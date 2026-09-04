@@ -28,7 +28,7 @@
     "阳包阴反包启动": "engulfing",
     "涨停跳空缺口共振": "limitup",
     "龙回头二次启动": "dragon",
-    "均线多头散发": "ma",
+    "均线多头发散": "ma",
     "低位仙人指路": "shadow",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
@@ -191,7 +191,7 @@
     ["engulfing", "阳包阴反包启动", "bullish_engulfing"],
     ["limitup", "涨停跳空缺口共振", "limitup_gap"],
     ["dragon", "龙回头二次启动", "dragon_pullback"],
-    ["ma", "均线多头散发", "ma_divergence"],
+    ["ma", "均线多头发散", "ma_divergence"],
     ["shadow", "低位仙人指路", "low_shadow"],
   ];
 
