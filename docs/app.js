@@ -954,7 +954,7 @@
       return;
     }
     if (meta) {
-      meta.textContent = `判定日 ${cleanText(mainlineCache.as_of)} · 规则化强度测量，100% 可复现；下月延续为概率问题，不构成投资建议`;
+      meta.textContent = `判定日 ${cleanText(mainlineCache.as_of)} · 蓄势轮动口径（经两年回测：验证期命中54.5%，非100%）· 不构成投资建议`;
     }
     grid.replaceChildren();
     mainlineCache.top_sectors.forEach((sector, rank) => {

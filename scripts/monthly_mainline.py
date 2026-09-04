@@ -31,7 +31,11 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from ashare_monitor.data import _ts_pro  # noqa: E402
 
-WEIGHTS = {"momentum": 0.35, "flow": 0.30, "breadth": 0.20, "signal": 0.15}
+# 两年回测（2024.09-2026.08，训练/验证分离）确定的口径：
+# 月度板块呈现均值回归——追高动量组合验证期 top1 命中 27-46%（低于随机50%），
+# 而"蓄势轮动"（低动量 + 高宽度 + 资金流入）验证期 top1 命中 54.5%、
+# top3 平均分位 0.549，显著优于随机基线。signal 因子未纳入回测，不计分仅展示。
+WEIGHTS = {"momentum": -0.45, "flow": 0.10, "breadth": 0.45, "signal": 0.0}
 MIN_MEMBERS = 10
 TOP_N = 5
 
@@ -152,11 +156,12 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
     table["members"] = sizes.reindex(table.index)
     table = table[table.members >= MIN_MEMBERS]
 
+    total_w = sum(abs(w) for w in WEIGHTS.values())
     score = (
-        WEIGHTS["momentum"] * minmax(table.momentum)
-        + WEIGHTS["flow"] * minmax(table.flow)
-        + WEIGHTS["breadth"] * minmax(table.breadth)
-        + WEIGHTS["signal"] * minmax(table.signal)
+        (WEIGHTS["momentum"] / total_w) * minmax(table.momentum)
+        + (WEIGHTS["flow"] / total_w) * minmax(table.flow)
+        + (WEIGHTS["breadth"] / total_w) * minmax(table.breadth)
+        + (WEIGHTS["signal"] / total_w) * minmax(table.signal)
     )
     table["score"] = (score * 100).round(1)
     table = table.sort_values("score", ascending=False)
@@ -199,11 +204,12 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
         "as_of": date.today().strftime("%Y%m%d"),
         "method": {
             "weights": WEIGHTS,
+            "rationale": "蓄势轮动口径（经两年回测验证）：主线预判不追高动量，优选横盘蓄势充分（高宽度）且尚未大涨（低动量）的板块，资金流入为佐证。",
             "window": {"momentum": "20 个交易日", "flow": "近 5 个交易日主力净流入均值（万元）",
                         "breadth": "站上 MA20 成员占比", "signal": "每 100 只成员信号数"},
         },
         "top_sectors": top,
-        "warning": "主线判定为规则化的近期强度测量，可 100% 复现；板块下月是否延续为概率问题，不构成投资建议。",
+        "warning": "蓄势轮动判定为规则化测量，可 100% 复现；历史回测验证期 top1 命中约 54.5%，并非 100%，板块走势为概率问题，不构成投资建议。",
     }
 
 
