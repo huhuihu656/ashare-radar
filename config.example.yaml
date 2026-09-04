@@ -1,0 +1,33 @@
+# 盘中扫描建议在 14:40（上海时间）运行；请确保数据源可提供实时行情。
+scan:
+  workers: 8
+  lookback_days: 320
+  min_history_days: 150
+  exclude_st: true
+  include_boards: ["主板", "创业板", "科创板", "北交所"]
+  cache_dir: "data/cache"
+  output_dir: "data/reports"
+
+# A：下跌后接近上一段上涨启动位（潜在支撑，非买入建议）
+support_retest:
+  enabled: true
+  min_prior_rally_pct: 0.15
+  rally_min_days: 15
+  rally_max_days: 90
+  approach_band_above_pct: 0.06
+  invalidation_below_pct: 0.03
+  ma_fast: 20
+  ma_slow: 60
+
+# B：低波动横盘后出现放量突破（量价代理，不等同于真实资金流）
+breakout:
+  enabled: true
+  consolidation_days: 20
+  max_range_pct: 0.12
+  max_atr_pct: 0.035
+  volume_baseline_days: 20
+  min_volume_ratio: 1.8
+  breakout_lookback_days: 20
+  min_close_position: 0.65
+
+# 可按你的通知渠道继续添加；当前始终落地 CSV/JSON，便于审计和回测。

@@ -1,0 +1,34 @@
+<#
+Registers a weekday 14:40 China-time task for the current Windows account.
+Run after creating .venv and installing the project.  This only schedules the
+research scanner; it never creates an order or starts trading software.
+#>
+[CmdletBinding()]
+param(
+    [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$TaskName = "AshareCloseMonitor",
+    [string]$RunAt = "14:40"
+)
+
+$ErrorActionPreference = "Stop"
+$python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
+$config = Join-Path $ProjectRoot "config.yaml"
+if (!(Test-Path -LiteralPath $python)) { throw "找不到虚拟环境：$python" }
+if (!(Test-Path -LiteralPath $config)) { throw "找不到配置文件：$config" }
+
+# Explicitly set the local China Standard Time so the instruction remains clear
+# when this script is copied to a machine with a different timezone.
+$tz = Get-TimeZone
+if ($tz.Id -ne "China Standard Time") {
+    Write-Warning "Current timezone is '$($tz.Id)'; Task Scheduler uses local time. Set it to China Standard Time first."
+}
+
+$arguments = "-m ashare_monitor.cli scan --config `"$config`""
+$action = New-ScheduledTaskAction -Execute $python -Argument $arguments -WorkingDirectory $ProjectRoot
+$trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At $RunAt
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
+    -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
+    -Description "A-share pre-close research scanner; no automated trading." -Force | Out-Null
+Write-Host "Created or updated task '$TaskName': weekdays at $RunAt."
+Write-Host ('Remove with: Unregister-ScheduledTask -TaskName "{0}" -Confirm:$false' -f $TaskName)

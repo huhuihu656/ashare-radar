@@ -1,0 +1,2 @@
+[console_scripts]
+ashare-monitor = ashare_monitor.cli:main

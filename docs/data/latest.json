@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "as_of": null,
+  "generated_at": null,
+  "published_at": null,
+  "universe_count": 0,
+  "failure_count": 0,
+  "coverage": 0,
+  "signal_counts": {
+    "support_retest": 0,
+    "sideways_breakout": 0
+  },
+  "warning": "首个扫描任务尚未完成。网站不会展示虚构行情。",
+  "signals": []
+}

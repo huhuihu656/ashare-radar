@@ -1,0 +1,16 @@
+# Python / local runtime
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+work/
+
+# Generated scanner state.  The public dashboard's small latest snapshot is
+# intentionally tracked under docs/data/.
+data/cache/
+data/reports/
+!docs/data/latest.json
+
+# Local editor/OS artifacts
+.DS_Store
+Thumbs.db

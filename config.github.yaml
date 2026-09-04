@@ -1,0 +1,26 @@
+# GitHub Actions uses this same research-only scanner configuration.  No API
+# keys or brokerage credentials are needed or permitted here.
+scan:
+  workers: 8
+  lookback_days: 320
+  min_history_days: 150
+  exclude_st: true
+  include_boards: ["主板", "创业板", "科创板", "北交所"]
+  cache_dir: "data/cache"
+  output_dir: "data/reports"
+support_retest:
+  min_prior_rally_pct: 0.15
+  rally_min_days: 15
+  rally_max_days: 90
+  approach_band_above_pct: 0.06
+  invalidation_below_pct: 0.03
+  ma_fast: 20
+  ma_slow: 60
+breakout:
+  consolidation_days: 20
+  max_range_pct: 0.12
+  max_atr_pct: 0.035
+  volume_baseline_days: 20
+  min_volume_ratio: 1.8
+  breakout_lookback_days: 20
+  min_close_position: 0.65

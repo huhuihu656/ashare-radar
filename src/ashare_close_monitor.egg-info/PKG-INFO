@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: ashare-close-monitor
+Version: 0.1.0
+Summary: A-share end-of-session research signal scanner (no trading)
+Requires-Python: >=3.10
+Requires-Dist: akshare>=1.14
+Requires-Dist: pandas>=2.1
+Requires-Dist: numpy>=1.26
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: tenacity>=8.2
+Requires-Dist: rich>=13.0
