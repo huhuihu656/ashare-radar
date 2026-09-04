@@ -23,8 +23,10 @@ if ($tz.Id -ne "China Standard Time") {
     Write-Warning "Current timezone is '$($tz.Id)'; Task Scheduler uses local time. Set it to China Standard Time first."
 }
 
-$arguments = "-m ashare_monitor.cli scan --config `"$config`""
-$action = New-ScheduledTaskAction -Execute $python -Argument $arguments -WorkingDirectory $ProjectRoot
+# Runs the full publish chain (scan -> export -> git push) so the public
+# GitHub Pages dashboard updates automatically after each trading day.
+$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $PSScriptRoot 'publish-site.ps1')`""
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $ProjectRoot
 $trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At $RunAt
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
     -MultipleInstances IgnoreNew
