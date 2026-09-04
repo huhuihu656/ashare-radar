@@ -1712,3 +1712,6 @@ td:first-child {
 .ct-row { display: flex; justify-content: space-between; gap: 14px; line-height: 1.55; }
 .ct-k { color: var(--quiet); }
 .ct-v { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* 命中信号的形态 chip 计数高亮 */
+.filter-button.has-hits .fb-count { color: var(--score); font-weight: 600; }

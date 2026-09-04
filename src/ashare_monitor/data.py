@@ -36,6 +36,10 @@ def get_universe() -> pd.DataFrame:
         # Sina codes carry an exchange prefix (sh600000 / bj920000); keep the
         # bare 6-digit symbol so history download and board inference agree.
         raw["symbol"] = raw["symbol"].astype(str).str[-6:]
+        # Sina spot volume is in shares; the history cache (Tushare/Tencent)
+        # stores lots (100 shares).  Convert so the live bar is comparable --
+        # a 100x unit mismatch silently inflates every volume-ratio signal.
+        raw["成交量"] = pd.to_numeric(raw["成交量"], errors="coerce") / 100
     return raw
 
 
@@ -163,7 +167,10 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
 
     try:
         raw = ak.stock_zh_a_daily(symbol=prefixed, adjust="qfq")
-        return _standardize(raw)
+        frame = _standardize(raw)
+        # Sina daily volume is in shares; normalize to lots like Tushare/Tencent.
+        frame["volume"] = frame["volume"] / 100
+        return frame
     except Exception as error:
         raise RuntimeError(f"{symbol} 行情源全部失败（腾讯: {tencent_error}；新浪: {error}）")
 

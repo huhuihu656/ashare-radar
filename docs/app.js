@@ -280,7 +280,7 @@
         { text: `回调缩量比 ${cleanText(item.pullback_vol_ratio)}`, cls: "" },
       ],
       dragon: [
-        { text: `量比 ${cleanText(item.second_vol_ratio)}`, cls: vr !== null && vr >= 2.3 ? "is-up" : "" },
+        { text: `量比 ${cleanText(item.second_vol_ratio)}`, cls: num(item.second_vol_ratio) !== null && num(item.second_vol_ratio) >= 2.3 ? "is-up" : "" },
         { text: `首波涨幅 ${signedPct(item.wave_gain_pct)}`, cls: signClass(item.wave_gain_pct) },
         { text: `前高 ${cleanText(item.prior_high)}`, cls: "" },
       ],
@@ -602,7 +602,7 @@
       ymd: b[0], open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5], live: false,
     }));
     // 盘中扫描：快照 bar 尚未写入缓存，用信号里的现价补一根“当日盘中”
-    const asOf = Number(String(item.as_of || "").slice(0, 8));
+    const asOf = Number(String(state.payload?.as_of || "").slice(0, 8));
     const lastYmd = bars.length ? Number(bars[bars.length - 1].ymd) : 0;
     if (asOf && lastYmd && asOf > lastYmd && num(item.close) !== null) {
       bars.push({
@@ -628,7 +628,10 @@
     });
   }
 
+  let klineRenderToken = 0;
+
   function renderKlineChart(item) {
+    const myToken = ++klineRenderToken;
     const body = $("#chart-body");
     const svg = $("#kline-svg");
     const note = $("#chart-note");
@@ -648,6 +651,7 @@
     };
 
     ensureKlines().then((klines) => {
+      if (myToken !== klineRenderToken) return; // 弹窗已切换，丢弃过期渲染
       if (!klines) {
         finish("K线数据不可用（数据文件缺失或加载失败）。", "muted");
         return;
@@ -733,7 +737,7 @@
       const rect = svgEl("rect", {
         x: x(i) - bodyW / 2, y: top, width: bodyW, height: h,
         stroke: color, "stroke-width": 1,
-        fill: up ? "#0a101c" : color,
+        fill: up ? "#05080f" : color,
       });
       if (b.live) rect.setAttribute("stroke-dasharray", "2 2");
       svg.append(rect);
