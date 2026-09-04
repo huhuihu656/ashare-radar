@@ -1415,7 +1415,7 @@ td:first-child {
 /* ---------- 详情对话框 ---------- */
 
 .signal-dialog {
-  width: min(600px, calc(100vw - 32px));
+  width: min(780px, calc(100vw - 32px));
   padding: 0;
   border: 1px solid var(--line-strong);
   border-radius: 15px;
@@ -1694,7 +1694,9 @@ td:first-child {
 
 
 /* ---------- 详情弹窗 K 线图 ---------- */
-.dialog-chart { margin-bottom: 14px; }
+.dialog-chart { margin-bottom: 14px; width: 100%; min-width: 0; }
+.chart-body { width: 100%; min-width: 0; box-sizing: border-box; }
+.kline-svg { width: 100%; }
 .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .chart-title { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; }
 .chart-legend { display: flex; gap: 12px; }

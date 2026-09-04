@@ -755,17 +755,22 @@
   }
 
   function drawKline(svg, body, bars, levelValue, levelField) {
-    const width = Math.max(320, body.clientWidth || 560);
-    const priceH = 250;
-    const volH = 58;
-    const gap = 14;
-    const padTop = 14;
-    const padRight = 64;
-    const padBottom = 22;
+    // 用 chart 节实测宽度（dialog 打开后的稳定布局值），并确保 body 全宽
+    body.style.width = "100%";
+    const sectionW = body.parentElement?.getBoundingClientRect().width || 0;
+    const measured = Math.max(0, Math.floor(sectionW) - 12);   // section 内边距容差
+    const width = Math.max(320, measured || 560);
+    const priceH = 360;
+    const volH = 72;
+    const gap = 16;
+    const padTop = 18;
+    const padRight = 72;
+    const padBottom = 26;
     const totalH = padTop + priceH + gap + volH + padBottom;
     svg.setAttribute("viewBox", `0 0 ${width} ${totalH}`);
-    svg.setAttribute("width", width);
-    svg.setAttribute("height", totalH);
+    // 宽度交给 CSS(width:100%)；属性宽度会干扰 dialog 内布局
+    svg.removeAttribute("width");
+    svg.removeAttribute("height");
     const chartW = width - padRight;
 
     const step = chartW / bars.length;
