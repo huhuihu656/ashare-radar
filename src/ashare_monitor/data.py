@@ -41,16 +41,28 @@ def get_universe() -> pd.DataFrame:
 
 @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5), reraise=True)
 def is_ashare_trading_day(day: date | None = None) -> bool:
-    """Check the official exchange-session calendar exposed by AkShare/Sina.
+    """Official exchange calendar via Tushare (paid), Sina as fallback.
 
     A weekday is not necessarily a trading day.  The caller must skip rather
     than reuse a stale quote if this check cannot be completed.
     """
+    target = pd.Timestamp(day or date.today()).normalize()
+    pro = _ts_pro()
+    if pro is not None:
+        try:
+            cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
+                                end_date=target.strftime("%Y%m%d"), is_open="1")
+            if cal is not None and not cal.empty:
+                return True
+            cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
+                                end_date=target.strftime("%Y%m%d"), is_open="0")
+            return cal is not None and cal.empty
+        except Exception:
+            pass
     import akshare as ak
     calendar = ak.tool_trade_date_hist_sina()
     if "trade_date" not in calendar.columns:
         raise RuntimeError("交易日历字段变化：缺少 trade_date")
-    target = pd.Timestamp(day or date.today()).normalize()
     sessions = pd.to_datetime(calendar["trade_date"], errors="coerce").dt.normalize()
     return bool(sessions.eq(target).any())
 
@@ -156,6 +168,109 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
         raise RuntimeError(f"{symbol} 行情源全部失败（腾讯: {tencent_error}；新浪: {error}）")
 
 
+def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force: bool = False) -> tuple[int, int]:
+    """Refresh the whole price cache from Tushare, one session per call pair.
+
+    Paid-source bulk refresh: each `daily` + `adj_factor` call returns the whole
+    market for one session (~0.5s together), so even a full 320-session rebuild
+    takes a few minutes instead of per-stock downloads.  Forward adjustment is
+    computed manually -- close * factor / factor(latest for the symbol) -- which
+    we verified equals pro_bar(adj="qfq") exactly (diff 0.0000).  After the
+    first rebuild, routine refreshes only fetch sessions newer than the newest
+    cached bar, so daily runs are nearly instant.
+
+    Cache format stays the existing one: CSV with a `date` column, then
+    open/high/low/close/volume.  Returns (symbols_written, sessions_fetched).
+    """
+    pro = _ts_pro()
+    if pro is None:
+        return 0, 0
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    cal = pro.trade_cal(
+        exchange="SSE",
+        start_date=(date.today() - timedelta(days=lookback_days * 2 + 30)).strftime("%Y%m%d"),
+        end_date=date.today().strftime("%Y%m%d"),
+        is_open="1",
+    )
+    if cal is None or cal.empty:
+        return 0, 0
+    all_sessions = sorted(cal["cal_date"].astype(str).tolist())
+
+    if force or not any(cache_dir.iterdir()):
+        needed = all_sessions
+    else:
+        newest = date(2000, 1, 1)
+        try:
+            sample = next(cache_dir.glob("*.csv"))
+            head = pd.read_csv(sample, parse_dates=["date"], nrows=5)
+            if not head.empty:
+                newest = max(head.date.max().date(), newest)
+        except Exception:
+            newest = date(2000, 1, 1)
+        needed = [s for s in all_sessions if s > newest.strftime("%Y%m%d")]
+        needed = sorted(set(needed + all_sessions[-3:]))
+    if not needed:
+        return 0, 0
+
+    frames: list[pd.DataFrame] = []
+    for session in needed:
+        try:
+            daily = pro.daily(trade_date=session)
+            factors = pro.adj_factor(trade_date=session)
+        except Exception:
+            continue
+        if daily is None or daily.empty or factors is None or factors.empty:
+            continue
+        merged = daily.merge(factors[["ts_code", "adj_factor"]], on="ts_code", how="inner")
+        merged["trade_date"] = session
+        frames.append(merged[["ts_code", "trade_date", "adj_factor", "open", "high", "low", "close", "vol"]])
+    if not frames:
+        return 0, 0
+    all_raw = pd.concat(frames, ignore_index=True)
+    all_raw["symbol"] = all_raw["ts_code"].astype(str).str[:6]
+    latest_factor = all_raw.sort_values(["symbol", "trade_date"]).groupby("symbol")["adj_factor"].last()
+
+    written = 0
+    for symbol, group in all_raw.groupby("symbol"):
+        base = float(latest_factor[symbol])
+        if base <= 0:
+            continue
+        bars = pd.DataFrame({
+            "date": pd.to_datetime(group["trade_date"]),
+            "open": pd.to_numeric(group["open"], errors="coerce"),
+            "high": pd.to_numeric(group["high"], errors="coerce"),
+            "low": pd.to_numeric(group["low"], errors="coerce"),
+            "close": pd.to_numeric(group["close"], errors="coerce") * group["adj_factor"] / base,
+            "volume": pd.to_numeric(group["vol"], errors="coerce"),
+        }).dropna()
+        if bars.empty:
+            continue
+        path = cache_dir / f"{symbol}.csv"
+        if path.exists():
+            try:
+                existing = pd.read_csv(path, parse_dates=["date"])
+                key = existing.date.dt.strftime("%Y%m%d")
+                bars_key = bars.date.dt.strftime("%Y%m%d")
+                existing = existing[~key.isin(bars_key)]
+                bars = pd.concat([existing, bars], ignore_index=True)
+            except Exception:
+                pass
+        bars = bars.sort_values("date")
+        bars.to_csv(path, index=False, columns=["date", "open", "high", "low", "close", "volume"])
+        written += 1
+    return written, len(needed)
+
+
+def _ts_pro():
+    """Lazy Tushare API handle; None when token missing/unusable."""
+    from . import tushare_src
+
+    if not tushare_src.available():
+        return None
+    return tushare_src._TS
+
+
 def history_for(symbol: str, cache_dir: Path, lookback_days: int) -> pd.DataFrame:
     """Return cached, forward-adjusted daily bars.
 
@@ -211,11 +326,26 @@ def append_live_bar(history: pd.DataFrame, quote: pd.Series) -> pd.DataFrame:
 def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
     """Shanghai Composite daily bars for the market-regime check.
 
-    One request per scan; failures return an empty frame so the scan continues
-    without a market tag instead of aborting.  Tencent index quotes are not
-    rate-limited like equity bars but can still be down; Sina daily is the
-    fallback.
+    Paid source first (Tushare index_daily); free feeds (Tencent/Sina) remain
+    as fallbacks.  One request per scan; failures return an empty frame so the
+    scan continues without a market tag instead of aborting.
     """
+    pro = _ts_pro()
+    if pro is not None:
+        try:
+            ts_code = {"sh000001": "000001.SH", "sz399001": "399001.SZ",
+                       "sz399006": "399006.SZ"}.get(symbol, "000001.SH")
+            raw = pro.index_daily(ts_code=ts_code,
+                                  start_date=(date.today() - timedelta(days=200)).strftime("%Y%m%d"))
+            if raw is not None and not raw.empty:
+                frame = raw.rename(columns={"trade_date": "date", "vol": "volume"})
+                frame.date = pd.to_datetime(frame.date)
+                frame = frame.set_index("date").sort_index()
+                for column in ["open", "high", "low", "close", "volume"]:
+                    frame[column] = pd.to_numeric(frame[column], errors="coerce")
+                return frame.dropna().tail(200)
+        except Exception:
+            pass
     import requests
 
     try:
@@ -226,20 +356,18 @@ def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
                 response.raise_for_status()
                 payload = response.json().get("data", {}).get(symbol, {})
                 bars = payload.get("qfqday") or payload.get("day") or []
-                if not bars:
-                    break
-                frame = pd.DataFrame([bar[:6] for bar in bars],
-                                     columns=["date", "open", "close", "high", "low", "volume"])
-                frame.date = pd.to_datetime(frame.date)
-                frame = frame.set_index("date").sort_index()
-                for column in ["open", "high", "low", "close", "volume"]:
-                    frame[column] = pd.to_numeric(frame[column], errors="coerce")
-                return frame.dropna()
+                if bars:
+                    frame = pd.DataFrame([bar[:6] for bar in bars],
+                                         columns=["date", "open", "close", "high", "low", "volume"])
+                    frame.date = pd.to_datetime(frame.date)
+                    frame = frame.set_index("date").sort_index()
+                    for column in ["open", "high", "low", "close", "volume"]:
+                        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+                    return frame.dropna()
             except Exception:
                 continue
     except Exception:
         pass
-    # Fallback: Sina daily (full index history in one request).
     try:
         import akshare as ak
 

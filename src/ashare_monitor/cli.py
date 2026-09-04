@@ -14,6 +14,7 @@ from rich.progress import track
 from .config import Config, load
 from .data import (append_live_bar, filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
+from .data import refresh_history_cache_bulk
 from .signals import scan_frame
 from .tushare_src import latest_moneyflow
 
@@ -67,7 +68,11 @@ def scan(config_path: str) -> int:
     # 大盘环境：一次请求，写入审计并可选过滤信号。
     regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
     console.print(f"[cyan]大盘环境：{regime['state']}（指数 {regime['close']}，MA20 {regime['ma20']}，MA60 {regime['ma60']}）[/cyan]")
-    # 付费数据源（Tushare）：真实主力资金流标注（失败软降级为无标注）。
+    # 付费数据源（Tushare）：先增量刷新全市场历史缓存（批量、秒级），
+    # 再拉真实主力资金流标注；任何一步失败都软降级。
+    written, sessions = refresh_history_cache_bulk(Path(cfg.scan.cache_dir), cfg.scan.lookback_days)
+    if sessions:
+        console.print(f"[green]Tushare 行情缓存：更新 {written} 只 / {sessions} 个交易日[/green]")
     moneyflow = latest_moneyflow()
     if moneyflow is not None:
         console.print(f"[green]Tushare 资金流：{len(moneyflow)} 只（净流入 {int((moneyflow.net_mf_amount > 0).sum())} 只）[/green]")
