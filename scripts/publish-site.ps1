@@ -27,8 +27,9 @@ param(
 # $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
 # 5.1; resolve the project root here in the body instead.
 if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
-    $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
-    $ProjectRoot = Split-Path -Parent $scriptPath
+    $scriptsDir = if ($PSScriptRoot) { $PSScriptRoot }
+                  else { Split-Path -Parent (if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }) }
+    $ProjectRoot = Split-Path -Parent $scriptsDir
 }
 
 $ErrorActionPreference = "Stop"
@@ -41,7 +42,7 @@ if (!(Test-Path -LiteralPath $configPath)) { throw "找不到配置文件：$con
 if (-not $SkipScan) {
     & $python -m ashare_monitor.cli scan --config $configPath
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "扫描失败（exit=$LASTEXITCODE）；保留已上线的旧数据，不发布。"
+        Write-Error -ErrorAction Continue "扫描失败（exit=$LASTEXITCODE）；保留已上线的旧数据，不发布。"
         exit 2
     }
     # scan exits 0 both on success and on a clean non-trading-day skip; the
@@ -58,24 +59,24 @@ if (-not $SkipScan) {
 # Export the newest complete report to the static payload (coverage-gated).
 & $python (Join-Path $ProjectRoot "scripts\export_dashboard.py") --reports-dir data/reports --out docs/data/latest.json --min-coverage $MinCoverage
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "导出失败或覆盖率低于发布门槛（$MinCoverage）；已上线的旧数据保持不变。"
+    Write-Error -ErrorAction Continue "导出失败或覆盖率低于发布门槛（$MinCoverage）；已上线的旧数据保持不变。"
     exit 2
 }
 
 # Commit + push only when the payload actually changed.
 $status = git status --porcelain -- docs/data/latest.json
-if ($LASTEXITCODE -ne 0) { Write-Error "git status 失败"; exit 2 }
+if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
 if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] latest.json 无变化（同一交易日重复运行），跳过提交。"
     exit 0
 }
 git add -- docs/data/latest.json
-if ($LASTEXITCODE -ne 0) { Write-Error "git add 失败"; exit 2 }
+if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
 git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘前扫描结果" --quiet
-if ($LASTEXITCODE -ne 0) { Write-Error "git commit 失败"; exit 2 }
+if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
 git push origin main
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "git push 失败。请检查本机 git/SSH 配置与网络。"
+    Write-Error -ErrorAction Continue "git push 失败。请检查本机 git/SSH 配置与网络。"
     exit 2
 }
 Write-Host "[publish] 已推送到 GitHub；Pages 稍后自动更新。"

@@ -14,3 +14,6 @@ data/reports/
 # Local editor/OS artifacts
 .DS_Store
 Thumbs.db
+
+# Local semgrep guardian plugin artifacts
+.semgrep/

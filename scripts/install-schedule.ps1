@@ -14,8 +14,9 @@ param(
 # $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
 # 5.1; resolve the project root here in the body instead.
 if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
-    $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
-    $ProjectRoot = Split-Path -Parent $scriptPath
+    $scriptsDir = if ($PSScriptRoot) { $PSScriptRoot }
+                  else { Split-Path -Parent (if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }) }
+    $ProjectRoot = Split-Path -Parent $scriptsDir
 }
 
 $ErrorActionPreference = "Stop"
