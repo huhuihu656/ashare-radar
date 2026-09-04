@@ -8,9 +8,9 @@ broker; it only publishes the research snapshot.
 
 Requirements:
   - .venv exists with the project installed (README).
-  - The repo has a `main` branch whose GitHub remote is reachable.  Push
-    credentials must be available to the calling context (scheduled task runs
-    as the same Windows user that stored them via credential manager).
+  - The repo has a `main` branch whose GitHub remote is reachable.  Pushes use
+    the repo-level SSH command with the deploy key (see `git config
+    core.sshCommand`), which works from the scheduled task without a browser.
   - Config file must exist.
 
 Exit codes: 0 ok; 2 scan/export/push failure; 3 not a trading day (ok, nothing
@@ -18,11 +18,18 @@ to publish).
 #>
 [CmdletBinding()]
 param(
-    [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$ProjectRoot = "",
     [string]$Config = "config.yaml",
     [double]$MinCoverage = 0.5,
     [switch]$SkipScan
 )
+
+# $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
+# 5.1; resolve the project root here in the body instead.
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+    $ProjectRoot = Split-Path -Parent $scriptPath
+}
 
 $ErrorActionPreference = "Stop"
 Set-Location $ProjectRoot
@@ -49,7 +56,7 @@ if (-not $SkipScan) {
 }
 
 # Export the newest complete report to the static payload (coverage-gated).
-& $python "$PSScriptRoot\export_dashboard.py" --reports-dir data/reports --out docs/data/latest.json --min-coverage $MinCoverage
+& $python (Join-Path $ProjectRoot "scripts\export_dashboard.py") --reports-dir data/reports --out docs/data/latest.json --min-coverage $MinCoverage
 if ($LASTEXITCODE -ne 0) {
     Write-Error "导出失败或覆盖率低于发布门槛（$MinCoverage）；已上线的旧数据保持不变。"
     exit 2
@@ -68,7 +75,7 @@ git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘前扫描结�
 if ($LASTEXITCODE -ne 0) { Write-Error "git commit 失败"; exit 2 }
 git push origin main
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "git push 失败。请检查 GitHub 凭据（git credential-manager）和网络。"
+    Write-Error "git push 失败。请检查本机 git/SSH 配置与网络。"
     exit 2
 }
 Write-Host "[publish] 已推送到 GitHub；Pages 稍后自动更新。"

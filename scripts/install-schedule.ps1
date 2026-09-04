@@ -1,14 +1,22 @@
 ﻿<#
 Registers a weekday 14:40 China-time task for the current Windows account.
 Run after creating .venv and installing the project.  This only schedules the
-research scanner; it never creates an order or starts trading software.
+research scanner + static-site publish chain; it never creates an order or
+starts trading software.
 #>
 [CmdletBinding()]
 param(
-    [string]$ProjectRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$ProjectRoot = "",
     [string]$TaskName = "AshareCloseMonitor",
     [string]$RunAt = "14:40"
 )
+
+# $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
+# 5.1; resolve the project root here in the body instead.
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $scriptPath = if ($PSCommandPath) { $PSCommandPath } else { $MyInvocation.MyCommand.Path }
+    $ProjectRoot = Split-Path -Parent $scriptPath
+}
 
 $ErrorActionPreference = "Stop"
 $python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
@@ -25,7 +33,7 @@ if ($tz.Id -ne "China Standard Time") {
 
 # Runs the full publish chain (scan -> export -> git push) so the public
 # GitHub Pages dashboard updates automatically after each trading day.
-$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $PSScriptRoot 'publish-site.ps1')`""
+$arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $ProjectRoot 'scripts\publish-site.ps1')`""
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $ProjectRoot
 $trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At $RunAt
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
