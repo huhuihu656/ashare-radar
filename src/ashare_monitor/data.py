@@ -147,7 +147,10 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
         "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
     }
     tencent_error = None
-    for host in ("https://ifzq.gtimg.cn", "http://web.ifzq.gtimg.cn"):
+    # HTTPS only: plaintext quote transport is removed per security review --
+    # corrupted quotes would silently poison signals.  When the HTTPS host is
+    # rate-limited, the HTTPS Sina daily fallback below takes over.
+    for host in ("https://ifzq.gtimg.cn",):
         try:
             response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
             response.raise_for_status()
@@ -360,7 +363,7 @@ def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
 
     try:
         params = {"param": f"{symbol},day,{date.today() - timedelta(days=180):%Y-%m-%d},{date.today():%Y-%m-%d},150,qfq"}
-        for host in ("https://ifzq.gtimg.cn", "http://web.ifzq.gtimg.cn"):
+        for host in ("https://ifzq.gtimg.cn",):
             try:
                 response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
                 response.raise_for_status()
