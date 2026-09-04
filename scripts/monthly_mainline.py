@@ -67,10 +67,37 @@ SECTOR_ETF = [
 ]
 
 
+_ETF_OFFICIAL: dict[str, str] | None = None
+
+
+def load_etf_official(pro) -> None:
+    """拉取场内基金官方全名（判定日一次）；用于保证用户可搜索到真实 ETF。"""
+    global _ETF_OFFICIAL
+    try:
+        fund = pro.fund_basic(market="E")
+        official = dict(zip(fund["ts_code"], fund["name"]))
+        mgmt = dict(zip(fund["ts_code"], fund["management"]))
+        stripped: dict[str, str] = {}
+        for code, name in official.items():
+            company = str(mgmt.get(code, ""))
+            short = name
+            if company and name.startswith(company):
+                short = name[len(company):]
+            # 再剥一层常见简称（如 国泰 -> 无）；保底保留原名
+            stripped[code] = short if short else name
+        _ETF_OFFICIAL = stripped
+    except Exception:
+        _ETF_OFFICIAL = {}
+
+
 def sector_etf(industry: str) -> dict | None:
     for keywords, code, label in SECTOR_ETF:
         if any(k in industry for k in keywords):
-            return {"code": code, "label": label}
+            official = (_ETF_OFFICIAL or {}).get(code)
+            # 显示名 = 官方名（去公司前缀，仍是官方名的子串，搜索必命中）；
+            # 若官方名缺失则退回手工 label，并保留代码可查证。
+            display = official or label
+            return {"code": code, "label": display, "official": official or None}
     return None
 
 
@@ -200,6 +227,7 @@ def per_stock_flow(pro, members: pd.DataFrame, sessions: int = 5) -> pd.Series:
 
 
 def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: Path) -> dict:
+    load_etf_official(pro)
     mom = momentum_factor(members, cache_dir)
     flow = flow_factor(pro, members)
     brd = breadth_factor(members, cache_dir)

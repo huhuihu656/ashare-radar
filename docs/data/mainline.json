@@ -26,7 +26,8 @@
       "members": 16,
       "etf": {
         "code": "159766.SZ",
-        "label": "运输ETF"
+        "label": "富国中证旅游主题ETF",
+        "official": "富国中证旅游主题ETF"
       },
       "top_stocks": [
         {
@@ -59,7 +60,8 @@
       "members": 50,
       "etf": {
         "code": "512880.SH",
-        "label": "券商ETF"
+        "label": "国泰中证全指证券公司ETF",
+        "official": "国泰中证全指证券公司ETF"
       },
       "top_stocks": [
         {
@@ -122,7 +124,8 @@
       "members": 42,
       "etf": {
         "code": "512800.SH",
-        "label": "银行ETF"
+        "label": "华宝中证银行ETF",
+        "official": "华宝中证银行ETF"
       },
       "top_stocks": [
         {
@@ -155,7 +158,8 @@
       "members": 11,
       "etf": {
         "code": "512660.SH",
-        "label": "军工ETF"
+        "label": "国泰中证军工ETF",
+        "official": "国泰中证军工ETF"
       },
       "top_stocks": [
         {
