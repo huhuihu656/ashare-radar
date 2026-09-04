@@ -33,6 +33,10 @@ if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
 }
 
 $ErrorActionPreference = "Stop"
+# The machine's Windows system proxy (127.0.0.1:12450) can be down or block
+# domestic quote feeds.  Scanner traffic goes direct; SSH pushes are unaffected.
+$env:NO_PROXY = "*"
+$env:no_proxy = "*"
 Set-Location $ProjectRoot
 $python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $configPath = Join-Path $ProjectRoot $Config
