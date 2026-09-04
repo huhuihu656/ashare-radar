@@ -28,3 +28,5 @@ _preview/
 data/backtest_cache/
 data/backtest_moneyflow.csv
 data/backtest_report.json
+data/sector_backtest_report.json
+data/mainline_backtest_report.json
