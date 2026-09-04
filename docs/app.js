@@ -345,6 +345,12 @@
       dot.className = `position-dot pos-${positionTierClass(num(item.position_pct))}`;
       add(pos, "span", `参考仓位 ${num(item.position_pct)}% · ${cleanText(item.position_tier)}`, "position-text");
     }
+    if (num(item.entry_price) !== null) {
+      const plan = add(noteCell, "div", undefined, "plan-line");
+      const dot = add(plan, "i", undefined, "plan-dot");
+      dot.className = `plan-dot plan-${item.entry_state === "已触发" ? "fired" : "wait"}`;
+      add(plan, "span", `买 ${decimal.format(num(item.entry_price))} · 损 ${decimal.format(num(item.stop_loss))} · 盈 ${decimal.format(num(item.take_profit))}（1:${cleanText(item.risk_reward)}·${cleanText(item.entry_state)}）`, "plan-text");
+    }
 
     const actionCell = add(tr, "td");
     const detailButton = add(actionCell, "button", "详情", "detail-btn");
@@ -456,6 +462,12 @@
         cls: "is-position",
       });
       rows.push({ dt: "仓位依据", dd: cleanText(item.position_reason) });
+      if (num(item.entry_price) !== null) {
+        rows.push({ dt: "买入参考价", dd: `${decimal.format(num(item.entry_price))}（${cleanText(item.entry_state)}）`, cls: "is-position" });
+        rows.push({ dt: "止损价", dd: decimal.format(num(item.stop_loss)), cls: "is-down" });
+        rows.push({ dt: "止盈价", dd: `${decimal.format(num(item.take_profit))}（1:${cleanText(item.risk_reward)}）`, cls: "is-up" });
+        rows.push({ dt: "计划依据", dd: cleanText(item.plan_note) });
+      }
     }
     if (kind === "support") {
       rows.push(

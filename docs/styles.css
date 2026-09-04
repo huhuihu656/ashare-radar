@@ -1726,3 +1726,11 @@ td:first-child {
 .position-dot.pos-watch { background: var(--quiet); }
 .position-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .dm-row .is-position { color: var(--score); font-weight: 600; }
+
+
+/* ---------- 买卖点计划 ---------- */
+.plan-line { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.plan-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.plan-dot.plan-fired { background: var(--up); box-shadow: 0 0 6px var(--up); }
+.plan-dot.plan-wait { background: var(--quiet); }
+.plan-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }

@@ -118,7 +118,7 @@ def box_breakout_bullish(frame: pd.DataFrame, cfg: BoxBreakoutConfig, risk: Risk
                             0.20 * red_green / cfg.red_green_vol_ratio + 0.15 * (1 - range_pct / cfg.box_max_range_pct)), 1)
     return {
         **_base_row(frame), "signal": "箱体突破红肥绿瘦", "score": score,
-        "box_high": round(box_high, 3), "range_pct": round(range_pct * 100, 2),
+        "box_high": round(box_high, 3), "box_low": round(box_low, 3), "range_pct": round(range_pct * 100, 2),
         "converge_ratio": round(converge, 2), "red_green_vol_ratio": round(red_green, 2),
         "volume_ratio": round(vol_ratio, 2),
         "note": "低位箱体末端收敛后放量突破上沿；突破后需回踩不破箱体上沿确认",
@@ -163,6 +163,7 @@ def bullish_engulfing(frame: pd.DataFrame, cfg: EngulfingConfig, risk: RiskConfi
     return {
         **_base_row(frame), "signal": "阳包阴反包启动", "score": score,
         "pullback_ratio": round(pullback, 2), "prior2_gain_pct": round(prior_gain * 100, 2),
+        "yin_high": round(float(prev.high), 3), "yin_low": round(float(prev.low), 3),
         "engulf_vol_ratio": round(engulf_vol_ratio, 2), "volume_ratio": round(volume_valid(float(today.volume), frame, risk) * 1, 2),
         "note": "上升初期缩量洗盘后放量反包并突破阴线高点；需维持放量确认",
     }
@@ -218,6 +219,7 @@ def limitup_gap(frame: pd.DataFrame, cfg: LimitUpGapConfig, risk: RiskConfig, li
     return {
         **_base_row(frame), "signal": "涨停跳空缺口共振", "score": score,
         "limit_date": str(frame.index[i].date()), "gap_size_pct": round(gap_pct, 2),
+        "gap_bottom": round(gap_bottom, 3), "limit_close": round(limit_close, 3),
         "days_since_limit": int(days_since), "pullback_vol_ratio": round(pullback_vol_ratio, 2),
         "note": "涨停突破压力位+实体缺口3日未回补，回调缩量；封单金额与主力性质需另行核验",
     }
@@ -279,7 +281,7 @@ def dragon_pullback(frame: pd.DataFrame, cfg: DragonConfig, risk: RiskConfig) ->
         **_base_row(frame), "signal": "龙回头二次启动", "score": score,
         "wave_gain_pct": round(wave_gain * 100, 2), "pullback_pct": round(pullback_pct * 100, 2),
         "pullback_vol_ratio": round(pullback_vol / wave_vol, 2), "second_vol_ratio": round(vol_ratio, 2),
-        "prior_high": round(peak, 3),
+        "prior_high": round(peak, 3), "pullback_low": round(pullback_low, 3),
         "note": "首波后缩量回调至关键均线，二次放量站稳前高；龙头股续强概率较高",
     }
 
@@ -370,6 +372,7 @@ def low_shadow_test(frame: pd.DataFrame, cfg: ShadowTestConfig, risk: RiskConfig
     return {
         **_base_row(frame), "signal": "低位仙人指路", "score": score,
         "shadow_ratio": round(upper_shadow / body, 2), "shadow_vol_ratio": round(shadow_vol_ratio, 2),
+        "shadow_high": round(float(prev.high), 3), "shadow_low": round(float(prev.low), 3),
         "cover_vol_ratio": round(cover_vol_ratio, 2), "prior_gain_60d_pct": round(_gain_over(frame, 60) * 100, 2),
         "note": "低位放量长上影试盘后阳线覆盖上影高点；需后续3日不破上影低点确认",
     }
@@ -518,6 +521,81 @@ def position_strategy(row: dict, market_env: str = "未知") -> dict:
         "position_pct": pct,
         "position_tier": tier,
         "position_reason": "、".join(reasons) or "满分结构",
+    }
+
+
+def entry_exit_plan(row: dict) -> dict:
+    """Mechanical entry / stop / target plan derived from pattern anatomy.
+
+    Each pattern's invalidation level IS its stop (the level that falsifies the
+    thesis), its confirmation level is the entry, and the target comes from a
+    1:2 risk-reward or the classic measured move (box height projection).
+    Round-trip levels are research references, never certainty.
+    """
+    kind = row.get("signal")
+    close = float(row.get("close") or 0)
+
+    def _r2(entry: float, stop: float) -> tuple[float, float]:
+        risk = entry - stop
+        return stop, (entry + 2 * risk) if risk > 0 else stop
+
+    entry = stop = target = None
+    note = ""
+    if kind == "回踩前期起涨位":
+        start = row.get("start_price")
+        if start:
+            entry, stop, target = round(start * 1.01, 2), round(start * 0.97, 2), None
+            note = "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+    elif kind == "横盘后放量突破":
+        bh = row.get("breakout_high")
+        if bh:
+            entry, stop, target = round(bh * 1.005, 2), round(bh * 0.97, 2), None
+            note = "突破位上沿确认买入；跌回突破位下方3%止损"
+    elif kind == "箱体突破红肥绿瘦":
+        bh, bl = row.get("box_high"), row.get("box_low")
+        if bh and bl:
+            entry, stop = round(bh * 1.005, 2), round(bh * 0.97, 2)
+            target = round(bh + (bh - bl), 2)   # 箱体高度投影（经典量度目标）
+            note = "箱体上沿确认买入；跌回上沿下方3%止损；目标=箱体高度投影"
+    elif kind == "阳包阴反包启动":
+        yh, yl = row.get("yin_high"), row.get("yin_low")
+        if yh and yl:
+            entry, stop, target = round(yh * 1.005, 2), round(yl * 0.99, 2), None
+            note = "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+    elif kind == "涨停跳空缺口共振":
+        gb = row.get("gap_bottom")
+        if gb:
+            entry, stop, target = round(gb * 1.005, 2), round(gb * 0.99, 2), None
+            note = "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+    elif kind == "龙回头二次启动":
+        ph, pl = row.get("prior_high"), row.get("pullback_low")
+        if ph and pl:
+            entry, stop, target = round(ph * 1.005, 2), round(pl * 0.99, 2), None
+            note = "放量站稳前高买入；跌破回调低点（二次启动失败）止损"
+    elif kind == "均线多头发散":
+        bh, ma = row.get("breakout_high"), row.get("ma20")
+        if bh and ma:
+            entry, stop, target = round(bh * 1.005, 2), round(ma * 0.97, 2), None
+            note = "突破压力位买入；跌破MA20（多头结构破坏）止损"
+    elif kind == "低位仙人指路":
+        sh, sl = row.get("shadow_high"), row.get("shadow_low")
+        if sh and sl:
+            entry, stop, target = round(sh * 1.005, 2), round(sl * 0.99, 2), None
+            note = "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+    if entry is None or stop is None or entry <= stop:
+        return {}
+    if target is None:
+        risk = entry - stop
+        target = round(entry + 2 * risk, 2)     # 1:2 风险收益比
+    rr = round((target - entry) / (entry - stop), 2) if entry > stop else 0
+    state = "已触发" if close >= entry else "待确认"
+    return {
+        "entry_price": entry,
+        "stop_loss": stop,
+        "take_profit": target,
+        "risk_reward": rr,
+        "entry_state": state,
+        "plan_note": note,
     }
 
 

@@ -318,3 +318,30 @@ def test_position_strategy_inflow_boost_capped_at_30() -> None:
     row = position_strategy({"score": 90, "net_mf_amount": 1000}, "偏强")
     assert row["position_pct"] == 30.0  # 单票上限 30%
     assert "主力净流入" in row["position_reason"]
+
+
+# ---------------------------------------------------------------------------
+# 买卖点计划
+# ---------------------------------------------------------------------------
+
+def test_plan_support_entry_stop_r2() -> None:
+    from ashare_monitor.signals import entry_exit_plan
+    plan = entry_exit_plan({"signal": "回踩前期起涨位", "close": 15.0, "start_price": 14.55})
+    assert plan["entry_price"] > plan["stop_loss"]
+    assert plan["take_profit"] > plan["entry_price"]
+    assert plan["risk_reward"] == 2.0
+    assert plan["entry_state"] in ("已触发", "待确认")
+
+
+def test_plan_box_measured_move_target() -> None:
+    from ashare_monitor.signals import entry_exit_plan
+    plan = entry_exit_plan({"signal": "箱体突破红肥绿瘦", "close": 64.2,
+                            "box_high": 62.5, "box_low": 58.0})
+    # 目标 = 上沿 + 箱体高度 = 62.5 + 4.5 = 67.0
+    assert plan["take_profit"] == 67.0
+    assert plan["stop_loss"] < plan["entry_price"]
+
+
+def test_plan_unknown_signal_returns_empty() -> None:
+    from ashare_monitor.signals import entry_exit_plan
+    assert entry_exit_plan({"signal": "未知信号", "close": 10}) == {}
