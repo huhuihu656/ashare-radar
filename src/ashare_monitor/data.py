@@ -13,18 +13,29 @@ HISTORY_COLUMNS = {"日期": "date", "开盘": "open", "最高": "high", "最低
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10), reraise=True)
 def get_universe() -> pd.DataFrame:
-    """Live A-share universe from Eastmoney via AkShare.
+    """Live A-share universe via AkShare.
 
-    `stock_zh_a_spot_em` includes main board, ChiNext, STAR and Beijing stocks;
-    the caller records the exact successful coverage in run.json.
+    Eastmoney spot covers main board, ChiNext, STAR and Beijing stocks, but its
+    clist endpoint can throttle/drop direct connections; fall back to the Sina
+    spot feed, which covers the same boards.  The caller records the exact
+    successful coverage in run.json.
     """
     import akshare as ak
-    raw = ak.stock_zh_a_spot_em()
+    try:
+        raw = ak.stock_zh_a_spot_em()
+        source = "eastmoney"
+    except Exception:
+        raw = ak.stock_zh_a_spot()
+        source = "sina"
     required = {"代码", "名称", "最新价"}
     missing = required - set(raw.columns)
     if missing:
         raise RuntimeError(f"行情字段变化，缺少: {missing}")
     raw = raw.rename(columns={"代码": "symbol", "名称": "name", "最新价": "last_price"})
+    if source == "sina":
+        # Sina codes carry an exchange prefix (sh600000 / bj920000); keep the
+        # bare 6-digit symbol so history download and board inference agree.
+        raw["symbol"] = raw["symbol"].astype(str).str[-6:]
     return raw
 
 
