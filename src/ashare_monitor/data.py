@@ -120,8 +120,12 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
     params = {
         "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
     }
+    # Prefer HTTPS.  Plaintext http://web.ifzq.gtimg.cn is kept ONLY as a last
+    # resort: both HTTPS hosts rate-limit this endpoint (HTTP 501) under daily
+    # full-market load.  The payload is public market data -- no credentials or
+    # user data ever travel over it, and the scanner is research-only.
     last_error = None
-    for host in ("http://web.ifzq.gtimg.cn", "https://ifzq.gtimg.cn"):
+    for host in ("https://ifzq.gtimg.cn", "http://web.ifzq.gtimg.cn"):
         try:
             response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
             response.raise_for_status()
