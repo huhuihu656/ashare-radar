@@ -1,4 +1,4 @@
-<#
+﻿<#
 Registers a weekday 14:40 China-time task for the current Windows account.
 Run after creating .venv and installing the project.  This only schedules the
 research scanner; it never creates an order or starts trading software.

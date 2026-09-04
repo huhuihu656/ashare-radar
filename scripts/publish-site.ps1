@@ -1,4 +1,4 @@
-<#
+﻿<#
 Publishes the daily scan to the public GitHub Pages dashboard.
 
 Pipeline: run scanner -> export sanitized payload -> commit -> push.
