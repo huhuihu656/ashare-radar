@@ -75,6 +75,12 @@
     return n >= 0 ? "is-up" : "is-down";
   };
 
+  const signedNum = (value) => {
+    const n = num(value);
+    if (n === null) return "—";
+    return `${n > 0 ? "+" : ""}${number.format(n)}`;
+  };
+
   const signedPct = (value) => {
     const n = num(value);
     if (n === null) return "—";
@@ -922,6 +928,75 @@
     });
   }
 
+  /* ---------- 月度主线板块 ---------- */
+
+  const MAINLINE_URL = "./data/mainline.json";
+  let mainlineCache = null;
+
+  async function renderMainline() {
+    const grid = $("#mainline-grid");
+    const meta = $("#mainline-meta");
+    if (!grid) return;
+    if (!mainlineCache) {
+      try {
+        const response = await fetch(`${MAINLINE_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (response.ok) mainlineCache = await response.json();
+      } catch (error) {
+        mainlineCache = null;
+      }
+    }
+    if (!mainlineCache || !Array.isArray(mainlineCache.top_sectors) || !mainlineCache.top_sectors.length) {
+      const empty = document.createElement("p");
+      empty.className = "mainline-empty";
+      empty.textContent = "主线数据尚未发布（每月首个交易日自动更新）。";
+      grid.replaceChildren(empty);
+      if (meta) meta.textContent = "";
+      return;
+    }
+    if (meta) {
+      meta.textContent = `判定日 ${cleanText(mainlineCache.as_of)} · 规则化强度测量，100% 可复现；下月延续为概率问题，不构成投资建议`;
+    }
+    grid.replaceChildren();
+    mainlineCache.top_sectors.forEach((sector, rank) => {
+      const card = document.createElement("article");
+      card.className = "mainline-card";
+      card.setAttribute("role", "listitem");
+
+      const top = add(card, "div", undefined, "mainline-card-top");
+      add(top, "span", `0${rank + 1}`, "mainline-rank");
+      const nameWrap = add(top, "div", undefined, "mainline-name-wrap");
+      add(nameWrap, "h3", cleanText(sector.industry), "mainline-name");
+      const score = add(top, "div", undefined, "mainline-score");
+      add(score, "span", cleanText(sector.score), "mainline-score-num");
+      add(score, "span", "分", "mainline-score-unit");
+
+      const bar = add(card, "div", undefined, "mainline-bar");
+      const fill = add(bar, "i");
+      fill.style.width = `${Math.max(0, Math.min(100, Number(sector.score) || 0))}%`;
+
+      const metrics = add(card, "dl", undefined, "mainline-metrics");
+      const items = [
+        ["动量20日", `${signedPct(sector.momentum_20d_pct)}`, signClass(sector.momentum_20d_pct)],
+        ["主力资金5日", `${signedNum(sector.flow_5d_avg_10k)}万`, signClass(sector.flow_5d_avg_10k)],
+        ["板块宽度", `${pct(sector.breadth_pct)}`, ""],
+        ["信号密度", `${cleanText(sector.signal_density)}/百`, ""],
+      ];
+      items.forEach(([label, value, cls]) => {
+        const wrap = add(metrics, "div", undefined, "mainline-metric");
+        add(wrap, "dt", label);
+        add(wrap, "dd", value, cls || undefined);
+      });
+
+      const stocks = add(card, "div", undefined, "mainline-stocks");
+      (sector.top_stocks || []).forEach((stock) => {
+        const chip = add(stocks, "span", undefined, "mainline-stock");
+        add(chip, "span", `${cleanText(stock.name)} ${cleanText(stock.symbol)}`, "ms-name");
+        add(chip, "span", `${stock.ret_20d_pct > 0 ? "+" : ""}${cleanText(stock.ret_20d_pct)}%`, `ms-ret ${signClass(stock.ret_20d_pct)}`);
+      });
+      grid.append(card);
+    });
+  }
+
   /* ---------- 数据加载 ---------- */
 
   async function loadData() {
@@ -943,6 +1018,7 @@
       setStatus(dataState(payload));
       renderBoards();
       renderResults();
+      renderMainline();
     } catch (error) {
       const hadData = Boolean(state.payload?.as_of);
       if (!state.loaded) state.payload = { signals: [] };

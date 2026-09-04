@@ -345,3 +345,29 @@ def test_plan_box_measured_move_target() -> None:
 def test_plan_unknown_signal_returns_empty() -> None:
     from ashare_monitor.signals import entry_exit_plan
     assert entry_exit_plan({"signal": "未知信号", "close": 10}) == {}
+
+
+# ---------------------------------------------------------------------------
+# 月度主线板块：确定性评分
+# ---------------------------------------------------------------------------
+
+def test_minmax_normalizes_to_01() -> None:
+    import sys
+    sys.path.insert(0, "scripts")
+    from monthly_mainline import minmax
+
+    import pandas as pd
+    values = minmax(pd.Series([1.0, 2.0, 3.0], index=["a", "b", "c"]))
+    assert abs(values["a"] - 0.0) < 1e-9
+    assert abs(values["c"] - 1.0) < 1e-9
+    assert abs(values["b"] - 0.5) < 1e-9
+
+
+def test_minmax_flat_series_returns_half() -> None:
+    import sys
+    sys.path.insert(0, "scripts")
+    from monthly_mainline import minmax
+
+    import pandas as pd
+    values = minmax(pd.Series([2.0, 2.0, 2.0], index=["a", "b", "c"]))
+    assert (values == 0.5).all()

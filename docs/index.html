@@ -14,8 +14,8 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23f0913f' stroke-width='1.6' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23f0913f' stroke-width='1.4' opacity='0.7'/%3E%3Cpath d='M16 16 L25 7.5' stroke='%23f0913f' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f0913f'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./styles.css?v=9" />
-    <script defer src="./app.js?v=9"></script>
+    <link rel="stylesheet" href="./styles.css?v=10" />
+    <script defer src="./app.js?v=10"></script>
   </head>
   <body>
     <a class="skip-link" href="#signals">跳到候选池</a>
@@ -123,6 +123,19 @@
           <strong class="kpi-value" id="failure-count">—</strong>
           <small>未能完成本次计算的股票数</small>
         </article>
+      </section>
+
+      <section class="mainline" id="mainline" aria-labelledby="mainline-title">
+        <div class="mainline-head">
+          <div>
+            <p class="eyebrow">MAINLINE RADAR · 月度主线板块</p>
+            <h2 id="mainline-title">本月主线板块</h2>
+          </div>
+          <p class="mainline-meta" id="mainline-meta">初月自动判定（规则化强度测量，不构成投资建议）</p>
+        </div>
+        <div class="mainline-grid" id="mainline-grid" role="list">
+          <p class="mainline-empty" id="mainline-empty">主线数据尚未发布（每月首个交易日自动更新）。</p>
+        </div>
       </section>
 
       <section class="workspace" id="signals" aria-labelledby="signals-title">

@@ -68,13 +68,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Commit + push only when the payload actually changed.
-$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json
+$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
 if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] latest.json/klines.json 无变化（同一交易日重复运行），跳过提交。"
     exit 0
 }
-git add -- docs/data/latest.json docs/data/klines.json
+git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
 git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘前扫描结果" --quiet
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
