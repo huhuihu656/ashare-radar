@@ -208,6 +208,59 @@ def append_live_bar(history: pd.DataFrame, quote: pd.Series) -> pd.DataFrame:
     return pd.concat([history[history.index.normalize() < today], live]).tail(len(history) + 1)
 
 
+def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
+    """Shanghai Composite daily bars for the market-regime check.
+
+    One request per scan; failures return an empty frame so the scan continues
+    without a market tag instead of aborting.
+    """
+    import requests
+
+    try:
+        params = {"param": f"{symbol},day,{date.today() - timedelta(days=180):%Y-%m-%d},{date.today():%Y-%m-%d},150,qfq"}
+        for host in ("https://ifzq.gtimg.cn", "http://web.ifzq.gtimg.cn"):
+            try:
+                response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
+                response.raise_for_status()
+                payload = response.json().get("data", {}).get(symbol, {})
+                bars = payload.get("qfqday") or payload.get("day") or []
+                if not bars:
+                    return pd.DataFrame()
+                frame = pd.DataFrame([bar[:6] for bar in bars],
+                                     columns=["date", "open", "close", "high", "low", "volume"])
+                frame.date = pd.to_datetime(frame.date)
+                frame = frame.set_index("date").sort_index()
+                for column in ["open", "high", "low", "close", "volume"]:
+                    frame[column] = pd.to_numeric(frame[column], errors="coerce")
+                return frame.dropna()
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return pd.DataFrame()
+
+
+def market_regime(frame: pd.DataFrame, ma_days: int = 60) -> dict:
+    """Classify the broad market as 偏强/中性/偏弱 from the index frame.
+
+    偏弱 = 收盘价与20日线均在60日线下方（单边下跌），此时个股形态成功率
+    普遍降低；用于审计记录与可选的信号过滤。
+    """
+    if frame.empty or len(frame) < ma_days + 20:
+        return {"state": "未知", "close": None, "ma20": None, "ma60": None}
+    close = frame.close.astype(float)
+    ma20 = float(close.rolling(20).mean().iloc[-1])
+    ma60 = float(close.rolling(ma_days).mean().iloc[-1])
+    price = float(close.iloc[-1])
+    if price < ma20 < ma60:
+        state = "偏弱"
+    elif price > ma20 > ma60:
+        state = "偏强"
+    else:
+        state = "中性"
+    return {"state": state, "close": round(price, 2), "ma20": round(ma20, 2), "ma60": round(ma60, 2)}
+
+
 def polite_pause() -> None:
     """Small spacing between public-data requests; tune workers conservatively."""
     time.sleep(0.03)

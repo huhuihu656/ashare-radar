@@ -13,21 +13,28 @@ from rich.progress import track
 
 from .config import Config, load
 from .data import (append_live_bar, filter_universe, get_universe, history_for,
-                   is_ashare_trading_day, polite_pause)
+                   index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .signals import scan_frame
+
+LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
 
 console = Console()
 
 
-def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path) -> list[dict]:
+def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str) -> list[dict]:
     symbol = str(quote.symbol)
     history = history_for(symbol, cache_dir, cfg.scan.lookback_days)
     if len(history) < cfg.scan.min_history_days:
         return []
     frame = append_live_bar(history, quote)
-    rows = scan_frame(frame, cfg.support_retest, cfg.breakout)
+    limit_pct = LIMIT_PCT_BY_BOARD.get(str(quote["board"]), 0.10)
+    rows = scan_frame(frame, cfg.support_retest, cfg.breakout, cfg.risk,
+                      cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
+                      cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
+                      limit_pct=limit_pct)
     for row in rows:
         row.update({"symbol": symbol, "name": str(quote["name"]), "board": str(quote["board"]),
+                    "market_env": market_state,
                     "scan_time": datetime.now().astimezone().isoformat(timespec="seconds")})
     polite_pause()
     return rows
@@ -47,6 +54,9 @@ def scan(config_path: str) -> int:
     except Exception as error:
         console.print(f"[red]无法获取实时股票池：{error}[/red]")
         return 2
+    # 大盘环境：一次请求，写入审计并可选过滤信号。
+    regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
+    console.print(f"[cyan]大盘环境：{regime['state']}（指数 {regime['close']}，MA20 {regime['ma20']}，MA60 {regime['ma60']}）[/cyan]")
     cache_dir = Path(cfg.scan.cache_dir)
     report_dir = Path(cfg.scan.output_dir) / datetime.now().strftime("%Y%m%d")
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -54,16 +64,21 @@ def scan(config_path: str) -> int:
     failures: list[dict] = []
     records = [row for _, row in universe.iterrows()]
     with ThreadPoolExecutor(max_workers=cfg.scan.workers) as pool:
-        future_map = {pool.submit(_scan_one, row, cfg, cache_dir): row for row in records}
+        future_map = {pool.submit(_scan_one, row, cfg, cache_dir, regime["state"]): row for row in records}
         for future in track(as_completed(future_map), total=len(future_map), description="扫描 A 股"):
             quote = future_map[future]
             try:
                 signals.extend(future.result())
             except Exception as error:
                 failures.append({"symbol": str(quote.symbol), "error": str(error)[:300]})
-    columns = ["symbol", "name", "board", "signal", "score", "close", "volume", "scan_time", "note",
+    columns = ["symbol", "name", "board", "signal", "score", "close", "volume", "market_env", "scan_time", "note",
                "start_date", "start_price", "distance_to_start_pct", "prior_rally_pct", "ma20", "ma60",
-               "range_pct", "atr_pct", "volume_ratio", "breakout_high", "close_position"]
+               "range_pct", "atr_pct", "volume_ratio", "breakout_high", "close_position",
+               "box_high", "converge_ratio", "red_green_vol_ratio",
+               "pullback_ratio", "prior2_gain_pct", "engulf_vol_ratio",
+               "limit_date", "gap_size_pct", "days_since_limit", "pullback_vol_ratio",
+               "wave_gain_pct", "pullback_pct", "second_vol_ratio", "prior_high",
+               "ma_gap_pct", "shadow_ratio", "shadow_vol_ratio", "cover_vol_ratio", "prior_gain_60d_pct"]
     result = pd.DataFrame(signals)
     if result.empty:
         result = pd.DataFrame(columns=columns)
@@ -75,7 +90,9 @@ def scan(config_path: str) -> int:
         "scan_time": datetime.now().astimezone().isoformat(timespec="seconds"),
         "universe_count": len(records), "signal_count": len(signals), "failure_count": len(failures),
         "failures": failures, "config": str(Path(config_path).resolve()),
-        "warning": "研究预警；默认“资金进入”仅是实时量价代理，非真实主力资金流。",
+        "market": regime,
+        "warning": "研究预警；默认“资金进入”仅是实时量价代理，非真实主力资金流。技术形态为概率工具，"
+                   "需结合位置、量能与市场环境三重验证，不构成投资建议。",
     }
     (report_dir / "run.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     console.print(f"[green]完成：{len(records)} 只覆盖，{len(signals)} 条信号。[/green] {report_dir.resolve()}")

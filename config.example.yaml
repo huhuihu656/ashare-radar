@@ -1,4 +1,6 @@
-# 盘中扫描建议在 14:40（上海时间）运行；请确保数据源可提供实时行情。
+# 研究预警扫描器配置。所有阈值都可调；免费行情源仅提供量价数据，
+# "资金进入"均为量价代理。封单金额、逐笔资金流等需要授权数据源。
+
 scan:
   workers: 8
   lookback_days: 320
@@ -8,7 +10,7 @@ scan:
   cache_dir: "data/cache"
   output_dir: "data/reports"
 
-# A：下跌后接近上一段上涨启动位（潜在支撑，非买入建议）
+# 原有信号
 support_retest:
   enabled: true
   min_prior_rally_pct: 0.15
@@ -19,7 +21,6 @@ support_retest:
   ma_fast: 20
   ma_slow: 60
 
-# B：低波动横盘后出现放量突破（量价代理，不等同于真实资金流）
 breakout:
   enabled: true
   consolidation_days: 20
@@ -30,4 +31,70 @@ breakout:
   breakout_lookback_days: 20
   min_close_position: 0.65
 
-# 可按你的通知渠道继续添加；当前始终落地 CSV/JSON，便于审计和回测。
+# 共性风控（位置/量能/大盘环境）——所有新形态统一生效
+risk:
+  enabled: true
+  position_lookback_days: 120     # 6个月≈120交易日
+  max_position_gain_pct: 1.0      # 位置错误：6个月涨幅>100% 形态失效
+  low_zone_pct: 0.45              # 低位判定：120日位置分位上限
+  min_volume_ratio: 1.5           # 量能缺失：量比<1.5 视为无效
+  early_trend_max_gain_pct: 0.60  # "趋势初期"的60日涨幅上限
+  weak_market_skip_signals: false # 大盘单边下跌时是否丢弃全部信号
+  weak_market_ma: 60
+
+# 一、启动信号
+box_breakout:            # 箱体突破 + 红肥绿瘦
+  enabled: true
+  box_days: 40
+  box_max_range_pct: 0.25
+  converge_days: 5
+  converge_ratio: 0.6
+  red_green_vol_ratio: 1.3
+  min_breakout_vol_ratio: 2.0     # 突破量 >= 5日均量2倍
+  vol_ma_days: 5
+
+bullish_engulfing:       # 阳包阴反包启动
+  enabled: true
+  max_pullback_ratio: 0.30        # 阴线回调 <= 前两日涨幅的30%
+  pullback_vol_ratio: 0.8         # 阴线量 < 近5日均量80%（缩量）
+  engulf_min_vol_ratio: 1.2       # 反包量 >= 阴线量1.2倍
+  vol_ma_days: 5
+
+limitup_gap:             # 涨停 + 跳空缺口共振
+  enabled: true
+  lookback_days: 20
+  gap_hold_days: 3                 # 缺口3日内未回补
+  limit_tolerance_pct: 0.003
+  pressure_lookback_days: 60       # 涨停需突破前60日高点
+  pullback_vol_ratio: 0.5          # 回调量 < 涨停日50%
+
+# 二、趋势延续
+dragon_pullback:         # 龙回头二次启动
+  enabled: true
+  wave_lookback_days: 60
+  min_first_wave_pct: 0.20        # 首波涨幅 >= 20%
+  max_pullback_pct: 0.30          # 回调 <= 首波30%
+  pullback_vol_ratio: 0.30        # 回调量 < 首波均量30%
+  pullback_ma_tolerance: 0.05     # 回踩20/30日线容差
+  min_second_vol_ratio: 2.3       # 二次启动量比 >= 2.3
+  prior_high_tolerance: 0.98      # 站稳前高（收盘 >= 前高98%）
+  vol_ma_days: 20
+
+ma_divergence:           # 均线多头发散 + 量能突破
+  enabled: true
+  ma_fast: 20
+  ma_slow: 60
+  cross_lookback_days: 60
+  divergence_hold_days: 7         # 金叉后至少7日维持发散
+  pullback_ma_tolerance: 0.03     # 回调不破20日线
+  min_breakout_vol_ratio: 2.0     # 突破压力位量比 >= 2
+  vol_ma_days: 50                 # 量能站上50日均量线
+  breakout_lookback_days: 20
+
+low_shadow:              # 低位仙人指路
+  enabled: true
+  min_shadow_ratio: 2.0           # 上影线 >= 实体2倍
+  max_prior_gain_pct: 0.30        # 前期涨幅 <= 30%
+  shadow_vol_ratio: 1.2           # 上影日量 >= 5日均量1.2倍
+  support_days: 5                 # 上影日低点守住近5日支撑
+  vol_ma_days: 5

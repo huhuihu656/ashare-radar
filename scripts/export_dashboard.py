@@ -47,9 +47,26 @@ def coverage_of(run: dict[str, Any]) -> float:
     return max(0.0, min(1.0, (total - failures) / total))
 
 
+SIGNAL_COUNT_KEYS = {
+    "回踩前期起涨位": "support_retest",
+    "横盘后放量突破": "sideways_breakout",
+    "箱体突破红肥绿瘦": "box_breakout",
+    "阳包阴反包启动": "bullish_engulfing",
+    "涨停跳空缺口共振": "limitup_gap",
+    "龙回头二次启动": "dragon_pullback",
+    "均线多头发散": "ma_divergence",
+    "低位仙人指路": "low_shadow",
+}
+
+
 def build_payload(report_dir: Path, signals: list[dict[str, Any]], run: dict[str, Any]) -> dict[str, Any]:
-    support = sum(item.get("signal") == "回踩前期起涨位" for item in signals)
-    breakout = sum(item.get("signal") == "横盘后放量突破" for item in signals)
+    counts = {key: 0 for key in SIGNAL_COUNT_KEYS.values()}
+    for item in signals:
+        key = SIGNAL_COUNT_KEYS.get(item.get("signal"))
+        if key:
+            counts[key] += 1
+    support = counts["support_retest"]
+    breakout = counts["sideways_breakout"]
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": report_dir.name,
@@ -58,7 +75,7 @@ def build_payload(report_dir: Path, signals: list[dict[str, Any]], run: dict[str
         "universe_count": int(run.get("universe_count", 0) or 0),
         "failure_count": int(run.get("failure_count", 0) or 0),
         "coverage": round(coverage_of(run), 4),
-        "signal_counts": {"support_retest": support, "sideways_breakout": breakout},
+        "signal_counts": counts,
         "warning": "研究预警，不构成投资建议；“资金进入”为量价代理，不是已证实的资金流。",
         "signals": signals,
     }

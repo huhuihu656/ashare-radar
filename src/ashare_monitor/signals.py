@@ -3,13 +3,381 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from .config import BreakoutConfig, SupportConfig
+from .config import (
+    BoxBreakoutConfig,
+    BreakoutConfig,
+    DragonConfig,
+    EngulfingConfig,
+    LimitUpGapConfig,
+    MaDivergenceConfig,
+    RiskConfig,
+    ShadowTestConfig,
+    SupportConfig,
+)
 
 
 def _base_row(frame: pd.DataFrame) -> dict[str, float]:
     last = frame.iloc[-1]
     return {"close": float(last.close), "volume": float(last.volume)}
 
+
+# ---------------------------------------------------------------------------
+# Shared risk guards (位置 / 量能 / 趋势初期)
+# ---------------------------------------------------------------------------
+
+def position_ok(frame: pd.DataFrame, risk: RiskConfig) -> bool:
+    """6个月内（约120个交易日）涨幅不得超过上限；高位形态胜率骤降。"""
+    if not risk.enabled:
+        return True
+    look = min(risk.position_lookback_days, len(frame) - 2)
+    if look < 30:
+        return True
+    base = float(frame.close.iloc[-look - 1])
+    if base <= 0:
+        return False
+    return float(frame.close.iloc[-1]) / base - 1 <= risk.max_position_gain_pct
+
+
+def low_zone_ok(frame: pd.DataFrame, risk: RiskConfig) -> bool:
+    """价格处于观察窗口的相对低位（位置分位 <= low_zone_pct）。"""
+    window = frame.iloc[-(risk.position_lookback_days + 1):]
+    lo = float(window.low.min())
+    hi = float(window.high.max())
+    if hi <= lo:
+        return False
+    return (float(frame.close.iloc[-1]) - lo) / (hi - lo) <= risk.low_zone_pct
+
+
+def volume_valid(today_volume: float, frame: pd.DataFrame, risk: RiskConfig) -> bool:
+    """通用量能门槛：当日量比 >= 1.5 且不低于前5日均量的1.5倍之一。"""
+    if not risk.enabled:
+        return True
+    base = float(frame.volume.iloc[-21:-1].mean()) if len(frame) >= 21 else float(frame.volume.iloc[:-1].mean())
+    if base <= 0:
+        return False
+    return today_volume / base >= risk.min_volume_ratio
+
+
+def _vol_ma(frame: pd.DataFrame, days: int) -> float:
+    return float(frame.volume.iloc[-days:].mean())
+
+
+def _gain_over(frame: pd.DataFrame, days: int) -> float:
+    """Close change over the last `days` bars (before today)."""
+    if len(frame) < days + 2:
+        return 0.0
+    base = float(frame.close.iloc[-days - 2])
+    prev = float(frame.close.iloc[-2])
+    return prev / base - 1 if base > 0 else 0.0
+
+
+# ---------------------------------------------------------------------------
+# 一、启动信号类
+# ---------------------------------------------------------------------------
+
+def box_breakout_bullish(frame: pd.DataFrame, cfg: BoxBreakoutConfig, risk: RiskConfig) -> dict | None:
+    """箱体突破 + 红肥绿瘦：低位箱体末端收敛，放量大阳线刺穿箱体上沿。
+
+    主力吸筹完成的量价结构：箱体内阳线放量（红肥）、阴线缩量（绿瘦），
+    突破 K 线需放量至 5 日均量 2 倍以上。
+    """
+    need = cfg.box_days + 25
+    if len(frame) < need:
+        return None
+    box = frame.iloc[-(cfg.box_days + 1):-1]
+    box_high = float(box.high.max())
+    box_low = float(box.low.min())
+    range_pct = box_high / box_low - 1 if box_low > 0 else 1e9
+    if not (0.03 <= range_pct <= cfg.box_max_range_pct):
+        return None
+    # 箱体末端波动收敛
+    tail = box.iloc[-cfg.converge_days:]
+    tail_range = float(tail.high.max() / tail.low.min() - 1) if tail.low.min() > 0 else 1e9
+    converge = tail_range / range_pct if range_pct > 0 else 1e9
+    if converge > cfg.converge_ratio:
+        return None
+    # 红肥绿瘦：箱体内阳线均量明显大于阴线均量
+    bulls = box[box.close > box.open]
+    bears = box[box.close < box.open]
+    if len(bulls) < 5 or len(bears) < 3:
+        return None
+    red_green = float(bulls.volume.mean() / bears.volume.mean()) if bears.volume.mean() > 0 else 0.0
+    if red_green < cfg.red_green_vol_ratio:
+        return None
+    # 突破当日：放量大阳线刺穿箱体上沿，且处于相对低位
+    today = frame.iloc[-1]
+    if not (float(today.close) > box_high and float(today.close) > float(today.open)):
+        return None
+    prior_vol_ma = float(frame.volume.iloc[-cfg.vol_ma_days - 1:-1].mean())
+    vol_ratio = float(today.volume) / prior_vol_ma if prior_vol_ma > 0 else 0.0
+    if vol_ratio < cfg.min_breakout_vol_ratio:
+        return None
+    if not (position_ok(frame, risk) and low_zone_ok(frame, risk)):
+        return None
+    score = round(100 * min(1, 0.40 * vol_ratio / cfg.min_breakout_vol_ratio + 0.25 * (1 - converge) +
+                            0.20 * red_green / cfg.red_green_vol_ratio + 0.15 * (1 - range_pct / cfg.box_max_range_pct)), 1)
+    return {
+        **_base_row(frame), "signal": "箱体突破红肥绿瘦", "score": score,
+        "box_high": round(box_high, 3), "range_pct": round(range_pct * 100, 2),
+        "converge_ratio": round(converge, 2), "red_green_vol_ratio": round(red_green, 2),
+        "volume_ratio": round(vol_ratio, 2),
+        "note": "低位箱体末端收敛后放量突破上沿；突破后需回踩不破箱体上沿确认",
+    }
+
+
+def bullish_engulfing(frame: pd.DataFrame, cfg: EngulfingConfig, risk: RiskConfig) -> dict | None:
+    """阳包阴反包启动：上升初期缩量阴线后，次日放量阳线突破阴线最高点。
+
+    洗盘结束信号：回调幅度不得超过前两日涨幅的30%，反包阳线须放量。
+    """
+    if len(frame) < 12:
+        return None
+    prev = frame.iloc[-2]
+    today = frame.iloc[-1]
+    if not (prev.close < prev.open and today.close > today.open):
+        return None
+    # 前两日涨幅金额与相对涨幅（阴线前的两日累计）
+    prior_top = float(frame.close.iloc[-3])
+    gain_amount = prior_top - float(frame.close.iloc[-5])
+    if gain_amount <= 0:
+        return None
+    prior_gain = gain_amount / float(frame.close.iloc[-5])
+    # 阴线回调金额 / 前两日涨幅金额
+    pullback = (prior_top - float(prev.close)) / gain_amount
+    if pullback > cfg.max_pullback_ratio:
+        return None
+    # 阴线缩量（明显小于近5日均量）
+    if float(prev.volume) >= _vol_ma(frame.iloc[:-1], cfg.vol_ma_days) * cfg.pullback_vol_ratio:
+        return None
+    # 反包阳线放量突破阴线最高点（而非仅覆盖实体）
+    if float(today.close) < float(prev.high):
+        return None
+    engulf_vol_ratio = float(today.volume / prev.volume) if prev.volume > 0 else 0.0
+    if engulf_vol_ratio < cfg.engulf_min_vol_ratio or not volume_valid(float(today.volume), frame, risk):
+        return None
+    # 位置：上升趋势初期（60日涨幅受限）且不在高位
+    if _gain_over(frame, 60) > risk.early_trend_max_gain_pct or not position_ok(frame, risk):
+        return None
+    score = round(100 * min(1, 0.40 * min(engulf_vol_ratio / 2.0, 1) + 0.30 * (1 - pullback / cfg.max_pullback_ratio) +
+                            0.30 * min(prior_gain / 0.15, 1)), 1)
+    return {
+        **_base_row(frame), "signal": "阳包阴反包启动", "score": score,
+        "pullback_ratio": round(pullback, 2), "prior2_gain_pct": round(prior_gain * 100, 2),
+        "engulf_vol_ratio": round(engulf_vol_ratio, 2), "volume_ratio": round(volume_valid(float(today.volume), frame, risk) * 1, 2),
+        "note": "上升初期缩量洗盘后放量反包并突破阴线高点；需维持放量确认",
+    }
+
+
+def limitup_gap(frame: pd.DataFrame, cfg: LimitUpGapConfig, risk: RiskConfig, limit_pct: float = 0.10) -> dict | None:
+    """涨停 + 跳空缺口共振：20日内涨停且伴随向上实体缺口，3日未回补。
+
+    涨停需为首次突破关键压力位（非跟风），封单金额免费行情源无法核验，
+    以「封板收盘 + 突破前60日高点」近似。
+    """
+    need = cfg.pressure_lookback_days + cfg.lookback_days + 5
+    if len(frame) < need:
+        return None
+    closes = frame.close.astype(float)
+    opens = frame.open.astype(float)
+    highs = frame.high.astype(float)
+    lows = frame.low.astype(float)
+    vols = frame.volume.astype(float)
+    limit_price = lambda prev_close: round(prev_close * (1 + limit_pct), 2)
+    found = None
+    for i in range(len(frame) - cfg.gap_hold_days - 1, max(len(frame) - cfg.lookback_days - 1, 1), -1):
+        prev_close = float(closes.iloc[i - 1])
+        is_limit = float(closes.iloc[i]) >= limit_price(prev_close) - cfg.limit_tolerance_pct and float(closes.iloc[i]) == float(highs.iloc[i])
+        gap = float(opens.iloc[i]) > float(highs.iloc[i - 1])
+        if not (is_limit and gap):
+            continue
+        # 首次突破关键压力位：涨停日收盘高于此前60日最高收盘（不含当日）
+        pressure = float(closes.iloc[max(0, i - cfg.pressure_lookback_days):i].max())
+        if float(closes.iloc[i]) <= pressure:
+            continue
+        # 缺口3日内未回补
+        gap_bottom = float(highs.iloc[i - 1])
+        hold = i + cfg.gap_hold_days < len(frame) and float(lows.iloc[i + 1:i + 1 + cfg.gap_hold_days].min()) > gap_bottom
+        if not hold:
+            continue
+        found = (i, gap_bottom, float(closes.iloc[i]), float(vols.iloc[i]))
+        break
+    if found is None:
+        return None
+    i, gap_bottom, limit_close, limit_vol = found
+    # 回调缩量至涨停日50%以下（涨停后至当前的最小量）
+    after_vol = float(vols.iloc[i + 1:].min())
+    pullback_vol_ratio = after_vol / limit_vol if limit_vol > 0 else 1e9
+    if pullback_vol_ratio > cfg.pullback_vol_ratio:
+        return None
+    if not position_ok(frame, risk):
+        return None
+    gap_pct = (float(opens.iloc[i]) / float(highs.iloc[i - 1]) - 1) * 100
+    days_since = len(frame) - 1 - i
+    score = round(100 * min(1, 0.45 * (1 - pullback_vol_ratio / cfg.pullback_vol_ratio) +
+                            0.30 * min(gap_pct / 3.0, 1) + 0.25 * min(10 / max(days_since, 1), 1)), 1)
+    return {
+        **_base_row(frame), "signal": "涨停跳空缺口共振", "score": score,
+        "limit_date": str(frame.index[i].date()), "gap_size_pct": round(gap_pct, 2),
+        "days_since_limit": int(days_since), "pullback_vol_ratio": round(pullback_vol_ratio, 2),
+        "note": "涨停突破压力位+实体缺口3日未回补，回调缩量；封单金额与主力性质需另行核验",
+    }
+
+
+# ---------------------------------------------------------------------------
+# 二、趋势延续类
+# ---------------------------------------------------------------------------
+
+def dragon_pullback(frame: pd.DataFrame, cfg: DragonConfig, risk: RiskConfig) -> dict | None:
+    """龙回头二次启动：强势首波后缩量回调至20/30日线附近，二次放量突破前高。"""
+    need = cfg.wave_lookback_days + 30
+    if len(frame) < need:
+        return None
+    window = frame.iloc[-(cfg.wave_lookback_days + 1):-1]  # 首波与回调区间（不含今日）
+    highs = window.high.astype(float)
+    peak_pos = int(np.argmax(highs.values))  # positional index into window
+    peak = float(highs.iloc[peak_pos])
+    pre_peak = window.iloc[: peak_pos + 1]
+    if len(pre_peak) < 5:
+        return None
+    start_pos = int(np.argmin(pre_peak.low.astype(float).values))
+    start_low = float(pre_peak.low.iloc[start_pos])
+    wave_gain = peak / start_low - 1 if start_low > 0 else 0.0
+    if wave_gain < cfg.min_first_wave_pct:
+        return None
+    post_peak = window.iloc[peak_pos + 1:]
+    if len(post_peak) < 3:
+        return None
+    pullback_low = float(post_peak.low.min())
+    pullback_pct = (peak - pullback_low) / peak if peak > 0 else 1e9
+    if pullback_pct > cfg.max_pullback_pct:
+        return None
+    # 回调缩量至首波均量30%以下
+    wave_vol = float(window.iloc[start_pos : peak_pos + 1].volume.mean())
+    pullback_vol = float(post_peak.volume.mean())
+    if wave_vol <= 0 or pullback_vol / wave_vol > cfg.pullback_vol_ratio:
+        return None
+    # 回调至20/30日线附近
+    close = frame.close.astype(float)
+    ma20 = float(close.rolling(20).mean().iloc[-1])
+    ma30 = float(close.rolling(30).mean().iloc[-1])
+    near_ma = abs(pullback_low - ma20) / ma20 <= cfg.pullback_ma_tolerance or abs(pullback_low - ma30) / ma30 <= cfg.pullback_ma_tolerance
+    if not near_ma:
+        return None
+    # 今日二次启动：放量（量比>=2.3）并站稳前高
+    today = frame.iloc[-1]
+    vol_base = float(frame.volume.astype(float).rolling(cfg.vol_ma_days).mean().iloc[-2]) if len(frame) > cfg.vol_ma_days else 0.0
+    vol_ratio = float(today.volume) / vol_base if vol_base > 0 else 0.0
+    if vol_ratio < cfg.min_second_vol_ratio:
+        return None
+    if float(today.close) < peak * cfg.prior_high_tolerance:
+        return None
+    if not position_ok(frame, risk):
+        return None
+    score = round(100 * min(1, 0.40 * min(vol_ratio / 3.0, 1) + 0.25 * min(wave_gain / 0.5, 1) +
+                            0.20 * (1 - pullback_pct / cfg.max_pullback_pct) + 0.15 * (1 - pullback_vol / wave_vol)), 1)
+    return {
+        **_base_row(frame), "signal": "龙回头二次启动", "score": score,
+        "wave_gain_pct": round(wave_gain * 100, 2), "pullback_pct": round(pullback_pct * 100, 2),
+        "pullback_vol_ratio": round(pullback_vol / wave_vol, 2), "second_vol_ratio": round(vol_ratio, 2),
+        "prior_high": round(peak, 3),
+        "note": "首波后缩量回调至关键均线，二次放量站稳前高；龙头股续强概率较高",
+    }
+
+
+def ma_divergence_breakout(frame: pd.DataFrame, cfg: MaDivergenceConfig, risk: RiskConfig) -> dict | None:
+    """均线多头发散 + 量能突破：20日线金叉60日线后多头排列，量能站上50日均量线。"""
+    need = cfg.ma_slow + cfg.cross_lookback_days + 15
+    if len(frame) < need:
+        return None
+    close = frame.close.astype(float)
+    ma_fast = close.rolling(cfg.ma_fast).mean()
+    ma_slow = close.rolling(cfg.ma_slow).mean()
+    if not (ma_fast.iloc[-1] > ma_slow.iloc[-1]):
+        return None
+    # 金叉发生在最近 cross_lookback_days 内
+    recent = ma_fast.iloc[-(cfg.cross_lookback_days + 1):]
+    crossed = bool(((recent.iloc[:-1] <= ma_slow.iloc[-(cfg.cross_lookback_days + 1):-1]) &
+                    (recent.iloc[1:].values > ma_slow.iloc[-cfg.cross_lookback_days:].values)).any())
+    if not crossed:
+        return None
+    # 至少7日维持多头发散
+    gap = (ma_fast - ma_slow).iloc[-cfg.divergence_hold_days:]
+    if (gap <= 0).any() or gap.iloc[-1] <= gap.iloc[0]:
+        return None
+    # 回调不破20日线
+    recent_lows = frame.low.astype(float).iloc[-cfg.divergence_hold_days:]
+    if float(recent_lows.min()) < float(ma_fast.iloc[-1]) * (1 - cfg.pullback_ma_tolerance):
+        return None
+    # 量能站上50日均量线 + 突破关键压力位（前20日高点）时量比>=2
+    today = frame.iloc[-1]
+    vol_ma50 = float(frame.volume.rolling(cfg.vol_ma_days).mean().iloc[-1])
+    if float(today.volume) < vol_ma50:
+        return None
+    pressure = float(frame.high.astype(float).iloc[-(cfg.breakout_lookback_days + 1):-1].max())
+    if float(today.close) < pressure:
+        return None
+    vol_ratio = float(today.volume) / float(frame.volume.iloc[-(cfg.breakout_lookback_days + 1):-1].mean())
+    if vol_ratio < cfg.min_breakout_vol_ratio:
+        return None
+    if not position_ok(frame, risk):
+        return None
+    ma_gap_pct = float((ma_fast.iloc[-1] / ma_slow.iloc[-1] - 1) * 100)
+    score = round(100 * min(1, 0.40 * min(vol_ratio / 3.0, 1) + 0.30 * min(ma_gap_pct / 5.0, 1) +
+                            0.30 * min(len(gap[gap > 0]) / cfg.divergence_hold_days, 1)), 1)
+    return {
+        **_base_row(frame), "signal": "均线多头发散", "score": score,
+        "ma20": round(float(ma_fast.iloc[-1]), 3), "ma60": round(float(ma_slow.iloc[-1]), 3),
+        "ma_gap_pct": round(ma_gap_pct, 2), "volume_ratio": round(vol_ratio, 2),
+        "breakout_high": round(pressure, 3),
+        "note": "均线多头排列且量能突破压力位；需防无量假突破，大盘弱势时谨慎",
+    }
+
+
+def low_shadow_test(frame: pd.DataFrame, cfg: ShadowTestConfig, risk: RiskConfig) -> dict | None:
+    """低位仙人指路：低位长上影试盘后，次日阳线覆盖上影线高点。
+
+    必须出现在前期涨幅<=30%的低位区域；高位形态多为出货信号。上影低点
+    是否在后续3日守住属于未来数据，由之后的扫描日复核。
+    """
+    if len(frame) < 40:
+        return None
+    prev = frame.iloc[-2]
+    today = frame.iloc[-1]
+    body = abs(float(prev.close - prev.open))
+    upper_shadow = float(prev.high) - max(float(prev.open), float(prev.close))
+    if body <= 0 or upper_shadow / body < cfg.min_shadow_ratio:
+        return None
+    # 位置：前期（60日）涨幅<=30%且处于相对低位
+    if _gain_over(frame, 60) > cfg.max_prior_gain_pct or not low_zone_ok(frame, risk):
+        return None
+    # 上影日放量但未破位（低点守住近5日支撑）
+    shadow_vol_ratio = float(prev.volume) / _vol_ma(frame.iloc[:-1], cfg.vol_ma_days)
+    if shadow_vol_ratio < cfg.shadow_vol_ratio:
+        return None
+    support = float(frame.low.astype(float).iloc[-(cfg.support_days + 1):-1].min())
+    if float(prev.low) < support:
+        return None
+    # 次日阳线覆盖上影线最高点，且放量
+    if not (float(today.close) > float(today.open) and float(today.close) >= float(prev.high)):
+        return None
+    cover_vol_ratio = float(today.volume / prev.volume) if prev.volume > 0 else 0.0
+    if cover_vol_ratio < 1.0 or not volume_valid(float(today.volume), frame, risk):
+        return None
+    if not position_ok(frame, risk):
+        return None
+    score = round(100 * min(1, 0.40 * min(upper_shadow / body / 4.0, 1) + 0.30 * min(cover_vol_ratio / 2.0, 1) +
+                            0.30 * (1 - max(_gain_over(frame, 60), 0) / cfg.max_prior_gain_pct)), 1)
+    return {
+        **_base_row(frame), "signal": "低位仙人指路", "score": score,
+        "shadow_ratio": round(upper_shadow / body, 2), "shadow_vol_ratio": round(shadow_vol_ratio, 2),
+        "cover_vol_ratio": round(cover_vol_ratio, 2), "prior_gain_60d_pct": round(_gain_over(frame, 60) * 100, 2),
+        "note": "低位放量长上影试盘后阳线覆盖上影高点；需后续3日不破上影低点确认",
+    }
+
+
+# ---------------------------------------------------------------------------
+# 原有两类信号（保持不变）
+# ---------------------------------------------------------------------------
 
 def support_retest(frame: pd.DataFrame, cfg: SupportConfig) -> dict | None:
     """Find a completed prior rally whose low is being retested in a downtrend.
@@ -94,7 +462,19 @@ def sideways_breakout(frame: pd.DataFrame, cfg: BreakoutConfig) -> dict | None:
     }
 
 
-def scan_frame(frame: pd.DataFrame, support_cfg: SupportConfig, breakout_cfg: BreakoutConfig) -> list[dict]:
+def scan_frame(
+    frame: pd.DataFrame,
+    support_cfg: SupportConfig,
+    breakout_cfg: BreakoutConfig,
+    risk: RiskConfig,
+    box_cfg: BoxBreakoutConfig,
+    engulf_cfg: EngulfingConfig,
+    limitup_cfg: LimitUpGapConfig,
+    dragon_cfg: DragonConfig,
+    ma_cfg: MaDivergenceConfig,
+    shadow_cfg: ShadowTestConfig,
+    limit_pct: float = 0.10,
+) -> list[dict]:
     clean = frame.copy().sort_index()
     clean = clean[~clean.index.duplicated(keep="last")]
     clean = clean.dropna(subset=["open", "high", "low", "close", "volume"])
@@ -105,6 +485,30 @@ def scan_frame(frame: pd.DataFrame, support_cfg: SupportConfig, breakout_cfg: Br
             out.append(row)
     if breakout_cfg.enabled:
         row = sideways_breakout(clean, breakout_cfg)
+        if row:
+            out.append(row)
+    if box_cfg.enabled:
+        row = box_breakout_bullish(clean, box_cfg, risk)
+        if row:
+            out.append(row)
+    if engulf_cfg.enabled:
+        row = bullish_engulfing(clean, engulf_cfg, risk)
+        if row:
+            out.append(row)
+    if limitup_cfg.enabled:
+        row = limitup_gap(clean, limitup_cfg, risk, limit_pct)
+        if row:
+            out.append(row)
+    if dragon_cfg.enabled:
+        row = dragon_pullback(clean, dragon_cfg, risk)
+        if row:
+            out.append(row)
+    if ma_cfg.enabled:
+        row = ma_divergence_breakout(clean, ma_cfg, risk)
+        if row:
+            out.append(row)
+    if shadow_cfg.enabled:
+        row = low_shadow_test(clean, shadow_cfg, risk)
         if row:
             out.append(row)
     return out
