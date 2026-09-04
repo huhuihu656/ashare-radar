@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.progress import track
 
 from .config import Config, load
-from .data import (append_live_bar, filter_universe, get_universe, history_for,
+from .data import (filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .data import refresh_history_cache_bulk
 from .signals import entry_exit_plan, position_strategy, scan_frame
@@ -29,7 +29,9 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
     history = history_for(symbol, cache_dir, cfg.scan.lookback_days)
     if len(history) < cfg.scan.min_history_days:
         return []
-    frame = append_live_bar(history, quote)
+    # 收盘后扫描：缓存已含今日真实收盘 bar（refresh_history_cache_bulk 拉当日），
+    # 直接用最后一行即可，不再构造盘中模拟 bar。
+    frame = history
     limit_pct = LIMIT_PCT_BY_BOARD.get(str(quote["board"]), 0.10)
     rows = scan_frame(frame, cfg.support_retest, cfg.breakout, cfg.risk,
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
@@ -64,10 +66,11 @@ def scan(config_path: str) -> int:
     except Exception as error:
         console.print(f"[red]无法核验 A 股交易日历，为避免使用过期行情已停止：{error}[/red]")
         return 2
+    today_str = datetime.now().strftime("%Y%m%d")
     try:
-        universe = filter_universe(get_universe(), cfg.scan.exclude_st, cfg.scan.include_boards)
+        universe = filter_universe(get_universe(today_str), cfg.scan.exclude_st, cfg.scan.include_boards)
     except Exception as error:
-        console.print(f"[red]无法获取实时股票池：{error}[/red]")
+        console.print(f"[red]无法获取当日收盘股票池（需 15:10 后运行）：{error}[/red]")
         return 2
     # 大盘环境：一次请求，写入审计并可选过滤信号。
     regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
@@ -137,8 +140,13 @@ def main() -> None:
     commands.add_parser("universe")
     args = parser.parse_args()
     if args.command == "universe":
-        universe = get_universe()
-        console.print(f"实时股票池：{len(universe)} 只；字段：{', '.join(universe.columns[:10])}")
+        # 收盘后模式：打印最近一个已收盘交易日的股票池概况。
+        try:
+            universe = get_universe(datetime.now().strftime("%Y%m%d"))
+        except Exception as error:
+            console.print(f"[red]{error}[/red]")
+            raise SystemExit(2)
+        console.print(f"收盘股票池：{len(universe)} 只")
         raise SystemExit(0)
     raise SystemExit(scan(args.config))
 

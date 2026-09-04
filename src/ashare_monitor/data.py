@@ -11,64 +11,52 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 HISTORY_COLUMNS = {"日期": "date", "开盘": "open", "最高": "high", "最低": "low", "收盘": "close", "成交量": "volume"}
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10), reraise=True)
-def get_universe() -> pd.DataFrame:
-    """Live A-share universe via AkShare.
+def get_universe(trade_date: str) -> pd.DataFrame:
+    """Closed-session universe: Tushare stock list + the day's real OHLCV.
 
-    Eastmoney spot covers main board, ChiNext, STAR and Beijing stocks, but its
-    clist endpoint can throttle/drop direct connections; fall back to the Sina
-    spot feed, which covers the same boards.  The caller records the exact
-    successful coverage in run.json.
+    Post-close official scan: no free realtime feed is involved.  `trade_date`
+    must be a closed session (15:10 run); the caller passes today's date.
+    Returns rows with symbol/name/board/last_price/open/high/low/volume where
+    volume is in lots (Tushare native) -- consistent with the price cache.
     """
-    import akshare as ak
-    try:
-        raw = ak.stock_zh_a_spot_em()
-        source = "eastmoney"
-    except Exception:
-        raw = ak.stock_zh_a_spot()
-        source = "sina"
-    required = {"代码", "名称", "最新价"}
-    missing = required - set(raw.columns)
-    if missing:
-        raise RuntimeError(f"行情字段变化，缺少: {missing}")
-    raw = raw.rename(columns={"代码": "symbol", "名称": "name", "最新价": "last_price"})
-    if source == "sina":
-        # Sina codes carry an exchange prefix (sh600000 / bj920000); keep the
-        # bare 6-digit symbol so history download and board inference agree.
-        raw["symbol"] = raw["symbol"].astype(str).str[-6:]
-        # Sina spot volume is in shares; the history cache (Tushare/Tencent)
-        # stores lots (100 shares).  Convert so the live bar is comparable --
-        # a 100x unit mismatch silently inflates every volume-ratio signal.
-        raw["成交量"] = pd.to_numeric(raw["成交量"], errors="coerce") / 100
-    return raw
+    pro = _ts_pro()
+    if pro is None:
+        raise RuntimeError("Tushare 不可用，无法获取股票池")
+    basic = pro.stock_basic(exchange="", list_status="L", fields="ts_code,name")
+    if basic is None or basic.empty:
+        raise RuntimeError("Tushare 股票列表为空")
+    daily = pro.daily(trade_date=trade_date)
+    if daily is None or daily.empty:
+        raise RuntimeError(f"Tushare {trade_date} 行情尚未发布（需收盘后运行）")
+    merged = basic.merge(daily[["ts_code", "open", "high", "low", "close", "vol"]],
+                         on="ts_code", how="inner")
+    if merged.empty:
+        raise RuntimeError("股票池与当日行情合并为空")
+    merged["symbol"] = merged["ts_code"].astype(str).str[:6]
+    merged = merged.rename(columns={
+        "name": "name", "close": "last_price", "vol": "volume"})
+    return merged[["symbol", "name", "open", "high", "low", "last_price", "volume"]]
 
 
 @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5), reraise=True)
 def is_ashare_trading_day(day: date | None = None) -> bool:
-    """Official exchange calendar via Tushare (paid), Sina as fallback.
+    """Official exchange calendar via Tushare (paid).  Fail-closed on error.
 
     A weekday is not necessarily a trading day.  The caller must skip rather
-    than reuse a stale quote if this check cannot be completed.
+    than reuse a stale quote if this check cannot be completed; free-source
+    fallbacks were removed per the paid-data policy.
     """
     target = pd.Timestamp(day or date.today()).normalize()
     pro = _ts_pro()
-    if pro is not None:
-        try:
-            cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
-                                end_date=target.strftime("%Y%m%d"), is_open="1")
-            if cal is not None and not cal.empty:
-                return True
-            cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
-                                end_date=target.strftime("%Y%m%d"), is_open="0")
-            return cal is not None and cal.empty
-        except Exception:
-            pass
-    import akshare as ak
-    calendar = ak.tool_trade_date_hist_sina()
-    if "trade_date" not in calendar.columns:
-        raise RuntimeError("交易日历字段变化：缺少 trade_date")
-    sessions = pd.to_datetime(calendar["trade_date"], errors="coerce").dt.normalize()
-    return bool(sessions.eq(target).any())
+    if pro is None:
+        raise RuntimeError("Tushare 不可用，无法核验交易日历")
+    cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
+                        end_date=target.strftime("%Y%m%d"), is_open="1")
+    if cal is None or cal.empty:
+        cal = pro.trade_cal(exchange="SSE", start_date=target.strftime("%Y%m%d"),
+                            end_date=target.strftime("%Y%m%d"), is_open="0")
+        return cal is not None and cal.empty
+    return True
 
 
 def infer_board(symbol: str) -> str:
@@ -131,51 +119,19 @@ def _standardize(frame: pd.DataFrame) -> pd.DataFrame:
     return frame.dropna()
 
 
-@retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5), reraise=True)
 def _download_history(symbol: str, start: date) -> pd.DataFrame:
-    """Daily forward-adjusted bars, Tencent first, Sina daily as fallback.
+    """Per-symbol forward-adjusted bars from Tushare (paid, qfq via factor math).
 
-    Free quote servers (Eastmoney, Tencent) throttle or blacklist an IP under
-    full-market load; Sina is a different host family and returns the full
-    history in one request.  All payloads are public market data.
+    Free quote servers were removed from the data chain per the paid-data
+    policy; a symbol the bulk refresh missed raises instead of silently
+    switching sources.
     """
-    import requests
+    from .tushare_src import qfq_daily
 
-    _throttle_download()
-    prefixed = _tencent_symbol(symbol)
-    params = {
-        "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
-    }
-    tencent_error = None
-    # HTTPS only: plaintext quote transport is removed per security review --
-    # corrupted quotes would silently poison signals.  When the HTTPS host is
-    # rate-limited, the HTTPS Sina daily fallback below takes over.
-    for host in ("https://ifzq.gtimg.cn",):
-        try:
-            response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
-            response.raise_for_status()
-            payload = response.json().get("data", {}).get(prefixed, {})
-            bars = payload.get("qfqday") or payload.get("day") or []
-            if not bars:
-                return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
-            # Tencent bar order: date, open, close, high, low, volume.  Some
-            # symbols carry a 7th amount field; keep the six standard columns.
-            frame = pd.DataFrame([bar[:6] for bar in bars],
-                                 columns=["date", "open", "close", "high", "low", "volume"])
-            return _standardize(frame)
-        except Exception as error:
-            tencent_error = error
-    # Tencent hosts unavailable -> Sina daily (full history, forward-adjusted).
-    import akshare as ak
-
-    try:
-        raw = ak.stock_zh_a_daily(symbol=prefixed, adjust="qfq")
-        frame = _standardize(raw)
-        # Sina daily volume is in shares; normalize to lots like Tushare/Tencent.
-        frame["volume"] = frame["volume"] / 100
-        return frame
-    except Exception as error:
-        raise RuntimeError(f"{symbol} 行情源全部失败（腾讯: {tencent_error}；新浪: {error}）")
+    frame = qfq_daily(symbol, start)
+    if frame is None or frame.empty:
+        raise RuntimeError(f"{symbol} Tushare 行情不可用")
+    return frame
 
 
 def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force: bool = False) -> tuple[int, int]:
@@ -339,62 +295,25 @@ def append_live_bar(history: pd.DataFrame, quote: pd.Series) -> pd.DataFrame:
 def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
     """Shanghai Composite daily bars for the market-regime check.
 
-    Paid source first (Tushare index_daily); free feeds (Tencent/Sina) remain
-    as fallbacks.  One request per scan; failures return an empty frame so the
-    scan continues without a market tag instead of aborting.
+    Paid source only (Tushare index_daily).  During intraday scans today's bar
+    is not published yet; the frame simply ends at the previous close, which is
+    what the regime classifier needs.  Raises when Tushare is unavailable.
     """
     pro = _ts_pro()
-    if pro is not None:
-        try:
-            ts_code = {"sh000001": "000001.SH", "sz399001": "399001.SZ",
-                       "sz399006": "399006.SZ"}.get(symbol, "000001.SH")
-            raw = pro.index_daily(ts_code=ts_code,
-                                  start_date=(date.today() - timedelta(days=200)).strftime("%Y%m%d"))
-            if raw is not None and not raw.empty:
-                frame = raw.rename(columns={"trade_date": "date", "vol": "volume"})
-                frame.date = pd.to_datetime(frame.date)
-                frame = frame.set_index("date").sort_index()
-                for column in ["open", "high", "low", "close", "volume"]:
-                    frame[column] = pd.to_numeric(frame[column], errors="coerce")
-                return frame.dropna().tail(200)
-        except Exception:
-            pass
-    import requests
-
-    try:
-        params = {"param": f"{symbol},day,{date.today() - timedelta(days=180):%Y-%m-%d},{date.today():%Y-%m-%d},150,qfq"}
-        for host in ("https://ifzq.gtimg.cn",):
-            try:
-                response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
-                response.raise_for_status()
-                payload = response.json().get("data", {}).get(symbol, {})
-                bars = payload.get("qfqday") or payload.get("day") or []
-                if bars:
-                    frame = pd.DataFrame([bar[:6] for bar in bars],
-                                         columns=["date", "open", "close", "high", "low", "volume"])
-                    frame.date = pd.to_datetime(frame.date)
-                    frame = frame.set_index("date").sort_index()
-                    for column in ["open", "high", "low", "close", "volume"]:
-                        frame[column] = pd.to_numeric(frame[column], errors="coerce")
-                    return frame.dropna()
-            except Exception:
-                continue
-    except Exception:
-        pass
-    try:
-        import akshare as ak
-
-        raw = ak.stock_zh_index_daily(symbol=symbol)
-        frame = raw.rename(columns={
-            "date": "date", "open": "open", "high": "high",
-            "low": "low", "close": "close", "volume": "volume"})
-        frame.date = pd.to_datetime(frame.date)
-        frame = frame.set_index("date").sort_index()
-        for column in ["open", "high", "low", "close", "volume"]:
-            frame[column] = pd.to_numeric(frame[column], errors="coerce")
-        return frame.dropna().tail(200)
-    except Exception:
-        return pd.DataFrame()
+    if pro is None:
+        raise RuntimeError("Tushare 不可用，无法获取大盘指数")
+    ts_code = {"sh000001": "000001.SH", "sz399001": "399001.SZ",
+               "sz399006": "399006.SZ"}.get(symbol, "000001.SH")
+    raw = pro.index_daily(ts_code=ts_code,
+                          start_date=(date.today() - timedelta(days=200)).strftime("%Y%m%d"))
+    if raw is None or raw.empty:
+        raise RuntimeError("Tushare 指数数据为空")
+    frame = raw.rename(columns={"trade_date": "date", "vol": "volume"})
+    frame.date = pd.to_datetime(frame.date)
+    frame = frame.set_index("date").sort_index()
+    for column in ["open", "high", "low", "close", "volume"]:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    return frame.dropna().tail(200)
 
 
 def market_regime(frame: pd.DataFrame, ma_days: int = 60) -> dict:
