@@ -1778,3 +1778,6 @@ td:first-child {
 .mainline-etf { font-size: 11px; color: var(--breakout-bright); background: var(--breakout-soft); padding: 3px 8px; border-radius: 6px; }
 .mainline-noetf { font-size: 11px; color: var(--quiet); }
 .ms-flow { font-variant-numeric: tabular-nums; }
+
+.mainline-badge { display: block; font-size: 15px; font-weight: 700; color: var(--score); font-variant-numeric: tabular-nums; }
+.mainline-rank-caption { display: block; font-size: 10px; color: var(--quiet); margin-top: 2px; }

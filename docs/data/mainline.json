@@ -7,7 +7,7 @@
       "breadth": 0.45,
       "signal": 0.0
     },
-    "rationale": "蓄势轮动口径（经两年回测验证）：主线预判不追高动量，优选横盘蓄势充分（高宽度）且尚未大涨（低动量）的板块，资金流入为佐证。",
+    "rationale": "蓄势轮动口径（经两年回测验证）：主线预判不追高动量，优选横盘蓄势充分（高宽度）且尚未大涨（低动量）的板块，资金流入为佐证。排名为相对优先级，不代表板块当前涨幅或未来涨幅。",
     "window": {
       "momentum": "20 个交易日",
       "flow": "近 5 个交易日主力净流入均值（万元）",
@@ -18,7 +18,9 @@
   "top_sectors": [
     {
       "industry": "港口",
-      "score": 33.7,
+      "rank": 1,
+      "rank_total": 88,
+      "rank_pctile": 100.0,
       "momentum_20d_pct": 3.98,
       "flow_5d_avg_10k": 2763.8,
       "breadth_pct": 100.0,
@@ -52,7 +54,9 @@
     },
     {
       "industry": "证券",
-      "score": 33.4,
+      "rank": 2,
+      "rank_total": 88,
+      "rank_pctile": 98.9,
       "momentum_20d_pct": 1.75,
       "flow_5d_avg_10k": -1275.4,
       "breadth_pct": 94.0,
@@ -86,7 +90,9 @@
     },
     {
       "industry": "其他商业",
-      "score": 32.3,
+      "rank": 3,
+      "rank_total": 88,
+      "rank_pctile": 97.7,
       "momentum_20d_pct": 4.7,
       "flow_5d_avg_10k": 993.3,
       "breadth_pct": 100.0,
@@ -116,7 +122,9 @@
     },
     {
       "industry": "银行",
-      "score": 32.3,
+      "rank": 4,
+      "rank_total": 88,
+      "rank_pctile": 96.6,
       "momentum_20d_pct": 6.56,
       "flow_5d_avg_10k": 33791.4,
       "breadth_pct": 95.2,
@@ -150,7 +158,9 @@
     },
     {
       "industry": "船舶",
-      "score": 30.8,
+      "rank": 5,
+      "rank_total": 88,
+      "rank_pctile": 95.4,
       "momentum_20d_pct": 5.18,
       "flow_5d_avg_10k": 24920.6,
       "breadth_pct": 90.9,

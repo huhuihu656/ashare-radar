@@ -256,7 +256,8 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
 
     top = []
     names = dict(zip(members.symbol, members.name))
-    for industry in table.head(TOP_N).index:
+    total_sectors = int(table.shape[0])
+    for rank_pos, industry in enumerate(table.head(TOP_N).index, start=1):
         ind_members = members[members.industry == industry].symbol
         # 推荐个股：板块内近 5 日主力净流入最高 3 只（回测验证 v1 口径）；剔除 ST
         ind_members = ind_members[
@@ -280,9 +281,12 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
                 "ret_20d_pct": round(ret, 2) if ret is not None else None,
             })
         etf = sector_etf(industry)
+        rank_pctile = round((1 - (rank_pos - 1) / max(total_sectors - 1, 1)) * 100, 1)
         top.append({
             "industry": industry,
-            "score": float(table.loc[industry, "score"]),
+            "rank": rank_pos,
+            "rank_total": total_sectors,
+            "rank_pctile": rank_pctile,
             "momentum_20d_pct": round(float(table.loc[industry, "momentum"]) * 100, 2),
             "flow_5d_avg_10k": round(float(table.loc[industry, "flow"]), 1),
             "breadth_pct": round(float(table.loc[industry, "breadth"]) * 100, 1),
@@ -295,7 +299,7 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
         "as_of": date.today().strftime("%Y%m%d"),
         "method": {
             "weights": WEIGHTS,
-            "rationale": "蓄势轮动口径（经两年回测验证）：主线预判不追高动量，优选横盘蓄势充分（高宽度）且尚未大涨（低动量）的板块，资金流入为佐证。",
+            "rationale": "蓄势轮动口径（经两年回测验证）：主线预判不追高动量，优选横盘蓄势充分（高宽度）且尚未大涨（低动量）的板块，资金流入为佐证。排名为相对优先级，不代表板块当前涨幅或未来涨幅。",
             "window": {"momentum": "20 个交易日", "flow": "近 5 个交易日主力净流入均值（万元）",
                         "breadth": "站上 MA20 成员占比", "signal": "每 100 只成员信号数"},
         },
@@ -331,7 +335,7 @@ def main() -> None:
     site_out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"主线判定完成（{result['as_of']}）→ {site_out}")
     for s in result["top_sectors"]:
-        print(f"  {s['score']:5.1f}  {s['industry']}  动量{s['momentum_20d_pct']:+.1f}% "
+        print(f"  #{s['rank']}/{s['rank_total']}  {s['industry']}  动量{s['momentum_20d_pct']:+.1f}% "
               f"资金{s['flow_5d_avg_10k']:+.0f}万 宽度{s['breadth_pct']:.0f}% 成员{s['members']}")
 
 

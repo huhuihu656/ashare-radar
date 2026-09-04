@@ -963,23 +963,25 @@
       card.setAttribute("role", "listitem");
 
       const top = add(card, "div", undefined, "mainline-card-top");
-      add(top, "span", `0${rank + 1}`, "mainline-rank");
+      add(top, "span", `#${cleanText(sector.rank)}`, "mainline-rank");
       const nameWrap = add(top, "div", undefined, "mainline-name-wrap");
       add(nameWrap, "h3", cleanText(sector.industry), "mainline-name");
-      const score = add(top, "div", undefined, "mainline-score");
-      add(score, "span", cleanText(sector.score), "mainline-score-num");
-      add(score, "span", "分", "mainline-score-unit");
+      const badge = add(top, "div", undefined, "mainline-score");
+      add(badge, "span", `TOP ${rank + 1}`, "mainline-badge");
+      add(badge, "span", `优先级排名 ${cleanText(sector.rank_pctile)}%`, "mainline-rank-caption");
 
       const bar = add(card, "div", undefined, "mainline-bar");
       const fill = add(bar, "i");
-      fill.style.width = `${Math.max(0, Math.min(100, Number(sector.score) || 0))}%`;
+      fill.style.width = `${Math.max(0, Math.min(100, Number(sector.rank_pctile) || 0))}%`;
 
       const metrics = add(card, "dl", undefined, "mainline-metrics");
+      const momentum = Number(sector.momentum_20d_pct) || 0;
+      const momLabel = momentum <= 0 ? "近20日涨幅（蓄势中，未大涨）" : "近20日涨幅";
       const items = [
-        ["动量20日", `${signedPct(sector.momentum_20d_pct)}`, signClass(sector.momentum_20d_pct)],
+        [momLabel, `${signedPct(momentum)}`, signClass(momentum)],
         ["主力资金5日", `${signedNum(sector.flow_5d_avg_10k)}万`, signClass(sector.flow_5d_avg_10k)],
-        ["板块宽度", `${pct(sector.breadth_pct)}`, ""],
-        ["信号密度", `${cleanText(sector.signal_density)}/百`, ""],
+        ["站上MA20占比", `${pct(sector.breadth_pct)}`, ""],
+        ["板块成员", `${cleanText(sector.members)} 只`, ""],
       ];
       items.forEach(([label, value, cls]) => {
         const wrap = add(metrics, "div", undefined, "mainline-metric");
