@@ -200,16 +200,19 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
     if force or not any(cache_dir.iterdir()):
         needed = all_sessions
     else:
+        # Cache files are sorted oldest -> newest; the freshest cached bar sits
+        # on the last row.  Fetch only sessions strictly newer than it.  A
+        # session whose write was interrupted simply stays stale and is
+        # refetched on the next run.
         newest = date(2000, 1, 1)
         try:
             sample = next(cache_dir.glob("*.csv"))
-            head = pd.read_csv(sample, parse_dates=["date"], nrows=5)
-            if not head.empty:
-                newest = max(head.date.max().date(), newest)
+            dates = pd.read_csv(sample, usecols=["date"], parse_dates=["date"])
+            if not dates.empty:
+                newest = max(dates.date.max().date(), newest)
         except Exception:
             newest = date(2000, 1, 1)
         needed = [s for s in all_sessions if s > newest.strftime("%Y%m%d")]
-        needed = sorted(set(needed + all_sessions[-3:]))
     if not needed:
         return 0, 0
 
