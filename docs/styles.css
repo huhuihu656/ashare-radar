@@ -1687,3 +1687,7 @@ td:first-child {
     border-bottom: 0;
   }
 }
+
+/* 主力资金标签（Tushare 真实资金流） */
+.metric-line.mf-in { color: var(--up, #ff5d6c); }
+.metric-line.mf-out { color: var(--down, #33c48e); }

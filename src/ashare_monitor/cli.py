@@ -15,13 +15,15 @@ from .config import Config, load
 from .data import (append_live_bar, filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .signals import scan_frame
+from .tushare_src import latest_moneyflow
 
 LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
 
 console = Console()
 
 
-def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str) -> list[dict]:
+def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
+             moneyflow: pd.DataFrame | None) -> list[dict]:
     symbol = str(quote.symbol)
     history = history_for(symbol, cache_dir, cfg.scan.lookback_days)
     if len(history) < cfg.scan.min_history_days:
@@ -32,10 +34,18 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str)
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
                       cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
                       limit_pct=limit_pct)
+    money = moneyflow.loc[symbol] if moneyflow is not None and symbol in moneyflow.index else None
     for row in rows:
         row.update({"symbol": symbol, "name": str(quote["name"]), "board": str(quote["board"]),
                     "market_env": market_state,
                     "scan_time": datetime.now().astimezone().isoformat(timespec="seconds")})
+        if money is not None:
+            net = float(money.net_mf_amount) if pd.notna(money.net_mf_amount) else None
+            row["mf_date"] = str(money.mf_date)
+            row["net_mf_amount"] = round(net, 1) if net is not None else None
+            if net is not None:
+                flow_tag = ("资金净流入" if net > 0 else "资金净流出")
+                row["note"] = f"{row['note']} | {flow_tag} {abs(net)/10000:.1f}亿（{row.get('mf_date', '')}主力口径）"
     polite_pause()
     return rows
 
@@ -57,6 +67,12 @@ def scan(config_path: str) -> int:
     # 大盘环境：一次请求，写入审计并可选过滤信号。
     regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
     console.print(f"[cyan]大盘环境：{regime['state']}（指数 {regime['close']}，MA20 {regime['ma20']}，MA60 {regime['ma60']}）[/cyan]")
+    # 付费数据源（Tushare）：真实主力资金流标注（失败软降级为无标注）。
+    moneyflow = latest_moneyflow()
+    if moneyflow is not None:
+        console.print(f"[green]Tushare 资金流：{len(moneyflow)} 只（净流入 {int((moneyflow.net_mf_amount > 0).sum())} 只）[/green]")
+    else:
+        console.print("[yellow]Tushare 资金流不可用（token/积分不足），信号仅含量价代理。[/yellow]")
     cache_dir = Path(cfg.scan.cache_dir)
     report_dir = Path(cfg.scan.output_dir) / datetime.now().strftime("%Y%m%d")
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -64,7 +80,7 @@ def scan(config_path: str) -> int:
     failures: list[dict] = []
     records = [row for _, row in universe.iterrows()]
     with ThreadPoolExecutor(max_workers=cfg.scan.workers) as pool:
-        future_map = {pool.submit(_scan_one, row, cfg, cache_dir, regime["state"]): row for row in records}
+        future_map = {pool.submit(_scan_one, row, cfg, cache_dir, regime["state"], moneyflow): row for row in records}
         for future in track(as_completed(future_map), total=len(future_map), description="扫描 A 股"):
             quote = future_map[future]
             try:
@@ -72,6 +88,7 @@ def scan(config_path: str) -> int:
             except Exception as error:
                 failures.append({"symbol": str(quote.symbol), "error": str(error)[:300]})
     columns = ["symbol", "name", "board", "signal", "score", "close", "volume", "market_env", "scan_time", "note",
+               "mf_date", "net_mf_amount",
                "start_date", "start_price", "distance_to_start_pct", "prior_rally_pct", "ma20", "ma60",
                "range_pct", "atr_pct", "volume_ratio", "breakout_high", "close_position",
                "box_high", "converge_ratio", "red_green_vol_ratio",

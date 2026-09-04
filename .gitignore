@@ -20,3 +20,6 @@ Thumbs.db
 
 # Local frontend preview fixtures
 _preview/
+
+# Local Tushare token (never committed)
+.tushare_token

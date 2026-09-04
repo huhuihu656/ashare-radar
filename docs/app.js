@@ -245,6 +245,15 @@
       .sort((a, b) => Number(b.score || 0) - Number(a.score || 0) || String(a.symbol || "").localeCompare(String(b.symbol || "")));
   }
 
+  const moneyTag = (item) => {
+    const net = num(item.net_mf_amount);
+    if (net === null) return null;
+    const yi = Math.abs(net) / 10000;          // 万元 -> 亿
+    const dir = net >= 0 ? "流入" : "流出";
+    const cls = net >= 0 ? "mf-in" : "mf-out";
+    return { text: `主力${dir} ${decimal.format(yi)}亿`, title: `最近主力资金（${cleanText(item.mf_date)}）`, cls };
+  };
+
   function metricLines(item) {
     if (signalKind(item.signal) === "support") {
       return [
@@ -287,12 +296,16 @@
       ],
     };
     const kind = signalKind(item.signal);
-    if (metricMap[kind]) return metricMap[kind];
-    return [
+    let lines;
+    if (metricMap[kind]) lines = metricMap[kind];
+    else lines = [
       { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
       { text: `区间振幅 ${pct(item.range_pct)}`, cls: "" },
       { text: `突破位 ${cleanText(item.breakout_high)}`, cls: "" },
     ];
+    const mf = moneyTag(item);
+    if (mf) lines.push(mf);
+    return lines;
   }
 
   function rowFor(item) {
@@ -419,6 +432,14 @@
       },
       { dt: "扫描时间", dd: prettyDate(item.scan_time) },
     ];
+    const net = num(item.net_mf_amount);
+    if (net !== null) {
+      rows.push({
+        dt: `主力资金——${cleanText(item.mf_date)}`,
+        dd: `${net >= 0 ? "+" : ""}${decimal.format(net / 10000)} 亿元`,
+        cls: net >= 0 ? "is-up" : "is-down",
+      });
+    }
     if (kind === "support") {
       rows.push(
         { dt: "起涨日", dd: prettyDate(item.start_date) },
