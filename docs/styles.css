@@ -1734,3 +1734,12 @@ td:first-child {
 .plan-dot.plan-fired { background: var(--up); box-shadow: 0 0 6px var(--up); }
 .plan-dot.plan-wait { background: var(--quiet); }
 .plan-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+
+/* ---------- K线粒度切换 ---------- */
+.chart-controls { display: flex; align-items: center; gap: 14px; }
+.granularity-switch { display: inline-flex; gap: 2px; background: rgba(13, 21, 38, 0.8); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.gran-btn { border: 0; background: transparent; color: var(--muted); font-size: 12px; padding: 3px 10px; border-radius: 6px; cursor: pointer; }
+.gran-btn:hover { color: var(--ink); }
+.gran-btn.is-active { background: var(--breakout-soft); color: var(--breakout-bright); font-weight: 600; }
+.gran-btn:focus-visible { outline: 2px solid var(--breakout); outline-offset: 1px; }

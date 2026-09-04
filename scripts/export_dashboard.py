@@ -83,17 +83,54 @@ def build_payload(report_dir: Path, signals: list[dict[str, Any]], run: dict[str
     }
 
 
-KLINE_BARS = 90  # 90根：MA60 有 30 个可见点
+KLINE_DAY_BARS = 90   # 日线：MA60 有 30 个可见点
+KLINE_WEEK_BARS = 64  # 周线
+KLINE_MONTH_BARS = 48 # 月线
+
+
+def _to_bars(frame: pd.DataFrame) -> list[list[Any]]:
+    """Compact [yyyymmdd, open, high, low, close, volume] arrays."""
+    bars: list[list[Any]] = []
+    for _, row in frame.iterrows():
+        bars.append([
+            int(row.date.strftime("%Y%m%d")),
+            round(float(row.open), 2),
+            round(float(row.high), 2),
+            round(float(row.low), 2),
+            round(float(row.close), 2),
+            int(row.volume),
+        ])
+    return bars
+
+
+def aggregate_week(frame: pd.DataFrame) -> pd.DataFrame:
+    """ISO-week OHLCV aggregation: first open / max high / min low / last close / volume sum."""
+    agg = (frame.assign(_week=frame.date.dt.isocalendar().week,
+                        _year=frame.date.dt.isocalendar().year)
+               .groupby(["_year", "_week"], as_index=False)
+               .agg(date=("date", "max"), open=("open", "first"),
+                    high=("high", "max"), low=("low", "min"),
+                    close=("close", "last"), volume=("volume", "sum")))
+    return agg[["date", "open", "high", "low", "close", "volume"]].sort_values("date")
+
+
+def aggregate_month(frame: pd.DataFrame) -> pd.DataFrame:
+    """Calendar-month OHLCV aggregation."""
+    agg = (frame.assign(_ym=frame.date.dt.to_period("M"))
+               .groupby(["_ym"], as_index=False)
+               .agg(date=("date", "max"), open=("open", "first"),
+                    high=("high", "max"), low=("low", "min"),
+                    close=("close", "last"), volume=("volume", "sum")))
+    return agg[["date", "open", "high", "low", "close", "volume"]].sort_values("date")
 
 
 def build_klines(signals: list[dict[str, Any]], cache_dir: Path) -> dict[str, Any]:
-    """Compact per-stock K-line history for the dashboard dialog chart.
+    """Back-end multi-granularity K-line series per signal symbol.
 
-    Reads the scanner cache (qfq daily bars, date-indexed CSV) and emits the
-    last KLINE_BARS bars per signal symbol as compact arrays
-    [yyyymmdd, open, high, low, close, volume].  Prices are rounded to 2
-    decimals, volume to integer.  A missing cache file simply omits the stock;
-    the frontend then falls back to the signal snapshot bar.
+    Aggregation happens here once per scan (week/month buckets built from the
+    daily bars); the frontend receives ready-made `day` / `week` / `month`
+    series and only renders the selected granularity -- no client-side rolling
+    of raw detail data.
     """
     stocks: dict[str, Any] = {}
     seen: set[str] = set()
@@ -106,24 +143,25 @@ def build_klines(signals: list[dict[str, Any]], cache_dir: Path) -> dict[str, An
         if not path.exists():
             continue
         try:
-            frame = pd.read_csv(path, parse_dates=["date"]).sort_values("date").tail(KLINE_BARS)
+            frame = pd.read_csv(path, parse_dates=["date"]).sort_values("date")
         except Exception:
             continue
         if frame.empty:
             continue
-        bars: list[list[Any]] = []
-        for _, row in frame.iterrows():
-            bars.append([
-                int(row.date.strftime("%Y%m%d")),
-                round(float(row.open), 2),
-                round(float(row.high), 2),
-                round(float(row.low), 2),
-                round(float(row.close), 2),
-                int(row.volume),
-            ])
-        stocks[symbol] = {"bars": bars, "as_of": int(frame.date.iloc[-1].strftime("%Y%m%d"))}
+        tail = frame.tail(KLINE_DAY_BARS)
+        week = aggregate_week(frame).tail(KLINE_WEEK_BARS)
+        month = aggregate_month(frame).tail(KLINE_MONTH_BARS)
+        stocks[symbol] = {
+            "series": {
+                "day": _to_bars(tail),
+                "week": _to_bars(week),
+                "month": _to_bars(month),
+            },
+            "as_of": int(tail.date.iloc[-1].strftime("%Y%m%d")),
+        }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
+        "granularities": ["day", "week", "month"],
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "stocks": stocks,
     }

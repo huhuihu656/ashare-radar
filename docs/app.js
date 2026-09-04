@@ -594,19 +594,50 @@
   let klinesCache = null;   // { stocks: { symbol: { bars: [[ymd,o,h,l,c,v],...], as_of } } }
   let klinesFailed = false;
 
+  let klinesLoading = null;
   async function ensureKlines() {
     if (klinesCache || klinesFailed) return klinesCache;
-    try {
-      const response = await fetch(`${KLINE_URL}?v=${Date.now()}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const payload = await response.json();
-      if (!payload || typeof payload !== "object" || !payload.stocks) throw new Error("K线数据格式不符");
-      klinesCache = payload;
-    } catch (error) {
-      klinesFailed = true;
-      klinesCache = null;
+    if (klinesLoading) return klinesLoading;
+    klinesLoading = (async () => {
+      try {
+        const response = await fetch(`${KLINE_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload || typeof payload !== "object" || !payload.stocks) throw new Error("K线数据格式不符");
+        klinesCache = payload;
+      } catch (error) {
+        klinesFailed = true;
+        klinesCache = null;
+      } finally {
+        klinesLoading = null;
+      }
+      return klinesCache;
+    })();
+    return klinesLoading;
+  }
+
+  /* 粒度选择（v2 后端已按 日/周/月 预聚合，前端只取现成系列渲染） */
+  let klineGranularity = "day";   // day | week | month
+
+  function setGranularity(kind) {
+    klineGranularity = kind;
+    const opts = document.querySelectorAll("#granularity-switch [data-gran]");
+    opts.forEach((btn) => {
+      const active = btn.dataset.gran === kind;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", String(active));
+    });
+    if ($("#signal-dialog")?.open && klineSeriesCache) {
+      renderKlineChart(klineSeriesCache);
     }
-    return klinesCache;
+  }
+
+  function bindGranularity() {
+    const container = $("#granularity-switch");
+    if (!container) return;
+    container.querySelectorAll("[data-gran]").forEach((btn) => {
+      btn.addEventListener("click", () => setGranularity(btn.dataset.gran));
+    });
   }
 
   const LEVEL_FIELDS = {
@@ -626,9 +657,23 @@
     prior_high: "\u524d\u9ad8",
   };
 
+  const numSafe = (v, fallback = 0) => {
+    const n = num(v);
+    return Number.isFinite(n) ? n : fallback;
+  };
+
+  /* 后端 v2 系列为紧凑数组 [ymd, open, high, low, close, volume]；
+     drawKline 消费对象 bar，在此一次性适配（仅遍历单股，非明细聚合）。 */
+  const klineBarFromArray = (a) => ({
+    ymd: a[0], open: numSafe(a[1]), high: numSafe(a[2]),
+    low: numSafe(a[3]), close: numSafe(a[4]),
+    volume: Math.max(0, numSafe(a[5])), live: false,
+  });
+
   function klineBarsFor(item, stock) {
     const bars = (stock && Array.isArray(stock.bars) ? stock.bars : []).map((b) => ({
-      ymd: b[0], open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5], live: false,
+      ymd: b[0], open: numSafe(b[1]), high: numSafe(b[2]), low: numSafe(b[3]),
+      close: numSafe(b[4]), volume: Math.max(0, numSafe(b[5])), live: false,
     }));
     // 盘中扫描：快照 bar 尚未写入缓存，用信号里的现价补一根“当日盘中”
     const asOf = Number(String(state.payload?.as_of || "").slice(0, 8));
@@ -659,13 +704,17 @@
 
   let klineRenderToken = 0;
 
+  let klineSeriesCache = null;   // 当前弹窗的 item（用于粒度切换重渲染）
+
   function renderKlineChart(item) {
     const myToken = ++klineRenderToken;
+    klineSeriesCache = item;
     const body = $("#chart-body");
     const svg = $("#kline-svg");
     const note = $("#chart-note");
     const title = $("#chart-title");
-    title.textContent = `${cleanText(item.name)} ${cleanText(item.symbol)} · K线（前复权，近60个交易日）`;
+    const granLabel = { day: "日", week: "周", month: "月" }[klineGranularity] || "日";
+    title.textContent = `${cleanText(item.name)} ${cleanText(item.symbol)} · K线（前复权，${granLabel}线）`;
     svg.replaceChildren();
     note.textContent = "正在加载K线数据…";
     note.className = "chart-note muted";
@@ -687,13 +736,21 @@
       }
       const symbol = String(item.symbol || "").padStart(6, "0");
       const stock = klines.stocks[symbol];
-      const bars = klineBarsFor(item, stock);
+      let bars = null;
+      if (stock?.series && stock.series[klineGranularity]) {
+        bars = stock.series[klineGranularity].map(klineBarFromArray);  // 后端成品 → 渲染对象
+      } else if (stock?.bars) {
+        bars = klineBarsFor(item, stock);                // v1 兼容
+      }
+      if (!bars) bars = [];
+
       if (!bars.length) {
         finish("该标的暂无K线数据。", "muted");
         return;
       }
       drawKline(svg, body, bars, levelValue, levelField);
-      finish(bars.some((b) => b.live) ? "最后一根为当日盘中快照（14:40 扫描口径）。" : "", "");
+      finish(klineGranularity === "day" && bars.some((b) => b.live)
+        ? "最后一根为当日盘中快照（14:40 扫描口径）。" : "", "");
     });
   }
 
@@ -931,6 +988,7 @@
   }
 
   bindControls();
+  bindGranularity();
   renderOverview();
   setFilterButtons();
   loadData();
