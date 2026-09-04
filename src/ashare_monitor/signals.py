@@ -462,6 +462,65 @@ def sideways_breakout(frame: pd.DataFrame, cfg: BreakoutConfig) -> dict | None:
     }
 
 
+def position_strategy(row: dict, market_env: str = "未知") -> dict:
+    """Research-reference position sizing for a signal row.
+
+    Transparent tiered model, never investment advice:
+
+      base = score tier          (>=80: 30%, >=60: 20%, >=40: 10%, else 5%)
+      x market environment       (偏强 1.0 / 中性 0.7 / 偏弱·未知 0.5)
+      x main-force money flow    (净流入 1.2 / 净流出 0.8 / 无数据 1.0)
+
+    Final value snaps to a 5% grid and caps at 30% (single-name risk cap).
+    Every factor that moved the number is listed in position_reason so the
+    derivation is auditable from the CSV alone.
+    """
+    score = float(row.get("score") or 0)
+    if score >= 80:
+        base = 30.0
+    elif score >= 60:
+        base = 20.0
+    elif score >= 40:
+        base = 10.0
+    else:
+        base = 5.0
+    factor = 1.0
+    reasons: list[str] = []
+    if market_env == "偏强":
+        pass
+    elif market_env == "中性":
+        factor *= 0.7
+        reasons.append("大盘中性")
+    elif market_env == "偏弱":
+        factor *= 0.5
+        reasons.append("大盘偏弱")
+    else:
+        factor *= 0.5
+        reasons.append("大盘未知")
+    net = row.get("net_mf_amount")
+    if net is not None:
+        if net > 0:
+            factor *= 1.2
+            reasons.append("主力净流入")
+        else:
+            factor *= 0.8
+            reasons.append("主力净流出")
+    pct = min(30.0, round(base * factor / 5) * 5)
+    if pct >= 25:
+        tier = "重点观察"
+    elif pct >= 15:
+        tier = "标准观察"
+    elif pct >= 10:
+        tier = "轻仓跟踪"
+    else:
+        tier = "仅跟踪"
+    return {
+        "position_pct": pct,
+        "position_tier": tier,
+        "position_reason": "、".join(reasons) or "满分结构",
+    }
+
+
 def scan_frame(
     frame: pd.DataFrame,
     support_cfg: SupportConfig,

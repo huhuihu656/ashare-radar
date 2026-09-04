@@ -15,7 +15,7 @@ from .config import Config, load
 from .data import (append_live_bar, filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .data import refresh_history_cache_bulk
-from .signals import scan_frame
+from .signals import position_strategy, scan_frame
 from .tushare_src import latest_moneyflow
 
 LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
@@ -47,6 +47,8 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
             if net is not None:
                 flow_tag = ("资金净流入" if net > 0 else "资金净流出")
                 row["note"] = f"{row['note']} | {flow_tag} {abs(net)/10000:.1f}亿（{row.get('mf_date', '')}主力口径）"
+        # 参考仓位策略（分数+大盘+资金流三重推导，研究参考，非投资建议）
+        row.update(position_strategy(row, market_state))
     polite_pause()
     return rows
 
@@ -94,6 +96,7 @@ def scan(config_path: str) -> int:
                 failures.append({"symbol": str(quote.symbol), "error": str(error)[:300]})
     columns = ["symbol", "name", "board", "signal", "score", "close", "volume", "market_env", "scan_time", "note",
                "mf_date", "net_mf_amount",
+               "position_pct", "position_tier", "position_reason",
                "start_date", "start_price", "distance_to_start_pct", "prior_rally_pct", "ma20", "ma60",
                "range_pct", "atr_pct", "volume_ratio", "breakout_high", "close_position",
                "box_high", "converge_ratio", "red_green_vol_ratio",

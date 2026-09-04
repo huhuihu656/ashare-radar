@@ -292,3 +292,29 @@ def test_low_shadow_rejects_high_position() -> None:
     vol[-1] = 200.0
     frame = ohlc(open_, high, low, close, vol)
     assert low_shadow_test(frame, ShadowTestConfig(), RISK) is None
+
+
+# ---------------------------------------------------------------------------
+# 参考仓位策略
+# ---------------------------------------------------------------------------
+
+def test_position_strategy_score_tiers_and_strong_market() -> None:
+    from ashare_monitor.signals import position_strategy
+    row = position_strategy({"score": 85}, "偏强")
+    assert row["position_pct"] == 30.0
+    assert row["position_tier"] == "重点观察"
+
+
+def test_position_strategy_weak_market_outflow_slashes() -> None:
+    from ashare_monitor.signals import position_strategy
+    row = position_strategy({"score": 55, "net_mf_amount": -100}, "偏弱")
+    assert row["position_pct"] <= 10
+    assert "大盘偏弱" in row["position_reason"]
+    assert "主力净流出" in row["position_reason"]
+
+
+def test_position_strategy_inflow_boost_capped_at_30() -> None:
+    from ashare_monitor.signals import position_strategy
+    row = position_strategy({"score": 90, "net_mf_amount": 1000}, "偏强")
+    assert row["position_pct"] == 30.0  # 单票上限 30%
+    assert "主力净流入" in row["position_reason"]

@@ -1715,3 +1715,14 @@ td:first-child {
 
 /* 命中信号的形态 chip 计数高亮 */
 .filter-button.has-hits .fb-count { color: var(--score); font-weight: 600; }
+
+
+/* ---------- 参考仓位策略 ---------- */
+.position-line { display: flex; align-items: center; gap: 6px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.position-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.position-dot.pos-heavy { background: var(--score); box-shadow: 0 0 6px var(--score); }
+.position-dot.pos-std { background: var(--breakout-bright); }
+.position-dot.pos-light { background: var(--warn); }
+.position-dot.pos-watch { background: var(--quiet); }
+.position-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dm-row .is-position { color: var(--score); font-weight: 600; }

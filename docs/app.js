@@ -245,6 +245,8 @@
       .sort((a, b) => Number(b.score || 0) - Number(a.score || 0) || String(a.symbol || "").localeCompare(String(b.symbol || "")));
   }
 
+  const positionTierClass = (pct) => (pct >= 25 ? "heavy" : pct >= 15 ? "std" : pct >= 10 ? "light" : "watch");
+
   const moneyTag = (item) => {
     const net = num(item.net_mf_amount);
     if (net === null) return null;
@@ -335,7 +337,14 @@
     const fill = add(bar, "i");
     fill.style.width = `${rawScore}%`;
 
-    add(tr, "td", cleanText(item.note), "note");
+    const noteCell = add(tr, "td", undefined, "note");
+    add(noteCell, "div", cleanText(item.note), "note-text");
+    if (num(item.position_pct) !== null) {
+      const pos = add(noteCell, "div", undefined, "position-line");
+      const dot = add(pos, "i", undefined, "position-dot");
+      dot.className = `position-dot pos-${positionTierClass(num(item.position_pct))}`;
+      add(pos, "span", `参考仓位 ${num(item.position_pct)}% · ${cleanText(item.position_tier)}`, "position-text");
+    }
 
     const actionCell = add(tr, "td");
     const detailButton = add(actionCell, "button", "详情", "detail-btn");
@@ -439,6 +448,14 @@
         dd: `${net >= 0 ? "+" : ""}${decimal.format(net / 10000)} 亿元`,
         cls: net >= 0 ? "is-up" : "is-down",
       });
+    }
+    if (num(item.position_pct) !== null) {
+      rows.push({
+        dt: "参考仓位策略",
+        dd: `${num(item.position_pct)}% · ${cleanText(item.position_tier)}`,
+        cls: "is-position",
+      });
+      rows.push({ dt: "仓位依据", dd: cleanText(item.position_reason) });
     }
     if (kind === "support") {
       rows.push(
