@@ -212,7 +212,9 @@ def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
     """Shanghai Composite daily bars for the market-regime check.
 
     One request per scan; failures return an empty frame so the scan continues
-    without a market tag instead of aborting.
+    without a market tag instead of aborting.  Tencent index quotes are not
+    rate-limited like equity bars but can still be down; Sina daily is the
+    fallback.
     """
     import requests
 
@@ -225,7 +227,7 @@ def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
                 payload = response.json().get("data", {}).get(symbol, {})
                 bars = payload.get("qfqday") or payload.get("day") or []
                 if not bars:
-                    return pd.DataFrame()
+                    break
                 frame = pd.DataFrame([bar[:6] for bar in bars],
                                      columns=["date", "open", "close", "high", "low", "volume"])
                 frame.date = pd.to_datetime(frame.date)
@@ -237,7 +239,21 @@ def index_frame(symbol: str = "sh000001") -> pd.DataFrame:
                 continue
     except Exception:
         pass
-    return pd.DataFrame()
+    # Fallback: Sina daily (full index history in one request).
+    try:
+        import akshare as ak
+
+        raw = ak.stock_zh_index_daily(symbol=symbol)
+        frame = raw.rename(columns={
+            "date": "date", "open": "open", "high": "high",
+            "low": "low", "close": "close", "volume": "volume"})
+        frame.date = pd.to_datetime(frame.date)
+        frame = frame.set_index("date").sort_index()
+        for column in ["open", "high", "low", "close", "volume"]:
+            frame[column] = pd.to_numeric(frame[column], errors="coerce")
+        return frame.dropna().tail(200)
+    except Exception:
+        return pd.DataFrame()
 
 
 def market_regime(frame: pd.DataFrame, ma_days: int = 60) -> dict:
