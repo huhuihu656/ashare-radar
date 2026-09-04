@@ -535,9 +535,9 @@ def entry_exit_plan(row: dict) -> dict:
     kind = row.get("signal")
     close = float(row.get("close") or 0)
 
-    def _r2(entry: float, stop: float) -> tuple[float, float]:
+    def _r3(entry: float, stop: float) -> tuple[float, float]:
         risk = entry - stop
-        return stop, (entry + 2 * risk) if risk > 0 else stop
+        return stop, (entry + 3 * risk) if risk > 0 else stop
 
     entry = stop = target = None
     note = ""
@@ -555,8 +555,9 @@ def entry_exit_plan(row: dict) -> dict:
         bh, bl = row.get("box_high"), row.get("box_low")
         if bh and bl:
             entry, stop = round(bh * 1.005, 2), round(bh * 0.97, 2)
-            target = round(bh + (bh - bl), 2)   # 箱体高度投影（经典量度目标）
-            note = "箱体上沿确认买入；跌回上沿下方3%止损；目标=箱体高度投影"
+            measured = round(bh + (bh - bl), 2)  # 箱体高度投影（经典量度目标）
+            target = max(measured, round(entry + 3 * (entry - stop), 2))
+            note = "箱体上沿确认买入；跌回上沿下方3%止损；目标=箱体高度投影与1:3的较远者"
     elif kind == "阳包阴反包启动":
         yh, yl = row.get("yin_high"), row.get("yin_low")
         if yh and yl:
@@ -586,7 +587,7 @@ def entry_exit_plan(row: dict) -> dict:
         return {}
     if target is None:
         risk = entry - stop
-        target = round(entry + 2 * risk, 2)     # 1:2 风险收益比
+        target = round(entry + 3 * risk, 2)     # 1:3 风险收益比
     rr = round((target - entry) / (entry - stop), 2) if entry > stop else 0
     state = "已触发" if close >= entry else "待确认"
     return {

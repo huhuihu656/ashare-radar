@@ -324,12 +324,12 @@ def test_position_strategy_inflow_boost_capped_at_30() -> None:
 # 买卖点计划
 # ---------------------------------------------------------------------------
 
-def test_plan_support_entry_stop_r2() -> None:
+def test_plan_support_entry_stop_r3() -> None:
     from ashare_monitor.signals import entry_exit_plan
     plan = entry_exit_plan({"signal": "回踩前期起涨位", "close": 15.0, "start_price": 14.55})
     assert plan["entry_price"] > plan["stop_loss"]
     assert plan["take_profit"] > plan["entry_price"]
-    assert plan["risk_reward"] == 2.0
+    assert plan["risk_reward"] == 3.0
     assert plan["entry_state"] in ("已触发", "待确认")
 
 
@@ -337,8 +337,8 @@ def test_plan_box_measured_move_target() -> None:
     from ashare_monitor.signals import entry_exit_plan
     plan = entry_exit_plan({"signal": "箱体突破红肥绿瘦", "close": 64.2,
                             "box_high": 62.5, "box_low": 58.0})
-    # 目标 = 上沿 + 箱体高度 = 62.5 + 4.5 = 67.0
-    assert plan["take_profit"] == 67.0
+    # 箱体量度目标 67.0 vs 1:3 目标 62.81 + 3*(62.81-60.62)=69.38 → 取较远者
+    assert plan["take_profit"] == 69.38
     assert plan["stop_loss"] < plan["entry_price"]
 
 
