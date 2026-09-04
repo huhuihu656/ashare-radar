@@ -81,6 +81,21 @@ def _cache_path(cache_dir: Path, symbol: str) -> Path:
     return cache_dir / f"{symbol}.csv"
 
 
+_dl_lock = __import__("threading").Lock()
+_dl_next = 0.0
+
+
+def _throttle_download() -> None:
+    """Space out quote-server requests so the shared IP is not throttled."""
+    global _dl_next
+    with _dl_lock:
+        now = time.monotonic()
+        wait = _dl_next - now
+        if wait > 0:
+            time.sleep(wait)
+        _dl_next = time.monotonic() + 0.12
+
+
 def _tencent_symbol(symbol: str) -> str:
     """Tencent kline API wants exchange-prefixed codes (sh/sz/bj)."""
     if symbol.startswith("6"):
@@ -100,13 +115,21 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
     """
     import requests
 
+    _throttle_download()
     prefixed = _tencent_symbol(symbol)
-    url = "https://ifzq.gtimg.cn/appstock/app/fqkline/get"
     params = {
         "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
     }
-    response = requests.get(url, params=params, timeout=15)
-    response.raise_for_status()
+    last_error = None
+    for host in ("http://web.ifzq.gtimg.cn", "https://ifzq.gtimg.cn"):
+        try:
+            response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
+            response.raise_for_status()
+            break
+        except Exception as error:
+            last_error = error
+    else:
+        raise RuntimeError(f"{symbol} 腾讯行情下载失败: {last_error}")
     payload = response.json().get("data", {}).get(prefixed, {})
     bars = payload.get("qfqday") or payload.get("day") or []
     if not bars:
