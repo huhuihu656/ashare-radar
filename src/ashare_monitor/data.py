@@ -81,14 +81,40 @@ def _cache_path(cache_dir: Path, symbol: str) -> Path:
     return cache_dir / f"{symbol}.csv"
 
 
+def _tencent_symbol(symbol: str) -> str:
+    """Tencent kline API wants exchange-prefixed codes (sh/sz/bj)."""
+    if symbol.startswith("6"):
+        return "sh" + symbol
+    if symbol.startswith(("0", "3")):
+        return "sz" + symbol
+    return "bj" + symbol
+
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10), reraise=True)
 def _download_history(symbol: str, start: date) -> pd.DataFrame:
-    import akshare as ak
-    raw = ak.stock_zh_a_hist(symbol=symbol, period="daily", start_date=start.strftime("%Y%m%d"), adjust="qfq")
-    frame = raw.rename(columns=HISTORY_COLUMNS)
-    if not set(HISTORY_COLUMNS.values()).issubset(frame.columns):
-        raise RuntimeError(f"{symbol} 历史字段变化")
-    frame = frame[list(HISTORY_COLUMNS.values())].copy()
+    """Daily forward-adjusted bars from Tencent (single request, qfq built in).
+
+    Eastmoney can throttle or blacklist an IP mid-run; Tencent's fqkline
+    endpoint is fast and returns the same shape (date, open, close, high, low,
+    volume -- note the bar order differs from standard OHLC).
+    """
+    import requests
+
+    prefixed = _tencent_symbol(symbol)
+    url = "https://ifzq.gtimg.cn/appstock/app/fqkline/get"
+    params = {
+        "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
+    }
+    response = requests.get(url, params=params, timeout=15)
+    response.raise_for_status()
+    payload = response.json().get("data", {}).get(prefixed, {})
+    bars = payload.get("qfqday") or payload.get("day") or []
+    if not bars:
+        return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
+    # Tencent bar order: date, open, close, high, low, volume.  Some symbols
+    # carry a 7th amount field; keep only the six standard columns.
+    frame = pd.DataFrame([bar[:6] for bar in bars],
+                         columns=["date", "open", "close", "high", "low", "volume"])
     frame.date = pd.to_datetime(frame.date)
     frame = frame.set_index("date").sort_index()
     for column in ["open", "high", "low", "close", "volume"]:
