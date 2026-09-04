@@ -313,6 +313,20 @@
         </div>
         <button class="dialog-close" id="dialog-close" type="button" aria-label="关闭详情">×</button>
       </div>
+      <section class="dialog-chart" id="dialog-chart" aria-label="个股K线图">
+        <div class="chart-head">
+          <span class="chart-title" id="chart-title">K线 · 近60个交易日（前复权）</span>
+          <div class="chart-legend">
+            <span class="legend-item"><i class="legend-swatch" style="background:#d97430" aria-hidden="true"></i>MA20</span>
+            <span class="legend-item"><i class="legend-swatch" style="background:#2fa9a6" aria-hidden="true"></i>MA60</span>
+          </div>
+        </div>
+        <div class="chart-body" id="chart-body">
+          <svg class="kline-svg" id="kline-svg" role="img" aria-label="K线图：蜡烛图与均线"></svg>
+          <div class="chart-tooltip" id="chart-tooltip" role="tooltip" hidden></div>
+        </div>
+        <p class="chart-note muted" id="chart-note" role="status"></p>
+      </section>
       <dl class="dialog-meta" id="dialog-meta"></dl>
       <p class="dialog-note" id="dialog-note"></p>
       <p class="dialog-disclaimer">研究预警 · 不构成投资建议（「资金进入」仅为量价代理表述）。</p>

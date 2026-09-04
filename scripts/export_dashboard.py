@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+
+import pandas as pd
 from pathlib import Path
 import sys
 from typing import Any
@@ -81,7 +83,54 @@ def build_payload(report_dir: Path, signals: list[dict[str, Any]], run: dict[str
     }
 
 
-def export(reports_dir: Path, output: Path, min_coverage: float = 0.0) -> dict[str, Any]:
+KLINE_BARS = 90  # 90根：MA60 有 30 个可见点
+
+
+def build_klines(signals: list[dict[str, Any]], cache_dir: Path) -> dict[str, Any]:
+    """Compact per-stock K-line history for the dashboard dialog chart.
+
+    Reads the scanner cache (qfq daily bars, date-indexed CSV) and emits the
+    last KLINE_BARS bars per signal symbol as compact arrays
+    [yyyymmdd, open, high, low, close, volume].  Prices are rounded to 2
+    decimals, volume to integer.  A missing cache file simply omits the stock;
+    the frontend then falls back to the signal snapshot bar.
+    """
+    stocks: dict[str, Any] = {}
+    seen: set[str] = set()
+    for item in signals:
+        symbol = str(item.get("symbol") or "").zfill(6)
+        if not symbol or symbol in seen:
+            continue
+        seen.add(symbol)
+        path = cache_dir / f"{symbol}.csv"
+        if not path.exists():
+            continue
+        try:
+            frame = pd.read_csv(path, parse_dates=["date"]).sort_values("date").tail(KLINE_BARS)
+        except Exception:
+            continue
+        if frame.empty:
+            continue
+        bars: list[list[Any]] = []
+        for _, row in frame.iterrows():
+            bars.append([
+                int(row.date.strftime("%Y%m%d")),
+                round(float(row.open), 2),
+                round(float(row.high), 2),
+                round(float(row.low), 2),
+                round(float(row.close), 2),
+                int(row.volume),
+            ])
+        stocks[symbol] = {"bars": bars, "as_of": int(frame.date.iloc[-1].strftime("%Y%m%d"))}
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "stocks": stocks,
+    }
+
+
+def export(reports_dir: Path, output: Path, min_coverage: float = 0.0,
+           klines_output: Path | None = None) -> dict[str, Any]:
     report_dir, signals, run = find_latest_report(reports_dir)
     payload = build_payload(report_dir, signals, run)
     if payload["coverage"] < min_coverage:
@@ -90,6 +139,10 @@ def export(reports_dir: Path, output: Path, min_coverage: float = 0.0) -> dict[s
         )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if klines_output is not None:
+        klines = build_klines(signals, reports_dir.parent / "cache")
+        klines_output.parent.mkdir(parents=True, exist_ok=True)
+        klines_output.write_text(json.dumps(klines, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     return payload
 
 
@@ -98,11 +151,13 @@ def main() -> int:
     parser.add_argument("--reports-dir", default="data/reports")
     parser.add_argument("--out", default="docs/data/latest.json")
     parser.add_argument("--min-coverage", type=float, default=0.0)
+    parser.add_argument("--klines-out", default=None, help="K线数据输出（默认与 --out 同目录的 klines.json）")
     args = parser.parse_args()
     if not 0 <= args.min_coverage <= 1:
         parser.error("--min-coverage 必须在 0 到 1 之间")
+    klines_out = Path(args.klines_out) if args.klines_out else Path(args.out).parent / "klines.json"
     try:
-        payload = export(Path(args.reports_dir), Path(args.out), args.min_coverage)
+        payload = export(Path(args.reports_dir), Path(args.out), args.min_coverage, klines_out)
     except Exception as error:
         print(f"Dashboard export failed: {error}", file=sys.stderr)
         return 2

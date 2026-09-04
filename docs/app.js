@@ -513,6 +513,7 @@
 
   function openDialog(item) {
     $("#dialog-title").textContent = `${cleanText(item.name)}（${cleanText(item.symbol)}）`;
+    renderKlineChart(item);
     const tags = $("#dialog-tags");
     tags.replaceChildren();
     add(tags, "span", cleanText(item.board), "board-tag");
@@ -544,6 +545,285 @@
     $("#dialog-close").addEventListener("click", () => dialog.close());
     dialog.addEventListener("click", (event) => {
       if (event.target === dialog) dialog.close();
+    });
+  }
+
+  /* ---------- 个股 K 线图（详情弹窗） ---------- */
+
+  const KLINE_URL = "./data/klines.json";
+  const KLINE_PALETTE = {
+    up: "#ff5d6c",      // 阳线（红，A 股习惯）
+    down: "#33c48e",    // 阴线（绿）
+    ma20: "#d97430",    // MA20
+    ma60: "#2fa9a6",    // MA60
+    level: "#a18bff",   // 关键价位参考线
+    grid: "rgba(158, 181, 224, 0.13)",
+    ink: "#e9eef8",
+    muted: "#9fb0c6",
+    quiet: "#79889f",
+  };
+  let klinesCache = null;   // { stocks: { symbol: { bars: [[ymd,o,h,l,c,v],...], as_of } } }
+  let klinesFailed = false;
+
+  async function ensureKlines() {
+    if (klinesCache || klinesFailed) return klinesCache;
+    try {
+      const response = await fetch(`${KLINE_URL}?v=${Date.now()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = await response.json();
+      if (!payload || typeof payload !== "object" || !payload.stocks) throw new Error("K线数据格式不符");
+      klinesCache = payload;
+    } catch (error) {
+      klinesFailed = true;
+      klinesCache = null;
+    }
+    return klinesCache;
+  }
+
+  const LEVEL_FIELDS = {
+    support: ["start_price"],
+    breakout: ["breakout_high"],
+    box: ["box_high"],
+    engulfing: [],
+    limitup: [],
+    dragon: ["prior_high"],
+    ma: ["breakout_high"],
+    shadow: [],
+  };
+  const LEVEL_LABELS = {
+    start_price: "\u8d77\u6da8\u4f4d",
+    breakout_high: "\u7a81\u7834\u4f4d",
+    box_high: "\u7bb1\u4f53\u4e0a\u6cbf",
+    prior_high: "\u524d\u9ad8",
+  };
+
+  function klineBarsFor(item, stock) {
+    const bars = (stock && Array.isArray(stock.bars) ? stock.bars : []).map((b) => ({
+      ymd: b[0], open: b[1], high: b[2], low: b[3], close: b[4], volume: b[5], live: false,
+    }));
+    // 盘中扫描：快照 bar 尚未写入缓存，用信号里的现价补一根“当日盘中”
+    const asOf = Number(String(item.as_of || "").slice(0, 8));
+    const lastYmd = bars.length ? Number(bars[bars.length - 1].ymd) : 0;
+    if (asOf && lastYmd && asOf > lastYmd && num(item.close) !== null) {
+      bars.push({
+        ymd: asOf, open: num(item.close), high: num(item.close),
+        low: num(item.close), close: num(item.close),
+        volume: num(item.volume) ?? 0, live: true,
+      });
+    }
+    return bars;
+  }
+
+  function svgEl(tag, attrs) {
+    const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    Object.entries(attrs || {}).forEach(([key, value]) => node.setAttribute(key, value));
+    return node;
+  }
+
+  function movingAverage(bars, days) {
+    return bars.map((_, i) => {
+      if (i < days - 1) return null;
+      const slice = bars.slice(i - days + 1, i + 1);
+      return slice.reduce((sum, b) => sum + b.close, 0) / days;
+    });
+  }
+
+  function renderKlineChart(item) {
+    const body = $("#chart-body");
+    const svg = $("#kline-svg");
+    const note = $("#chart-note");
+    const title = $("#chart-title");
+    title.textContent = `${cleanText(item.name)} ${cleanText(item.symbol)} · K线（前复权，近60个交易日）`;
+    svg.replaceChildren();
+    note.textContent = "正在加载K线数据…";
+    note.className = "chart-note muted";
+
+    const kind = signalKind(item.signal);
+    const levelField = (LEVEL_FIELDS[kind] || []).find((f) => num(item[f]) !== null);
+    const levelValue = levelField ? num(item[levelField]) : null;
+
+    const finish = (message, cls) => {
+      note.textContent = message || "";
+      note.className = `chart-note ${cls || "muted"}`;
+    };
+
+    ensureKlines().then((klines) => {
+      if (!klines) {
+        finish("K线数据不可用（数据文件缺失或加载失败）。", "muted");
+        return;
+      }
+      const symbol = String(item.symbol || "").padStart(6, "0");
+      const stock = klines.stocks[symbol];
+      const bars = klineBarsFor(item, stock);
+      if (!bars.length) {
+        finish("该标的暂无K线数据。", "muted");
+        return;
+      }
+      drawKline(svg, body, bars, levelValue, levelField);
+      finish(bars.some((b) => b.live) ? "最后一根为当日盘中快照（14:40 扫描口径）。" : "", "");
+    });
+  }
+
+  function drawKline(svg, body, bars, levelValue, levelField) {
+    const width = Math.max(320, body.clientWidth || 560);
+    const priceH = 250;
+    const volH = 58;
+    const gap = 14;
+    const padTop = 14;
+    const padRight = 64;
+    const padBottom = 22;
+    const totalH = padTop + priceH + gap + volH + padBottom;
+    svg.setAttribute("viewBox", `0 0 ${width} ${totalH}`);
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", totalH);
+    const chartW = width - padRight;
+
+    const step = chartW / bars.length;
+    const bodyW = Math.max(1, step * 0.62);
+    let lo = Math.min(...bars.map((b) => b.low));
+    let hi = Math.max(...bars.map((b) => b.high));
+    if (levelValue !== null) { lo = Math.min(lo, levelValue); hi = Math.max(hi, levelValue); }
+    const range = hi - lo || 1;
+    lo -= range * 0.04; hi += range * 0.04;
+    const y = (price) => padTop + ((hi - price) / (hi - lo)) * priceH;
+    const x = (i) => i * step + step / 2;
+
+    // 网格与价格刻度（弱势描画）
+    for (let g = 0; g <= 4; g += 1) {
+      const gy = padTop + (priceH * g) / 4;
+      svg.append(svgEl("line", {
+        x1: 0, x2: chartW, y1: gy, y2: gy,
+        stroke: KLINE_PALETTE.grid, "stroke-width": 1,
+      }));
+      const label = svgEl("text", { x: chartW + 6, y: gy + 4, "font-size": 10, fill: KLINE_PALETTE.quiet });
+      label.textContent = (hi - (g / 4) * (hi - lo)).toFixed(2);
+      svg.append(label);
+    }
+    // 日期刻度（4 个）
+    const tickIdx = [0, Math.floor((bars.length - 1) / 3), Math.floor((2 * (bars.length - 1)) / 3), bars.length - 1];
+    tickIdx.forEach((i) => {
+      const label = svgEl("text", {
+        x: x(i), y: totalH - 6, "font-size": 10, fill: KLINE_PALETTE.muted, "text-anchor": "middle",
+      });
+      label.textContent = String(bars[i].ymd).slice(4);
+      svg.append(label);
+    });
+
+    // 成交量面板（独立量程——避免双轴）
+    const maxVol = Math.max(...bars.map((b) => b.volume), 1);
+    bars.forEach((b, i) => {
+      const vh = (b.volume / maxVol) * volH;
+      const color = b.close >= b.open ? KLINE_PALETTE.up : KLINE_PALETTE.down;
+      svg.append(svgEl("rect", {
+        x: x(i) - bodyW / 2, y: padTop + priceH + gap + (volH - vh),
+        width: bodyW, height: Math.max(vh, 0.5), fill: color, opacity: 0.55,
+      }));
+    });
+
+    // 蜡烛：阳线空心红描边、阴线实心绿（形状+颜色双重编码）
+    bars.forEach((b, i) => {
+      const up = b.close >= b.open;
+      const color = up ? KLINE_PALETTE.up : KLINE_PALETTE.down;
+      svg.append(svgEl("line", {
+        x1: x(i), x2: x(i), y1: y(b.high), y2: y(b.low),
+        stroke: color, "stroke-width": 1,
+      }));
+      const top = y(Math.max(b.open, b.close));
+      const h = Math.max(Math.abs(y(b.open) - y(b.close)), 1);
+      const rect = svgEl("rect", {
+        x: x(i) - bodyW / 2, y: top, width: bodyW, height: h,
+        stroke: color, "stroke-width": 1,
+        fill: up ? "#0a101c" : color,
+      });
+      if (b.live) rect.setAttribute("stroke-dasharray", "2 2");
+      svg.append(rect);
+    });
+
+    // 关键价位参考线（虚线 + 左缘标签）
+    if (levelValue !== null) {
+      const ly = y(levelValue);
+      svg.append(svgEl("line", {
+        x1: 0, x2: chartW, y1: ly, y2: ly,
+        stroke: KLINE_PALETTE.level, "stroke-width": 1, "stroke-dasharray": "4 4", opacity: 0.9,
+      }));
+      const label = svgEl("text", { x: 4, y: ly - 4, "font-size": 10, fill: KLINE_PALETTE.muted });
+      label.textContent = `${LEVEL_LABELS[levelField] || "关键位"} ${levelValue.toFixed(2)}`;
+      svg.append(label);
+    }
+
+    // MA20 / MA60（细线 + 右缘直标）
+    const ma20 = movingAverage(bars, 20);
+    const ma60 = movingAverage(bars, 60);
+    const drawMA = (values, color, label, days) => {
+      const pts = values.map((v, i) => (v === null ? null : `${x(i)},${y(v)}`)).filter(Boolean);
+      if (pts.length < 2) return;
+      svg.append(svgEl("polyline", {
+        points: pts.join(" "), fill: "none", stroke: color, "stroke-width": 1.5,
+      }));
+      const last = values[values.length - 1];
+      if (last !== null) {
+        const dot = svgEl("circle", { cx: x(values.length - 1), cy: y(last), r: 2, fill: color });
+        svg.append(dot);
+        const text = svgEl("text", { x: chartW + 6, y: y(last) + 3, "font-size": 10, fill: KLINE_PALETTE.muted });
+        text.textContent = `${label} ${last.toFixed(2)}`;
+        svg.append(text);
+      }
+    };
+    drawMA(ma60, KLINE_PALETTE.ma60, "MA60", 60);
+    drawMA(ma20, KLINE_PALETTE.ma20, "MA20", 20);
+
+    // 十字线 + tooltip（命中区大于图形本身）
+    const tooltip = $("#chart-tooltip");
+    const crosshair = svgEl("line", {
+      y1: padTop, y2: padTop + priceH + gap + volH, stroke: KLINE_PALETTE.muted, "stroke-width": 1, opacity: 0,
+    });
+    svg.append(crosshair);
+    svg.append(svgEl("rect", {
+      x: 0, y: padTop, width: chartW, height: priceH + gap + volH,
+      fill: "transparent", id: "kline-hit",
+    }));
+
+    svg.addEventListener("mousemove", (event) => {
+      const rect = svg.getBoundingClientRect();
+      const px = event.clientX - rect.left;
+      const py = event.clientY - rect.top;
+      if (px < 0 || px > chartW || py < padTop || py > padTop + priceH + gap + volH) {
+        tooltip.hidden = true;
+        crosshair.setAttribute("opacity", 0);
+        return;
+      }
+      const i = Math.min(bars.length - 1, Math.max(0, Math.floor(px / step)));
+      const b = bars[i];
+      crosshair.setAttribute("x1", x(i)); crosshair.setAttribute("x2", x(i));
+      crosshair.setAttribute("opacity", 0.55);
+      const ma20v = ma20[i]; const ma60v = ma60[i];
+      tooltip.innerHTML = "";
+      const rows = [
+        ["日期", String(b.ymd) + (b.live ? "（盘中）" : "")],
+        ["开", b.open.toFixed(2)], ["高", b.high.toFixed(2)],
+        ["低", b.low.toFixed(2)], ["收", b.close.toFixed(2)],
+        ["量", number.format(b.volume)],
+        ["MA20", ma20v === null ? "—" : ma20v.toFixed(2)],
+        ["MA60", ma60v === null ? "—" : ma60v.toFixed(2)],
+      ];
+      rows.forEach(([k, v]) => {
+        const row = document.createElement("div");
+        row.className = "ct-row";
+        const dt = document.createElement("span"); dt.className = "ct-k"; dt.textContent = k;
+        const dd = document.createElement("span"); dd.className = "ct-v"; dd.textContent = v;
+        row.append(dt, dd);
+        tooltip.append(row);
+      });
+      tooltip.hidden = false;
+      const bw = body.getBoundingClientRect();
+      const tw = tooltip.offsetWidth || 120;
+      const left = Math.min(Math.max(4, px + 14), Math.max(4, bw.width - tw - 8));
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${Math.max(4, py - 40)}px`;
+    });
+    svg.addEventListener("mouseleave", () => {
+      tooltip.hidden = true;
+      crosshair.setAttribute("opacity", 0);
     });
   }
 
