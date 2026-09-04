@@ -23,3 +23,8 @@ _preview/
 
 # Local Tushare token (never committed)
 .tushare_token
+
+# Backtest scripts + data (optional, re-runnable)
+data/backtest_cache/
+data/backtest_moneyflow.csv
+data/backtest_report.json

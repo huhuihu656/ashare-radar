@@ -395,20 +395,27 @@ def support_retest(frame: pd.DataFrame, cfg: SupportConfig) -> dict | None:
     ma_fast = close.rolling(cfg.ma_fast).mean()
     ma_slow = close.rolling(cfg.ma_slow).mean()
     current = len(close) - 1
+    # 向量化局部低点预筛（O(n²)→候选点稀疏），减少 10-50 倍循环量
+    arr = close.to_numpy()
+    roll_min = pd.Series(arr).rolling(9, center=True, min_periods=5).min().to_numpy()
+    # 是否局部低点（±4 日最小）
+    is_trough = (arr == roll_min) & np.isfinite(arr)
+    trough_idx = np.where(is_trough[: current - cfg.rally_min_days])[0]
+    trough_idx = trough_idx[trough_idx >= cfg.ma_slow]
     candidates: list[tuple[int, int, float]] = []
-    # Scan historical lows only; rally must have ended before the current decline.
-    for start in range(cfg.ma_slow, current - cfg.rally_min_days):
+    # 仅扫描当前下跌段之前的最后一段上涨（后进先出，取最近的有效候选）
+    for start in reversed(list(trough_idx)):
         end = min(start + cfg.rally_max_days, current - 5)
         if end - start < cfg.rally_min_days:
             continue
-        low = close.iloc[start]
-        if low != close.iloc[max(0, start - 4) : start + 5].min():
-            continue
-        future = close.iloc[start + cfg.rally_min_days : end + 1]
-        peak_pos = int(future.idxmax())
-        rally = close.iloc[peak_pos] / low - 1
+        low = arr[start]
+        future = arr[start + cfg.rally_min_days : end + 1]
+        peak_pos = int(np.argmax(future))
+        rally = future[peak_pos] / low - 1
         if rally >= cfg.min_prior_rally_pct:
             candidates.append((start, peak_pos, float(rally)))
+        if len(candidates) >= 8:
+            break
     if not candidates:
         return None
     start, peak, rally = candidates[-1]
