@@ -1771,3 +1771,10 @@ td:first-child {
 .mainline-stocks { display: flex; flex-wrap: wrap; gap: 6px; }
 .mainline-stock { display: inline-flex; gap: 6px; align-items: center; background: var(--support-soft); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; font-size: 11px; color: var(--muted); }
 .ms-ret { font-variant-numeric: tabular-nums; }
+
+
+/* ---------- 主线卡片：ETF 与推荐股 ---------- */
+.mainline-foot { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.mainline-etf { font-size: 11px; color: var(--breakout-bright); background: var(--breakout-soft); padding: 3px 8px; border-radius: 6px; }
+.mainline-noetf { font-size: 11px; color: var(--quiet); }
+.ms-flow { font-variant-numeric: tabular-nums; }

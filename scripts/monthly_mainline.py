@@ -39,6 +39,40 @@ WEIGHTS = {"momentum": -0.45, "flow": 0.10, "breadth": 0.45, "signal": 0.0}
 MIN_MEMBERS = 10
 TOP_N = 5
 
+# 东财细分行业 -> 主流可交易行业 ETF（名称关键词匹配 + 手动精选流动性好的）
+SECTOR_ETF = [
+    (("证券", "多元金融"), "512880.SH", "券商ETF"),
+    (("白酒", "饮料制造"), "512690.SH", "酒ETF"),
+    (("半导体", "元件", "光学光电子", "电子化学品"), "512480.SH", "半导体ETF"),
+    (("通信设备", "通信服务"), "515880.SH", "通信ETF"),
+    (("软件开发", "计算机设备", "IT服务"), "512720.SH", "计算机ETF"),
+    (("银行",), "512800.SH", "银行ETF"),
+    (("港口", "航运港口", "物流", "铁路公路"), "159766.SZ", "运输ETF"),
+    (("贵金属",), "518880.SH", "黄金ETF"),
+    (("油气开采", "石油加工", "油服工程"), "561360.SH", "油气ETF"),
+    (("工业金属", "小金属"), "159980.SZ", "有色ETF"),
+    (("煤炭开采", "煤炭加工"), "515220.SH", "煤炭ETF"),
+
+    (("汽车整车", "汽车零部件", "乘用车", "商用车"), "516110.SH", "汽车ETF"),
+    (("化学制药", "生物制品", "中药", "医药商业", "医疗服务", "医疗器械"), "512010.SH", "医药ETF"),
+    (("光伏设备", "风电设备"), "515790.SH", "光伏ETF"),
+    (("电池",), "561910.SH", "电池ETF"),
+    (("电力", "燃气", "电力行业"), "561560.SH", "电力ETF"),
+    (("种植业", "农产品加工", "养殖业", "渔业", "饲料", "农业综合"), "159825.SZ", "农业ETF"),
+    (("房地产开发", "房地产服务"), "512200.SH", "房地产ETF"),
+    (("白色家电", "家电零部件", "厨卫电器"), "159996.SZ", "家电ETF"),
+    (("游戏", "数字媒体", "影视院线", "广告营销", "出版", "电视广播"), "512980.SH", "传媒ETF"),
+    (("保险",), "512070.SH", "保险ETF"),
+    (("船舶", "航海装备", "航空装备", "航天装备", "地面兵装", "军工电子"), "512660.SH", "军工ETF"),
+]
+
+
+def sector_etf(industry: str) -> dict | None:
+    for keywords, code, label in SECTOR_ETF:
+        if any(k in industry for k in keywords):
+            return {"code": code, "label": label}
+    return None
+
 
 def minmax(values: pd.Series) -> pd.Series:
     lo, hi = values.min(), values.max()
@@ -140,11 +174,37 @@ def signal_factor(members: pd.DataFrame, reports_dir: Path) -> pd.Series:
     return merged.groupby("industry").apply(lambda g: g["n"].sum() / max(len(g), 1) * 100, include_groups=False)
 
 
+def per_stock_flow(pro, members: pd.DataFrame, sessions: int = 5) -> pd.Series:
+    """个股级近 N 日主力净流入合计（万元），用于板块内选股（回测 v1 口径）。"""
+    days: list[pd.DataFrame] = []
+    end = date.today()
+    cursor = end
+    while len(days) < sessions:
+        day = cursor.strftime("%Y%m%d")
+        try:
+            raw = pro.moneyflow(trade_date=day)
+        except Exception:
+            raw = None
+        if raw is not None and not raw.empty:
+            frame = raw.copy()
+            frame["symbol"] = frame["ts_code"].astype(str).str[:6]
+            frame["net_mf_amount"] = pd.to_numeric(frame["net_mf_amount"], errors="coerce")
+            days.append(frame[["symbol", "net_mf_amount"]])
+        cursor -= timedelta(days=1)
+        if cursor < end - timedelta(days=20):
+            break
+    if not days:
+        return pd.Series(dtype=float)
+    flow = pd.concat(days).groupby("symbol")["net_mf_amount"].sum()
+    return flow.reindex(members.symbol).fillna(0.0)
+
+
 def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: Path) -> dict:
     mom = momentum_factor(members, cache_dir)
     flow = flow_factor(pro, members)
     brd = breadth_factor(members, cache_dir)
     sig = signal_factor(members, reports_dir)
+    stock_flow = per_stock_flow(pro, members)
 
     table = pd.DataFrame(index=mom.index)
     table["momentum"] = mom
@@ -167,26 +227,31 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
     table = table.sort_values("score", ascending=False)
 
     top = []
-    member_ret = None
+    names = dict(zip(members.symbol, members.name))
     for industry in table.head(TOP_N).index:
         ind_members = members[members.industry == industry].symbol
-        # strongest members by 20d return
-        if member_ret is None:
-            member_ret = momentum_factor(members, cache_dir).to_frame() if False else None
-        rets = []
-        for symbol in ind_members:
+        # 推荐个股：板块内近 5 日主力净流入最高 3 只（回测验证 v1 口径）；剔除 ST
+        ind_members = ind_members[
+            ~ind_members.map(lambda s: "ST" in str(names.get(s, "")).upper())]
+        flows = stock_flow.reindex(ind_members).dropna().sort_values(ascending=False)
+        recs = []
+        for symbol in flows.index[:3]:
             path = cache_dir / f"{symbol}.csv"
-            if not path.exists():
-                continue
-            try:
-                closes = pd.read_csv(path, usecols=["close"])["close"].dropna()
-            except Exception:
-                continue
-            if len(closes) < 21:
-                continue
-            rets.append((symbol, float(closes.iloc[-1] / closes.iloc[-21] - 1)))
-        rets.sort(key=lambda x: -x[1])
-        names = dict(zip(members.symbol, members.name))
+            ret = None
+            if path.exists():
+                try:
+                    closes = pd.read_csv(path, usecols=["close"])["close"].dropna()
+                    if len(closes) >= 21:
+                        ret = float(closes.iloc[-1] / closes.iloc[-21] - 1) * 100
+                except Exception:
+                    pass
+            recs.append({
+                "symbol": symbol,
+                "name": str(names.get(symbol, symbol)),
+                "flow_5d_10k": round(float(flows[symbol]), 1),
+                "ret_20d_pct": round(ret, 2) if ret is not None else None,
+            })
+        etf = sector_etf(industry)
         top.append({
             "industry": industry,
             "score": float(table.loc[industry, "score"]),
@@ -195,10 +260,8 @@ def compute_mainline(pro, members: pd.DataFrame, cache_dir: Path, reports_dir: P
             "breadth_pct": round(float(table.loc[industry, "breadth"]) * 100, 1),
             "signal_density": round(float(table.loc[industry, "signal"]), 2),
             "members": int(table.loc[industry, "members"]),
-            "top_stocks": [
-                {"symbol": s, "name": str(names.get(s, s)), "ret_20d_pct": round(r * 100, 2)}
-                for s, r in rets[:3]
-            ],
+            "etf": etf,
+            "top_stocks": recs,
         })
     return {
         "as_of": date.today().strftime("%Y%m%d"),

@@ -24,21 +24,28 @@
       "breadth_pct": 100.0,
       "signal_density": 6.25,
       "members": 16,
+      "etf": {
+        "code": "159766.SZ",
+        "label": "运输ETF"
+      },
       "top_stocks": [
         {
-          "symbol": "002040",
-          "name": "南京港",
-          "ret_20d_pct": 11.14
+          "symbol": "600018",
+          "name": "上港集团",
+          "flow_5d_10k": 15328.3,
+          "ret_20d_pct": 5.23
         },
         {
-          "symbol": "001872",
-          "name": "招商港口",
-          "ret_20d_pct": 9.74
+          "symbol": "000582",
+          "name": "北部湾港",
+          "flow_5d_10k": 8313.1,
+          "ret_20d_pct": -2.72
         },
         {
-          "symbol": "000905",
-          "name": "厦门港务",
-          "ret_20d_pct": 9.25
+          "symbol": "601326",
+          "name": "秦港股份",
+          "flow_5d_10k": 6998.2,
+          "ret_20d_pct": 5.6
         }
       ]
     },
@@ -50,21 +57,28 @@
       "breadth_pct": 94.0,
       "signal_density": 6.0,
       "members": 50,
+      "etf": {
+        "code": "512880.SH",
+        "label": "券商ETF"
+      },
       "top_stocks": [
+        {
+          "symbol": "600030",
+          "name": "中信证券",
+          "flow_5d_10k": 39310.4,
+          "ret_20d_pct": 0.14
+        },
         {
           "symbol": "000712",
           "name": "锦龙股份",
+          "flow_5d_10k": 22871.5,
           "ret_20d_pct": 31.38
         },
         {
-          "symbol": "600095",
-          "name": "湘财股份",
-          "ret_20d_pct": 24.33
-        },
-        {
-          "symbol": "002670",
-          "name": "国盛证券",
-          "ret_20d_pct": 13.86
+          "symbol": "601162",
+          "name": "天风证券",
+          "flow_5d_10k": 16715.3,
+          "ret_20d_pct": 5.51
         }
       ]
     },
@@ -76,21 +90,25 @@
       "breadth_pct": 100.0,
       "signal_density": 0.0,
       "members": 12,
+      "etf": null,
       "top_stocks": [
         {
-          "symbol": "000007",
-          "name": "全新好",
-          "ret_20d_pct": 28.57
+          "symbol": "000829",
+          "name": "天音控股",
+          "flow_5d_10k": 8624.7,
+          "ret_20d_pct": 8.3
         },
         {
-          "symbol": "000056",
-          "name": "*ST皇庭",
-          "ret_20d_pct": 9.81
+          "symbol": "300622",
+          "name": "博士眼镜",
+          "flow_5d_10k": 3824.0,
+          "ret_20d_pct": 1.02
         },
         {
-          "symbol": "000882",
-          "name": "华联股份",
-          "ret_20d_pct": 9.22
+          "symbol": "002177",
+          "name": "御银股份",
+          "flow_5d_10k": 1583.5,
+          "ret_20d_pct": 5.33
         }
       ]
     },
@@ -102,21 +120,28 @@
       "breadth_pct": 95.2,
       "signal_density": 0.0,
       "members": 42,
+      "etf": {
+        "code": "512800.SH",
+        "label": "银行ETF"
+      },
       "top_stocks": [
         {
-          "symbol": "601998",
-          "name": "中信银行",
-          "ret_20d_pct": 19.17
+          "symbol": "600036",
+          "name": "招商银行",
+          "flow_5d_10k": 296960.3,
+          "ret_20d_pct": 7.45
         },
         {
-          "symbol": "601665",
-          "name": "齐鲁银行",
-          "ret_20d_pct": 15.92
+          "symbol": "601398",
+          "name": "工商银行",
+          "flow_5d_10k": 130939.8,
+          "ret_20d_pct": 7.97
         },
         {
-          "symbol": "601988",
-          "name": "中国银行",
-          "ret_20d_pct": 13.86
+          "symbol": "601169",
+          "name": "北京银行",
+          "flow_5d_10k": 123079.2,
+          "ret_20d_pct": 11.78
         }
       ]
     },
@@ -128,21 +153,28 @@
       "breadth_pct": 90.9,
       "signal_density": 27.27,
       "members": 11,
+      "etf": {
+        "code": "512660.SH",
+        "label": "军工ETF"
+      },
       "top_stocks": [
         {
-          "symbol": "300589",
-          "name": "江龙船艇",
-          "ret_20d_pct": 9.66
+          "symbol": "600150",
+          "name": "中国船舶",
+          "flow_5d_10k": 198109.0,
+          "ret_20d_pct": 7.52
         },
         {
           "symbol": "600482",
           "name": "中国动力",
+          "flow_5d_10k": 18008.0,
           "ret_20d_pct": 9.06
         },
         {
-          "symbol": "300600",
-          "name": "国瑞科技",
-          "ret_20d_pct": 8.37
+          "symbol": "603268",
+          "name": "松发股份",
+          "flow_5d_10k": 16178.3,
+          "ret_20d_pct": 5.18
         }
       ]
     }

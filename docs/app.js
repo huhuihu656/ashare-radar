@@ -991,8 +991,14 @@
       (sector.top_stocks || []).forEach((stock) => {
         const chip = add(stocks, "span", undefined, "mainline-stock");
         add(chip, "span", `${cleanText(stock.name)} ${cleanText(stock.symbol)}`, "ms-name");
-        add(chip, "span", `${stock.ret_20d_pct > 0 ? "+" : ""}${cleanText(stock.ret_20d_pct)}%`, `ms-ret ${signClass(stock.ret_20d_pct)}`);
+        add(chip, "span", `资金 ${stock.flow_5d_10k > 0 ? "+" : ""}${decimal.format((stock.flow_5d_10k || 0) / 10000)}亿`, `ms-flow ${signClass(stock.flow_5d_10k)}`);
       });
+      const foot = add(card, "div", undefined, "mainline-foot");
+      if (sector.etf) {
+        add(foot, "span", `行业ETF: ${cleanText(sector.etf.label)} (${cleanText(sector.etf.code)})`, "mainline-etf");
+      } else {
+        add(foot, "span", "暂无对应行业ETF（可用板块内推荐个股组合替代）", "mainline-noetf");
+      }
       grid.append(card);
     });
   }
