@@ -105,13 +105,23 @@ def _tencent_symbol(symbol: str) -> str:
     return "bj" + symbol
 
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10), reraise=True)
-def _download_history(symbol: str, start: date) -> pd.DataFrame:
-    """Daily forward-adjusted bars from Tencent (single request, qfq built in).
+def _standardize(frame: pd.DataFrame) -> pd.DataFrame:
+    """Normalize a raw OHLCV frame into the cache contract (date-indexed)."""
+    frame = frame[["date", "open", "high", "low", "close", "volume"]].copy()
+    frame.date = pd.to_datetime(frame.date)
+    frame = frame.set_index("date").sort_index()
+    for column in ["open", "high", "low", "close", "volume"]:
+        frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    return frame.dropna()
 
-    Eastmoney can throttle or blacklist an IP mid-run; Tencent's fqkline
-    endpoint is fast and returns the same shape (date, open, close, high, low,
-    volume -- note the bar order differs from standard OHLC).
+
+@retry(stop=stop_after_attempt(2), wait=wait_exponential(min=1, max=5), reraise=True)
+def _download_history(symbol: str, start: date) -> pd.DataFrame:
+    """Daily forward-adjusted bars, Tencent first, Sina daily as fallback.
+
+    Free quote servers (Eastmoney, Tencent) throttle or blacklist an IP under
+    full-market load; Sina is a different host family and returns the full
+    history in one request.  All payloads are public market data.
     """
     import requests
 
@@ -120,33 +130,30 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
     params = {
         "param": f"{prefixed},day,{start.strftime('%Y-%m-%d')},{date.today().strftime('%Y-%m-%d')},320,qfq",
     }
-    # Prefer HTTPS.  Plaintext http://web.ifzq.gtimg.cn is kept ONLY as a last
-    # resort: both HTTPS hosts rate-limit this endpoint (HTTP 501) under daily
-    # full-market load.  The payload is public market data -- no credentials or
-    # user data ever travel over it, and the scanner is research-only.
-    last_error = None
+    tencent_error = None
     for host in ("https://ifzq.gtimg.cn", "http://web.ifzq.gtimg.cn"):
         try:
             response = requests.get(host + "/appstock/app/fqkline/get", params=params, timeout=15)
             response.raise_for_status()
-            break
+            payload = response.json().get("data", {}).get(prefixed, {})
+            bars = payload.get("qfqday") or payload.get("day") or []
+            if not bars:
+                return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
+            # Tencent bar order: date, open, close, high, low, volume.  Some
+            # symbols carry a 7th amount field; keep the six standard columns.
+            frame = pd.DataFrame([bar[:6] for bar in bars],
+                                 columns=["date", "open", "close", "high", "low", "volume"])
+            return _standardize(frame)
         except Exception as error:
-            last_error = error
-    else:
-        raise RuntimeError(f"{symbol} 腾讯行情下载失败: {last_error}")
-    payload = response.json().get("data", {}).get(prefixed, {})
-    bars = payload.get("qfqday") or payload.get("day") or []
-    if not bars:
-        return pd.DataFrame(columns=["date", "open", "high", "low", "close", "volume"])
-    # Tencent bar order: date, open, close, high, low, volume.  Some symbols
-    # carry a 7th amount field; keep only the six standard columns.
-    frame = pd.DataFrame([bar[:6] for bar in bars],
-                         columns=["date", "open", "close", "high", "low", "volume"])
-    frame.date = pd.to_datetime(frame.date)
-    frame = frame.set_index("date").sort_index()
-    for column in ["open", "high", "low", "close", "volume"]:
-        frame[column] = pd.to_numeric(frame[column], errors="coerce")
-    return frame.dropna()
+            tencent_error = error
+    # Tencent hosts unavailable -> Sina daily (full history, forward-adjusted).
+    import akshare as ak
+
+    try:
+        raw = ak.stock_zh_a_daily(symbol=prefixed, adjust="qfq")
+        return _standardize(raw)
+    except Exception as error:
+        raise RuntimeError(f"{symbol} 行情源全部失败（腾讯: {tencent_error}；新浪: {error}）")
 
 
 def history_for(symbol: str, cache_dir: Path, lookback_days: int) -> pd.DataFrame:
