@@ -17,3 +17,6 @@ Thumbs.db
 
 # Local semgrep guardian plugin artifacts
 .semgrep/
+
+# Local frontend preview fixtures
+_preview/

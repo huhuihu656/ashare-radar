@@ -3,111 +3,178 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#05080f" />
     <meta
       name="description"
-      content="A 股收盘前趋势研究预警：回踩前期起涨位与横盘后放量突破。仅供研究，不构成投资建议。"
+      content="A 股收盘前趋势研究预警：回踩前期起涨位与横盘后放量突破。研究预警，不构成投资建议。"
     />
     <title>势能雷达 · A 股收盘前研究预警</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23f0913f' stroke-width='1.6' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23f0913f' stroke-width='1.4' opacity='0.7'/%3E%3Cpath d='M16 16 L25 7.5' stroke='%23f0913f' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f0913f'/%3E%3C/svg%3E"
+    />
     <link rel="stylesheet" href="./styles.css" />
     <script defer src="./app.js"></script>
   </head>
   <body>
-    <div class="grain" aria-hidden="true"></div>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="势能雷达首页">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span>势能雷达</span>
-      </a>
-      <div class="header-status">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span id="header-status">等待数据</span>
+    <a class="skip-link" href="#signals">跳到候选池</a>
+
+    <div class="bg-layers" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="bg-glow bg-glow-a"></div>
+      <div class="bg-glow bg-glow-b"></div>
+      <div class="bg-noise"></div>
+      <div class="bg-sweep"></div>
+    </div>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="势能雷达首页">
+          <svg class="brand-glyph" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.4"></circle>
+            <circle cx="12" cy="12" r="5.4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.62"></circle>
+            <path d="M12 12 L18.4 6.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+            <circle cx="12" cy="12" r="2.1" fill="currentColor"></circle>
+          </svg>
+          <span class="brand-text">势能雷达<small>POTENTIAL RADAR</small></span>
+        </a>
+        <div class="topbar-status">
+          <span class="status-led" id="header-led" aria-hidden="true"></span>
+          <span id="header-status">正在加载数据…</span>
+          <span class="status-sep" aria-hidden="true"></span>
+          <span class="freshness" id="header-freshness">—</span>
+        </div>
       </div>
     </header>
 
     <main id="top">
+      <noscript>
+        <p class="noscript-note">本页面需要启用 JavaScript 才能加载信号数据。</p>
+      </noscript>
+
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow">A-SHARE · PRE-CLOSE RESEARCH MONITOR</p>
-          <h1 id="hero-title">在噪声之前，<br /><em>看见势能。</em></h1>
+          <h1 id="hero-title">
+            在噪声之前，<br /><em>看见势能。</em>
+          </h1>
           <p class="hero-summary">
             每个交易日收盘前扫描全 A 股，定位正在靠近前期起涨位的下行结构，
             以及长期横盘后出现量价异动的候选标的。
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#signals">查看本次候选</a>
-            <button class="button button-quiet" id="refresh-button" type="button">刷新数据</button>
+            <a class="btn btn-primary" href="#signals">查看本次候选</a>
+            <button class="btn btn-ghost" id="refresh-button" type="button">刷新数据</button>
           </div>
         </div>
 
-        <aside class="scan-card" aria-label="本次扫描状态">
-          <div class="scan-card-top">
-            <span>本次扫描</span>
-            <span class="status-pill" id="scan-status">未运行</span>
+        <aside class="scan-console" aria-label="本次扫描状态">
+          <div class="console-head">
+            <div class="console-title">
+              <span class="console-kicker">SCAN CONSOLE</span>
+              <span class="pill is-pending" id="scan-status">未运行</span>
+            </div>
+            <div class="radar" aria-hidden="true">
+              <span class="radar-sweep"></span>
+              <span class="radar-ring radar-ring-a"></span>
+              <span class="radar-ring radar-ring-b"></span>
+              <span class="radar-blip"></span>
+            </div>
           </div>
           <dl class="scan-meta">
             <div><dt>交易日</dt><dd id="as-of">—</dd></div>
-            <div><dt>扫描时间</dt><dd id="scan-time">—</dd></div>
-            <div><dt>市场覆盖</dt><dd id="coverage">—</dd></div>
+            <div><dt>信号生成</dt><dd id="scan-time">—</dd></div>
+            <div><dt>数据发布</dt><dd id="published-at">—</dd></div>
           </dl>
-          <div class="coverage-track" aria-label="市场覆盖率"><span id="coverage-bar"></span></div>
-          <p class="scan-card-note" id="scan-note">自动任务完成后，最新结果会显示在这里。</p>
+          <div class="coverage-head">
+            <span>市场覆盖</span>
+            <strong id="coverage">—</strong>
+          </div>
+          <div class="coverage-track" role="img" aria-label="市场覆盖率">
+            <span id="coverage-bar"></span>
+          </div>
+          <p class="console-note" id="scan-note">自动任务完成后，最新结果会显示在这里。</p>
         </aside>
       </section>
 
-      <section class="metrics" aria-label="扫描统计">
-        <article class="metric-card">
-          <span class="metric-label">覆盖股票</span>
-          <strong id="universe-count">—</strong>
+      <section class="kpi-strip" aria-label="扫描统计">
+        <article class="kpi">
+          <span class="kpi-index" aria-hidden="true">01</span>
+          <span class="kpi-label">覆盖股票</span>
+          <strong class="kpi-value" id="universe-count">—</strong>
           <small>主板 · 创业板 · 科创板 · 北交所</small>
         </article>
-        <article class="metric-card accent-orange">
-          <span class="metric-label">回踩起涨位</span>
-          <strong id="support-count">—</strong>
+        <article class="kpi kpi-support">
+          <span class="kpi-index" aria-hidden="true">02</span>
+          <span class="kpi-label">回踩起涨位</span>
+          <strong class="kpi-value" id="support-count">—</strong>
           <small>下跌结构中的潜在支撑观察</small>
         </article>
-        <article class="metric-card accent-cyan">
-          <span class="metric-label">横盘放量突破</span>
-          <strong id="breakout-count">—</strong>
+        <article class="kpi kpi-breakout">
+          <span class="kpi-index" aria-hidden="true">03</span>
+          <span class="kpi-label">横盘放量突破</span>
+          <strong class="kpi-value" id="breakout-count">—</strong>
           <small>低波动区间后的量价异动</small>
         </article>
-        <article class="metric-card accent-violet">
-          <span class="metric-label">数据异常</span>
-          <strong id="failure-count">—</strong>
+        <article class="kpi kpi-failure">
+          <span class="kpi-index" aria-hidden="true">04</span>
+          <span class="kpi-label">数据异常</span>
+          <strong class="kpi-value" id="failure-count">—</strong>
           <small>未能完成本次计算的股票数</small>
         </article>
       </section>
 
       <section class="workspace" id="signals" aria-labelledby="signals-title">
-        <aside class="filter-panel">
-          <div>
-            <p class="panel-kicker">SIGNAL DESK</p>
-            <h2 id="signals-title">候选池</h2>
-            <p class="muted">按研究规则筛选，按信号分数排序。分数不是收益预测。</p>
-          </div>
+        <aside class="filter-rail">
+          <p class="panel-kicker">SIGNAL DESK</p>
+          <h2 id="signals-title">候选池</h2>
+          <p class="muted">按研究规则筛选，按信号分数排序。分数不是收益预测。</p>
 
           <fieldset class="filter-group">
             <legend>信号类型</legend>
-            <div class="filter-buttons" role="group" aria-label="按信号类型筛选">
-              <button class="filter-button is-active" data-filter="all" type="button">全部 <span id="all-count">0</span></button>
-              <button class="filter-button" data-filter="support" type="button">回踩起涨位 <span id="filter-support-count">0</span></button>
-              <button class="filter-button" data-filter="breakout" type="button">横盘放量 <span id="filter-breakout-count">0</span></button>
+            <div class="filter-row" role="group" aria-label="按信号类型筛选">
+              <button class="filter-button is-active" data-filter="all" type="button" aria-pressed="true">
+                <span class="fb-label">全部信号</span>
+                <span class="fb-count" id="all-count">0</span>
+              </button>
+              <button class="filter-button" data-filter="support" type="button" aria-pressed="false">
+                <span class="fb-label"
+                  ><i class="swatch swatch-support" aria-hidden="true"></i>回踩起涨位</span
+                >
+                <span class="fb-count" id="filter-support-count">0</span>
+              </button>
+              <button class="filter-button" data-filter="breakout" type="button" aria-pressed="false">
+                <span class="fb-label"
+                  ><i class="swatch swatch-breakout" aria-hidden="true"></i>横盘放量</span
+                >
+                <span class="fb-count" id="filter-breakout-count">0</span>
+              </button>
             </div>
           </fieldset>
 
-          <label class="input-label" for="search">代码或名称</label>
-          <input id="search" type="search" placeholder="例如：600519 或 贵州茅台" autocomplete="off" />
+          <label class="field-label" for="search">代码或名称</label>
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true">
+              <circle cx="7" cy="7" r="4.4" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+              <path d="M10.4 10.4 L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+            </svg>
+            <input id="search" type="search" placeholder="例如：600519 或 贵州茅台" autocomplete="off" />
+          </div>
 
-          <label class="input-label" for="board">所属板块</label>
-          <select id="board">
-            <option value="all">全部板块</option>
-          </select>
+          <label class="field-label" for="board">所属板块</label>
+          <div class="select-wrap">
+            <select id="board">
+              <option value="all">全部板块</option>
+            </select>
+          </div>
 
           <button class="reset-button" id="reset-filters" type="button">重置筛选</button>
+          <p class="rail-footnote">分数 ∈ [0, 100]，为规则化强度评分，不代表收益方向。</p>
         </aside>
 
         <section class="results-panel" aria-label="信号结果">
-          <div class="results-heading">
+          <div class="results-head">
             <div>
               <p class="panel-kicker">LATEST SIGNALS</p>
               <h2>收盘前观察清单</h2>
@@ -115,25 +182,89 @@
             <p id="result-summary" class="result-summary" aria-live="polite">加载中…</p>
           </div>
 
-          <div class="data-warning" id="data-warning" role="status"></div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">标的</th>
-                  <th scope="col">信号</th>
-                  <th scope="col">现价</th>
-                  <th scope="col">关键指标</th>
-                  <th scope="col">信号分数</th>
-                  <th scope="col">研究提示</th>
-                </tr>
-              </thead>
-              <tbody id="signal-rows"></tbody>
-            </table>
-            <div class="empty-state" id="empty-state" hidden>
-              <div class="empty-orbit" aria-hidden="true"></div>
-              <h3>没有符合条件的候选</h3>
-              <p>调整筛选条件，或等待下一次交易日扫描。</p>
+          <div id="data-warning" class="data-warning" role="status"></div>
+
+          <div class="table-card">
+            <div class="table-scroll">
+              <table>
+                <caption class="sr-only">
+                  信号候选清单：含标的、信号类型、现价、关键指标、信号分数与研究提示，可点击「详情」查看全部字段。
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">标的</th>
+                    <th scope="col">信号</th>
+                    <th scope="col" class="th-num">现价</th>
+                    <th scope="col">关键指标</th>
+                    <th scope="col" class="th-score"
+                      >信号分数<span class="sort-mark" aria-hidden="true"> ↓</span></th
+                    >
+                    <th scope="col">研究提示</th>
+                    <th scope="col"><span class="sr-only">详情</span></th>
+                  </tr>
+                </thead>
+                <tbody id="signal-rows">
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                  <tr class="skeleton-row" aria-hidden="true">
+                    <td><span class="sk sk-name"></span><span class="sk sk-code"></span></td>
+                    <td><span class="sk sk-badge"></span></td>
+                    <td><span class="sk sk-price"></span></td>
+                    <td><span class="sk sk-line"></span><span class="sk sk-line short"></span></td>
+                    <td><span class="sk sk-score"></span></td>
+                    <td><span class="sk sk-line short"></span></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="empty-state" role="status" hidden>
+              <div class="empty-visual" id="empty-visual" aria-hidden="true"></div>
+              <h3 id="empty-title"></h3>
+              <p id="empty-desc"></p>
             </div>
           </div>
         </section>
@@ -144,13 +275,13 @@
           <p class="eyebrow">HOW THE RADAR READS</p>
           <h2 id="method-title">两条可复盘的研究路径</h2>
         </div>
-        <article class="method-card support-method">
+        <article class="method-card mm-support">
           <span class="method-number">01</span>
           <h3>回踩前期起涨位</h3>
           <p>识别近期有效上涨的起点；当价格处于短中期下跌结构、接近该位置且未明显跌破时，列入潜在支撑观察。</p>
           <p class="method-rule">原上涨 ≥ 15% · 价格 &lt; MA20 &lt; MA60 · 接近起涨位</p>
         </article>
-        <article class="method-card breakout-method">
+        <article class="method-card mm-breakout">
           <span class="method-number">02</span>
           <h3>横盘后放量突破</h3>
           <p>检验低波动横盘、当日量比和收盘位置，筛选接近或突破区间上沿的量价异动。</p>
@@ -159,9 +290,27 @@
       </section>
     </main>
 
-    <footer>
-      <div><strong>势能雷达</strong><span>研究预警 · 不自动交易</span></div>
-      <p>本网站不构成投资建议。历史规律、技术信号及数据质量均不能保证未来表现。</p>
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <strong>势能雷达</strong>
+        <span>研究预警 · 不自动交易</span>
+      </div>
+      <p>
+        本网站为研究预警，不构成投资建议；文中「资金进入」等表述仅为量价代理，不代表真实资金流向。历史规律、技术信号及数据质量均不能保证未来表现。
+      </p>
     </footer>
+
+    <dialog class="signal-dialog" id="signal-dialog" aria-labelledby="dialog-title">
+      <div class="dialog-head">
+        <div>
+          <h2 id="dialog-title">标的详情</h2>
+          <p class="dialog-tags" id="dialog-tags"></p>
+        </div>
+        <button class="dialog-close" id="dialog-close" type="button" aria-label="关闭详情">×</button>
+      </div>
+      <dl class="dialog-meta" id="dialog-meta"></dl>
+      <p class="dialog-note" id="dialog-note"></p>
+      <p class="dialog-disclaimer">研究预警 · 不构成投资建议（「资金进入」仅为量价代理表述）。</p>
+    </dialog>
   </body>
 </html>
