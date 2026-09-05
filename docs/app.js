@@ -302,6 +302,12 @@
         { text: `覆盖量比 ${cleanText(item.cover_vol_ratio)}`, cls: "" },
         { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
       ],
+      breakout: [
+        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
+        { text: `区间振幅 ${pct(item.range_pct)}`, cls: "" },
+        { text: `ATR ${pct(item.atr_pct)}`, cls: "" },
+        { text: `突破位 ${cleanText(item.breakout_high)}`, cls: "" },
+      ],
     };
     const kind = signalKind(item.signal);
     let lines;
@@ -338,11 +344,16 @@
     metricLines(item).forEach((line) => add(metricsCell, "div", line.text, `metric-line ${line.cls}`.trim()));
 
     const scoreCell = add(tr, "td");
-    const rawScore = Math.max(0, Math.min(100, Number(item.score || 0)));
+    const rawScore = Math.max(0, Number(item.score || 0));
     const scoreWrap = add(scoreCell, "div", undefined, "score-cell");
     const top = add(scoreWrap, "div", undefined, "score-top");
-    add(top, "span", rawScore.toFixed(1), "score-num");
-    add(top, "span", "/ 100", "score-den");
+    const sortDisplay = Number((item.sort_score ?? item.score) || 0);
+    // 显示真实加权分（可超100），避免封顶掩盖排序差异
+    add(top, "span", sortDisplay.toFixed(1), "score-num");
+    add(top, "span", "", "score-den");
+    if (Number(item.sort_score || 0) > rawScore) {
+      add(scoreWrap, "p", `形态 ${rawScore.toFixed(1)} + 利好 ${(sortDisplay - rawScore).toFixed(1)}`, "score-bonus");
+    }
     const bar = add(scoreWrap, "span", undefined, "score-bar");
     const fill = add(bar, "i");
     fill.style.width = `${rawScore}%`;
