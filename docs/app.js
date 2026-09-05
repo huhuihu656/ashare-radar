@@ -248,7 +248,7 @@
         const haystack = `${item.symbol || ""} ${item.name || ""}`.toLowerCase();
         return kindMatch && boardMatch && (!query || haystack.includes(query));
       })
-      .sort((a, b) => Number(b.score || 0) - Number(a.score || 0) || String(a.symbol || "").localeCompare(String(b.symbol || "")));
+      .sort((a, b) => Number((b.sort_score ?? b.score) || 0) - Number((a.sort_score ?? a.score) || 0) || String(a.symbol || "").localeCompare(String(b.symbol || "")));
   }
 
   const positionTierClass = (pct) => (pct >= 25 ? "heavy" : pct >= 15 ? "std" : pct >= 10 ? "light" : "watch");
@@ -323,6 +323,10 @@
     add(stockCell, "span", cleanText(item.name), "stock-name");
     add(stockCell, "span", cleanText(item.symbol), "stock-code");
     add(stockCell, "span", cleanText(item.board), "board-tag");
+    const nc = Number(item.news_count || 0);
+    if (nc > 0) {
+      add(stockCell, "span", `利好 ×${nc}`, "news-badge");
+    }
 
     const signalCell = add(tr, "td");
     add(signalCell, "span", cleanText(item.signal), `signal-tag signal-${signalKind(item.signal)}`);
@@ -453,6 +457,10 @@
       },
       { dt: "扫描时间", dd: prettyDate(item.scan_time) },
     ];
+    if (Number(item.news_count || 0) > 0) {
+      rows.push({ dt: "近3日利好资讯", dd: `${item.news_count} 条（共 ${item.news_total} 条资讯）`, cls: "is-up" });
+      if (item.top_headline) rows.push({ dt: "代表性利好", dd: cleanText(item.top_headline), cls: "news-headline-cell" });
+    }
     const net = num(item.net_mf_amount);
     if (net !== null) {
       rows.push({

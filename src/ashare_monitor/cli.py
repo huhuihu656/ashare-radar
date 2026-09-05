@@ -16,6 +16,7 @@ from .data import (filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .data import refresh_history_cache_bulk
 from .signals import entry_exit_plan, position_strategy, scan_frame
+from .news_factor import news_counts, sort_score
 from .tushare_src import latest_moneyflow
 
 LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
@@ -99,7 +100,16 @@ def scan(config_path: str) -> int:
                 signals.extend(future.result())
             except Exception as error:
                 failures.append({"symbol": str(quote.symbol), "error": str(error)[:300]})
-    columns = ["symbol", "name", "board", "signal", "score", "close", "volume", "market_env", "scan_time", "note",
+    # 利好消息因子：每条信号附加近3日利好新闻数（东财公开资讯，文本非行情源）
+    news = news_counts([str(s["symbol"]) for s in signals],
+                       Path(cfg.scan.cache_dir).parent / "news_cache")
+    for row in signals:
+        info = news.get(str(row["symbol"]), {})
+        row["news_count"] = info.get("news_count", 0)
+        row["news_total"] = info.get("news_total", 0)
+        row["top_headline"] = info.get("top_headline", "")
+        row["sort_score"] = sort_score(float(row.get("score") or 0), int(row.get("news_count") or 0))
+    columns = ["symbol", "name", "board", "signal", "score", "sort_score", "close", "volume", "market_env", "scan_time", "note",
                "mf_date", "net_mf_amount",
                "position_pct", "position_tier", "position_reason",
                "entry_price", "stop_loss", "take_profit", "risk_reward", "entry_state", "plan_note",
@@ -114,7 +124,7 @@ def scan(config_path: str) -> int:
     if result.empty:
         result = pd.DataFrame(columns=columns)
     else:
-        result = result.reindex(columns=columns).sort_values(["signal", "score"], ascending=[True, False])
+        result = result.reindex(columns=columns).sort_values(["signal", "sort_score"], ascending=[True, False])
     result.to_csv(report_dir / "signals.csv", index=False, encoding="utf-8-sig")
     (report_dir / "signals.json").write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
     metadata = {

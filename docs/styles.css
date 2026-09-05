@@ -1781,3 +1781,8 @@ td:first-child {
 
 .mainline-badge { display: block; font-size: 15px; font-weight: 700; color: var(--score); font-variant-numeric: tabular-nums; }
 .mainline-rank-caption { display: block; font-size: 10px; color: var(--quiet); margin-top: 2px; }
+
+
+/* ---------- 利好消息徽章 ---------- */
+.news-badge { display: inline-block; margin-left: 6px; font-size: 10px; color: var(--up); background: rgba(255, 93, 108, 0.12); border: 1px solid rgba(255, 93, 108, 0.35); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums; }
+.dm-row .news-headline-cell { max-width: 320px; }

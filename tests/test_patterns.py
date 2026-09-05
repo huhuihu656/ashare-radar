@@ -371,3 +371,28 @@ def test_minmax_flat_series_returns_half() -> None:
     import pandas as pd
     values = minmax(pd.Series([2.0, 2.0, 2.0], index=["a", "b", "c"]))
     assert (values == 0.5).all()
+
+
+# ---------------------------------------------------------------------------
+# 利好消息因子
+# ---------------------------------------------------------------------------
+
+def test_news_classify_positive() -> None:
+    from ashare_monitor.news_factor import classify_text
+    assert classify_text("拟回购3亿元彰显信心") == 1
+    assert classify_text("中标国家电网项目") == 1
+    assert classify_text("业绩预增50%") == 1
+
+
+def test_news_classify_negative_wins() -> None:
+    from ashare_monitor.news_factor import classify_text
+    assert classify_text("股东计划减持不超过2%") == 0
+    assert classify_text("风险提示：股价异常波动") == 0
+
+
+def test_news_sort_score_capped_bonus() -> None:
+    from ashare_monitor.news_factor import sort_score
+    assert sort_score(70.0, 0) == 70.0
+    assert sort_score(70.0, 2) == 76.0
+    # 多条新闻加成封顶 15
+    assert sort_score(70.0, 20) == 85.0

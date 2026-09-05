@@ -2,7 +2,7 @@
   "schema_version": 1,
   "as_of": "20260904",
   "generated_at": "2026-09-04T23:43:35+08:00",
-  "published_at": "2026-09-04T16:46:27+00:00",
+  "published_at": "2026-09-05T18:22:30+00:00",
   "universe_count": 5348,
   "failure_count": 0,
   "coverage": 1.0,
@@ -45,7 +45,11 @@
       "take_profit": 10.91,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 97.3
     },
     {
       "close": 34.52,
@@ -74,7 +78,11 @@
       "take_profit": 39.69,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 79.9
     },
     {
       "close": 23.46,
@@ -103,7 +111,11 @@
       "take_profit": 25.01,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "神州数码拟回购2亿元至4亿元股份",
+      "sort_score": 27.5
     },
     {
       "close": 12.44,
@@ -132,7 +144,11 @@
       "take_profit": 14.16,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 79.0
     },
     {
       "close": 13.04,
@@ -161,7 +177,11 @@
       "take_profit": 14.12,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 28.5
     },
     {
       "close": 15.8,
@@ -190,7 +210,11 @@
       "take_profit": 19.38,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 85.8
     },
     {
       "close": 7.94,
@@ -219,7 +243,11 @@
       "take_profit": 8.56,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 21.2
     },
     {
       "close": 24.92,
@@ -248,7 +276,11 @@
       "take_profit": 27.12,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 40.4
     },
     {
       "close": 5.13,
@@ -277,7 +309,11 @@
       "take_profit": 5.95,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 79.2
     },
     {
       "close": 12.14,
@@ -306,7 +342,11 @@
       "take_profit": 13.83,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 83.7
     },
     {
       "close": 10.91,
@@ -335,7 +375,11 @@
       "take_profit": 11.65,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 15.0
     },
     {
       "close": 6.72,
@@ -364,7 +408,11 @@
       "take_profit": 6.72,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 10,
+      "top_headline": "",
+      "sort_score": 47.9
     },
     {
       "close": 7.12,
@@ -393,7 +441,11 @@
       "take_profit": 7.65,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 4,
+      "news_total": 10,
+      "top_headline": "长安汽车回购6639万股A股 金额5.61亿元",
+      "sort_score": 32.4
     },
     {
       "close": 27.95,
@@ -422,7 +474,11 @@
       "take_profit": 31.2,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 66.9
     },
     {
       "close": 6.26,
@@ -450,7 +506,11 @@
       "take_profit": 7.61,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 102.9
     },
     {
       "close": 5.61,
@@ -479,7 +539,11 @@
       "take_profit": 6.27,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "京东方A：累计回购A股8589.26万股 支付总额约5亿元",
+      "sort_score": 86.7
     },
     {
       "close": 5.18,
@@ -507,7 +571,11 @@
       "take_profit": 5.66,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 5.18,
@@ -535,7 +603,11 @@
       "take_profit": 6.41,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 88.6
     },
     {
       "close": 5.18,
@@ -564,7 +636,11 @@
       "take_profit": 5.96,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 84.0
     },
     {
       "close": 3.38,
@@ -593,7 +669,11 @@
       "take_profit": 3.72,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 56.8
     },
     {
       "close": 16.28,
@@ -622,7 +702,11 @@
       "take_profit": 18.88,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 80.6
     },
     {
       "close": 6.08,
@@ -651,7 +735,11 @@
       "take_profit": 6.9,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 75.8
     },
     {
       "close": 11.03,
@@ -679,7 +767,11 @@
       "take_profit": 12.28,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 4.86,
@@ -708,7 +800,11 @@
       "take_profit": 5.39,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 56.3
     },
     {
       "close": 7.7,
@@ -736,7 +832,11 @@
       "take_profit": 8.11,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 7.7,
@@ -764,7 +864,11 @@
       "take_profit": 8.77,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 85.7
     },
     {
       "close": 9.39,
@@ -793,7 +897,11 @@
       "take_profit": 10.78,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 76.6
     },
     {
       "close": 9.33,
@@ -821,7 +929,11 @@
       "take_profit": 11.35,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 92.1
     },
     {
       "close": 27.37,
@@ -850,7 +962,11 @@
       "take_profit": 29.82,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 38.7
     },
     {
       "close": 95.6,
@@ -879,7 +995,11 @@
       "take_profit": 102.93,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 23.5
     },
     {
       "close": 21.6,
@@ -908,7 +1028,11 @@
       "take_profit": 19.91,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 79.8
     },
     {
       "close": 29.86,
@@ -936,7 +1060,11 @@
       "take_profit": 36.63,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "今日299只个股突破半年线",
+      "sort_score": 87.2
     },
     {
       "close": 22.36,
@@ -965,7 +1093,11 @@
       "take_profit": 23.87,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 24.2
     },
     {
       "close": 30.18,
@@ -994,7 +1126,11 @@
       "take_profit": 34.07,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 71.9
     },
     {
       "close": 27.29,
@@ -1023,7 +1159,11 @@
       "take_profit": 30.73,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 73.4
     },
     {
       "close": 17.19,
@@ -1052,7 +1192,11 @@
       "take_profit": 18.7,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 38.6
     },
     {
       "close": 16.3,
@@ -1081,7 +1225,11 @@
       "take_profit": 17.57,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 22.1
     },
     {
       "close": 147.2,
@@ -1110,7 +1258,11 @@
       "take_profit": 166.16,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 81.1
     },
     {
       "close": 40.02,
@@ -1139,7 +1291,11 @@
       "take_profit": 45.59,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 77.3
     },
     {
       "close": 25.95,
@@ -1168,7 +1324,11 @@
       "take_profit": 27.73,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 13.7
     },
     {
       "close": 8.9,
@@ -1197,7 +1357,11 @@
       "take_profit": 9.55,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 3,
+      "top_headline": "苏州固锝已回购540万股 总支付5011万元",
+      "sort_score": 28.0
     },
     {
       "close": 8.41,
@@ -1225,7 +1389,11 @@
       "take_profit": 10.82,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 9.33,
@@ -1254,7 +1422,11 @@
       "take_profit": 10.27,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 49.0
     },
     {
       "close": 4.28,
@@ -1283,7 +1455,11 @@
       "take_profit": 4.85,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 76.3
     },
     {
       "close": 3.22,
@@ -1311,7 +1487,11 @@
       "take_profit": 3.49,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 2,
+      "news_total": 8,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 106.0
     },
     {
       "close": 3.22,
@@ -1339,7 +1519,11 @@
       "take_profit": 3.91,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 8,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 86.4
     },
     {
       "close": 15.57,
@@ -1368,7 +1552,11 @@
       "take_profit": 16.69,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 17.7
     },
     {
       "close": 3.64,
@@ -1397,7 +1585,11 @@
       "take_profit": 4.12,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 73.0
     },
     {
       "close": 17.49,
@@ -1426,7 +1618,11 @@
       "take_profit": 19.02,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 5,
+      "top_headline": "金风科技累计回购1302万股，耗资3亿元",
+      "sort_score": 51.1
     },
     {
       "close": 5.27,
@@ -1455,7 +1651,11 @@
       "take_profit": 6.03,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 88.5
     },
     {
       "close": 11.95,
@@ -1484,7 +1684,11 @@
       "take_profit": 13.06,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 37.0
     },
     {
       "close": 16.31,
@@ -1513,7 +1717,11 @@
       "take_profit": 18.19,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 3,
+      "news_total": 8,
+      "top_headline": "社保基金二季度重仓股揭秘：新进166股 增持157股",
+      "sort_score": 69.9
     },
     {
       "close": 24.89,
@@ -1542,7 +1750,11 @@
       "take_profit": 28.3,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 5,
+      "top_headline": "53股今日获机构买入评级 9股上涨空间超20%",
+      "sort_score": 79.3
     },
     {
       "close": 31.42,
@@ -1571,7 +1783,11 @@
       "take_profit": 34.05,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "信立泰已回购709万股 金额2.28亿元",
+      "sort_score": 39.0
     },
     {
       "close": 17.27,
@@ -1599,7 +1815,11 @@
       "take_profit": 19.29,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 87.8
     },
     {
       "close": 125.42,
@@ -1628,7 +1848,11 @@
       "take_profit": 142.08,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 3,
+      "top_headline": "杰瑞股份：14.65亿美元燃气轮机订单已收首笔预付款 计划2027年分批交付",
+      "sort_score": 86.3
     },
     {
       "close": 126.62,
@@ -1657,7 +1881,11 @@
       "take_profit": 136.64,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 27.2
     },
     {
       "close": 12.54,
@@ -1686,7 +1914,11 @@
       "take_profit": 13.66,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 37.9
     },
     {
       "close": 9.68,
@@ -1715,7 +1947,11 @@
       "take_profit": 11.78,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 84.1
     },
     {
       "close": 14.53,
@@ -1743,7 +1979,11 @@
       "take_profit": 16.02,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 56.31999999999999,
@@ -1772,7 +2012,11 @@
       "take_profit": 60.94,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 27.4
     },
     {
       "close": 6.6,
@@ -1800,7 +2044,11 @@
       "take_profit": 8.39,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "今日299只个股突破半年线",
+      "sort_score": 101.9
     },
     {
       "close": 4.58,
@@ -1828,7 +2076,11 @@
       "take_profit": 5.65,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 87.5
     },
     {
       "close": 4.05,
@@ -1856,7 +2108,11 @@
       "take_profit": 4.35,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 3,
+      "news_total": 10,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 109.0
     },
     {
       "close": 4.05,
@@ -1884,7 +2140,11 @@
       "take_profit": 4.86,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 3,
+      "news_total": 10,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 102.7
     },
     {
       "close": 8.59,
@@ -1913,7 +2173,11 @@
       "take_profit": 9.69,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 70.8
     },
     {
       "close": 3.22,
@@ -1942,7 +2206,11 @@
       "take_profit": 3.21,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 48.1
     },
     {
       "close": 7.38,
@@ -1970,7 +2238,11 @@
       "take_profit": 8.22,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 1,
+      "news_total": 1,
+      "top_headline": "超八成利润来自股权分红 江苏信托上半年营收净利双增",
+      "sort_score": 103.0
     },
     {
       "close": 16.7,
@@ -1999,7 +2271,11 @@
       "take_profit": 15.72,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 2,
+      "news_total": 3,
+      "top_headline": "金达威累计回购1253万股，耗资1.8亿元",
+      "sort_score": 70.5
     },
     {
       "close": 15.2,
@@ -2028,7 +2304,11 @@
       "take_profit": 16.23,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 14.1
     },
     {
       "close": 9.27,
@@ -2057,7 +2337,11 @@
       "take_profit": 10.2,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 51.7
     },
     {
       "close": 9.18,
@@ -2086,7 +2370,11 @@
       "take_profit": 9.92,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 27.8
     },
     {
       "close": 33.83,
@@ -2115,7 +2403,11 @@
       "take_profit": 37.67,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 62.1
     },
     {
       "close": 11.22,
@@ -2144,7 +2436,11 @@
       "take_profit": 10.92,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 68.7
     },
     {
       "close": 48.39,
@@ -2173,7 +2469,11 @@
       "take_profit": 53.17,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 45.2
     },
     {
       "close": 8.46,
@@ -2202,7 +2502,11 @@
       "take_profit": 9.67,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "儒意电影已回购1791万股 金额1.49亿元",
+      "sort_score": 86.5
     },
     {
       "close": 42.93,
@@ -2231,7 +2535,11 @@
       "take_profit": 45.96,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 19.2
     },
     {
       "close": 20.3,
@@ -2260,7 +2568,11 @@
       "take_profit": 22.08,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 5,
+      "top_headline": "康弘药业：康柏西普眼用注射液增加适应症获批",
+      "sort_score": 39.8
     },
     {
       "close": 48.27,
@@ -2289,7 +2601,11 @@
       "take_profit": 54.08,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 69.7
     },
     {
       "close": 14.92,
@@ -2318,7 +2634,11 @@
       "take_profit": 13.05,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 36.5
     },
     {
       "close": 172.3,
@@ -2347,7 +2667,11 @@
       "take_profit": 191.38,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 59.2
     },
     {
       "close": 45.45,
@@ -2376,7 +2700,11 @@
       "take_profit": 49.81,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 42.2
     },
     {
       "close": 9.28,
@@ -2405,7 +2733,11 @@
       "take_profit": 10.56,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 77.3
     },
     {
       "close": 62.63,
@@ -2434,7 +2766,11 @@
       "take_profit": 67.01,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 15.5
     },
     {
       "close": 12.24,
@@ -2463,7 +2799,11 @@
       "take_profit": 14.15,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 75.9
     },
     {
       "close": 7.210000000000001,
@@ -2492,7 +2832,11 @@
       "take_profit": 6.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "2连板集泰股份：液冷硅油尚未形成规模化订单及销售收入",
+      "sort_score": 63.0
     },
     {
       "close": 14.07,
@@ -2521,7 +2865,11 @@
       "take_profit": 13.04,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 2,
+      "news_total": 7,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 38.2
     },
     {
       "close": 53.02,
@@ -2550,7 +2898,11 @@
       "take_profit": 59.88,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "雷赛智能：定增申请获批 拟募资不超11.44亿元投向智能装备核心零部件等项目",
+      "sort_score": 79.4
     },
     {
       "close": 13.76,
@@ -2579,7 +2931,11 @@
       "take_profit": 14.71,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 14.6
     },
     {
       "close": 32.65,
@@ -2608,7 +2964,11 @@
       "take_profit": 36.86,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 73.9
     },
     {
       "close": 9.78,
@@ -2637,7 +2997,11 @@
       "take_profit": 10.76,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 4,
+      "top_headline": "劲仔食品近亿元回购股份，2.24%总股本将注销",
+      "sort_score": 53.1
     },
     {
       "close": 11.74,
@@ -2666,7 +3030,11 @@
       "take_profit": 12.83,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "18家公司重要股东开启增持模式 累计增持14.03亿元（附股）",
+      "sort_score": 43.8
     },
     {
       "close": 6.46,
@@ -2694,7 +3062,11 @@
       "take_profit": 7.73,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 61.7
     },
     {
       "close": 30.54,
@@ -2723,7 +3095,11 @@
       "take_profit": 33.47,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 44.6
     },
     {
       "close": 12.55,
@@ -2752,7 +3128,11 @@
       "take_profit": 13.64,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 38.0
     },
     {
       "close": 12.1,
@@ -2781,7 +3161,11 @@
       "take_profit": 12.92,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 19.5
     },
     {
       "close": 66.2,
@@ -2810,7 +3194,11 @@
       "take_profit": 71.09,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 3,
+      "top_headline": "鼎龙股份回购63万股 金额4594万元",
+      "sort_score": 24.6
     },
     {
       "close": 9.439999999999998,
@@ -2839,7 +3227,11 @@
       "take_profit": 10.12,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 18.8
     },
     {
       "close": 59.31,
@@ -2868,7 +3260,11 @@
       "take_profit": 68.89,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "87股今日获机构买入评级 24股上涨空间超20%",
+      "sort_score": 90.3
     },
     {
       "close": 7.37,
@@ -2897,7 +3293,11 @@
       "take_profit": 7.93,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 24.2
     },
     {
       "close": 16.28,
@@ -2926,7 +3326,11 @@
       "take_profit": 17.78,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 42.3
     },
     {
       "close": 13.43,
@@ -2955,7 +3359,11 @@
       "take_profit": 14.75,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 46.0
     },
     {
       "close": 81.2,
@@ -2984,7 +3392,11 @@
       "take_profit": 92.66,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 83.3
     },
     {
       "close": 14.989999999999998,
@@ -3013,7 +3425,11 @@
       "take_profit": 16.51,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 56.5
     },
     {
       "close": 23.19,
@@ -3042,7 +3458,11 @@
       "take_profit": 24.81,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 24.2
     },
     {
       "close": 9.37,
@@ -3071,7 +3491,11 @@
       "take_profit": 10.29,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 47.6
     },
     {
       "close": 12.609999999999998,
@@ -3100,7 +3524,11 @@
       "take_profit": 14.47,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 76.6
     },
     {
       "close": 9.13,
@@ -3129,7 +3557,11 @@
       "take_profit": 9.35,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 54.5
     },
     {
       "close": 27.18,
@@ -3158,7 +3590,11 @@
       "take_profit": 29.69,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 44.1
     },
     {
       "close": 11.53,
@@ -3187,7 +3623,11 @@
       "take_profit": 13.59,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 62.4
     },
     {
       "close": 5.61,
@@ -3216,7 +3656,11 @@
       "take_profit": 6.05,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 28.6
     },
     {
       "close": 35.25,
@@ -3245,7 +3689,11 @@
       "take_profit": 38.42,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 36.8
     },
     {
       "close": 32.3,
@@ -3274,7 +3722,11 @@
       "take_profit": 35.31,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 43.0
     },
     {
       "close": 12.17,
@@ -3303,7 +3755,11 @@
       "take_profit": 13.77,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 3,
+      "top_headline": "98股今日获机构买入评级 25股上涨空间超20%",
+      "sort_score": 79.0
     },
     {
       "close": 12.43,
@@ -3332,7 +3788,11 @@
       "take_profit": 15.15,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 67.0
     },
     {
       "close": 17.27,
@@ -3361,7 +3821,11 @@
       "take_profit": 18.53,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 23.1
     },
     {
       "close": 19.25,
@@ -3390,7 +3854,11 @@
       "take_profit": 21.08,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 5,
+      "top_headline": "98股今日获机构买入评级 25股上涨空间超20%",
+      "sort_score": 43.8
     },
     {
       "close": 4.18,
@@ -3419,7 +3887,11 @@
       "take_profit": 4.51,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 25.7
     },
     {
       "close": 54.82,
@@ -3448,7 +3920,11 @@
       "take_profit": 62.2,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 8,
+      "top_headline": "鹏辉能源2026年半年报：储能业务放量，业绩扭亏为盈",
+      "sort_score": 82.4
     },
     {
       "close": 17.53,
@@ -3477,7 +3953,11 @@
       "take_profit": 18.93,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 27.5
     },
     {
       "close": 31.83,
@@ -3506,7 +3986,11 @@
       "take_profit": 34.27,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 38.0
     },
     {
       "close": 27.5,
@@ -3534,7 +4018,11 @@
       "take_profit": 36.81,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 102.2
     },
     {
       "close": 50.19,
@@ -3563,7 +4051,11 @@
       "take_profit": 57.56,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 82.5
     },
     {
       "close": 15.36,
@@ -3591,7 +4083,11 @@
       "take_profit": 16.35,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 99.8
     },
     {
       "close": 15.36,
@@ -3620,7 +4116,11 @@
       "take_profit": 16.14,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 64.0
     },
     {
       "close": 15.36,
@@ -3648,7 +4148,11 @@
       "take_profit": 18.51,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 86.8
     },
     {
       "close": 386.0,
@@ -3677,7 +4181,11 @@
       "take_profit": 419.33,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 34.9
     },
     {
       "close": 15.56,
@@ -3706,7 +4214,11 @@
       "take_profit": 18.08,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 77.6
     },
     {
       "close": 28.92,
@@ -3735,7 +4247,11 @@
       "take_profit": 33.0,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 79.0
     },
     {
       "close": 37.59,
@@ -3764,7 +4280,11 @@
       "take_profit": 41.15,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 43.7
     },
     {
       "close": 18.95,
@@ -3793,7 +4313,11 @@
       "take_profit": 20.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 22.7
     },
     {
       "close": 30.61,
@@ -3822,7 +4346,11 @@
       "take_profit": 34.17,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 63.3
     },
     {
       "close": 24.9,
@@ -3851,7 +4379,11 @@
       "take_profit": 26.55,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 11.5
     },
     {
       "close": 14.02,
@@ -3880,7 +4412,11 @@
       "take_profit": 15.59,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 62.5
     },
     {
       "close": 18.19,
@@ -3908,7 +4444,11 @@
       "take_profit": 25.26,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 6,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 89.3
     },
     {
       "close": 88.9,
@@ -3937,7 +4477,11 @@
       "take_profit": 84.86,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 59.7
     },
     {
       "close": 20.08,
@@ -3966,7 +4510,11 @@
       "take_profit": 22.84,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 75.6
     },
     {
       "close": 54.86,
@@ -3995,7 +4543,11 @@
       "take_profit": 60.02,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 54.8
     },
     {
       "close": 52.56,
@@ -4024,7 +4576,11 @@
       "take_profit": 60.8,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 79.8
     },
     {
       "close": 19.27,
@@ -4053,7 +4609,11 @@
       "take_profit": 21.11,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 46.6
     },
     {
       "close": 16.88,
@@ -4081,7 +4641,11 @@
       "take_profit": 22.9,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 100.8
     },
     {
       "close": 351.0,
@@ -4110,7 +4674,11 @@
       "take_profit": 392.67,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 7,
+      "top_headline": "宁德时代：截至8月31日公司尚未实施股份回购",
+      "sort_score": 68.4
     },
     {
       "close": 27.94,
@@ -4139,7 +4707,11 @@
       "take_profit": 30.99,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 61.3
     },
     {
       "close": 58.29999999999999,
@@ -4168,7 +4740,11 @@
       "take_profit": 63.98,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 46.4
     },
     {
       "close": 41.62,
@@ -4197,7 +4773,11 @@
       "take_profit": 44.91,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "德方纳米：2026年上半年盈利4.55亿元 同比扭亏",
+      "sort_score": 33.4
     },
     {
       "close": 16.9,
@@ -4226,7 +4806,11 @@
       "take_profit": 19.66,
       "risk_reward": 4.81,
       "entry_state": "已触发",
-      "plan_note": "箱体上沿确认买入；跌回上沿下方3%止损；目标=箱体高度投影与1:3的较远者"
+      "plan_note": "箱体上沿确认买入；跌回上沿下方3%止损；目标=箱体高度投影与1:3的较远者",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "今日299只个股突破半年线",
+      "sort_score": 93.9
     },
     {
       "close": 16.9,
@@ -4254,7 +4838,11 @@
       "take_profit": 22.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "今日299只个股突破半年线",
+      "sort_score": 74.5
     },
     {
       "close": 24.04,
@@ -4283,7 +4871,11 @@
       "take_profit": 26.21,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "137股今日获机构买入评级",
+      "sort_score": 41.4
     },
     {
       "close": 19.27,
@@ -4312,7 +4904,11 @@
       "take_profit": 20.95,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 32.7
     },
     {
       "close": 36.65,
@@ -4341,7 +4937,11 @@
       "take_profit": 39.13,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 15.3
     },
     {
       "close": 88.65,
@@ -4370,7 +4970,11 @@
       "take_profit": 96.11,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 31.6
     },
     {
       "close": 36.06,
@@ -4399,7 +5003,11 @@
       "take_profit": 39.9,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 55.5
     },
     {
       "close": 81.71,
@@ -4428,7 +5036,11 @@
       "take_profit": 67.98,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 10,
+      "top_headline": "",
+      "sort_score": 57.0
     },
     {
       "close": 37.11,
@@ -4457,7 +5069,11 @@
       "take_profit": 42.72,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 88.2
     },
     {
       "close": 39.5,
@@ -4486,7 +5102,11 @@
       "take_profit": 45.36,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 78.1
     },
     {
       "close": 43.27,
@@ -4515,7 +5135,11 @@
       "take_profit": 46.64,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 32.3
     },
     {
       "close": 17.79,
@@ -4544,7 +5168,11 @@
       "take_profit": 19.31,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 76.6
     },
     {
       "close": 99.1,
@@ -4573,7 +5201,11 @@
       "take_profit": 115.31,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "今日117只个股突破年线",
+      "sort_score": 78.6
     },
     {
       "close": 37.62,
@@ -4602,7 +5234,11 @@
       "take_profit": 42.03,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 8,
+      "top_headline": "软通动力已回购429万股 金额1.58亿元",
+      "sort_score": 66.0
     },
     {
       "close": 18.23,
@@ -4631,7 +5267,11 @@
       "take_profit": 20.39,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 68.7
     },
     {
       "close": 12.16,
@@ -4660,7 +5300,11 @@
       "take_profit": 13.53,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 61.4
     },
     {
       "close": 20.77,
@@ -4689,7 +5333,11 @@
       "take_profit": 19.71,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 1,
+      "news_total": 9,
+      "top_headline": "今日盘中突破半年线个股",
+      "sort_score": 64.6
     },
     {
       "close": 33.74,
@@ -4718,7 +5366,11 @@
       "take_profit": 38.82,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 80.0
     },
     {
       "close": 14.04,
@@ -4746,7 +5398,11 @@
       "take_profit": 16.51,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 79.8
     },
     {
       "close": 104.04,
@@ -4775,7 +5431,11 @@
       "take_profit": 115.71,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 60.1
     },
     {
       "close": 37.8,
@@ -4804,7 +5464,11 @@
       "take_profit": 41.06,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 36.5
     },
     {
       "close": 45.85,
@@ -4833,7 +5497,11 @@
       "take_profit": 49.45,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 24.0
     },
     {
       "close": 17.24,
@@ -4862,7 +5530,11 @@
       "take_profit": 20.38,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 89.3
     },
     {
       "close": 37.9,
@@ -4891,7 +5563,11 @@
       "take_profit": 40.65,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 18.7
     },
     {
       "close": 38.03,
@@ -4920,7 +5596,11 @@
       "take_profit": 40.76,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 18.0
     },
     {
       "close": 26.38,
@@ -4949,7 +5629,11 @@
       "take_profit": 29.05,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 71.1
     },
     {
       "close": 113.88,
@@ -4978,7 +5662,11 @@
       "take_profit": 121.41,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 10.7
     },
     {
       "close": 28.19,
@@ -5007,7 +5695,11 @@
       "take_profit": 31.34,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 59.7
     },
     {
       "close": 21.64,
@@ -5036,7 +5728,11 @@
       "take_profit": 23.37,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 25.0
     },
     {
       "close": 62.7,
@@ -5065,7 +5761,11 @@
       "take_profit": 68.79,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 53.2
     },
     {
       "close": 6.73,
@@ -5094,7 +5794,11 @@
       "take_profit": 7.28,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 34.2
     },
     {
       "close": 9.19,
@@ -5122,7 +5826,11 @@
       "take_profit": 9.57,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 103.0
     },
     {
       "close": 9.19,
@@ -5150,7 +5858,11 @@
       "take_profit": 10.74,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 95.7
     },
     {
       "close": 5.57,
@@ -5179,7 +5891,11 @@
       "take_profit": 5.96,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 16.4
     },
     {
       "close": 9.07,
@@ -5207,7 +5923,11 @@
       "take_profit": 10.06,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 10.17,
@@ -5236,7 +5956,11 @@
       "take_profit": 9.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 69.0
     },
     {
       "close": 10.17,
@@ -5264,7 +5988,11 @@
       "take_profit": 15.77,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 90.5
     },
     {
       "close": 18.88,
@@ -5293,7 +6021,11 @@
       "take_profit": 21.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 62.8
     },
     {
       "close": 38.67,
@@ -5322,7 +6054,11 @@
       "take_profit": 42.29,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 42.1
     },
     {
       "close": 13.69,
@@ -5351,7 +6087,11 @@
       "take_profit": 15.13,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 2,
+      "top_headline": "罕见中期分红！AI带来增量金发科技近百亿元未分配利润如何消化？",
+      "sort_score": 61.4
     },
     {
       "close": 17.17,
@@ -5379,7 +6119,11 @@
       "take_profit": 23.21,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 1,
+      "top_headline": "今日299只个股突破半年线",
+      "sort_score": 94.9
     },
     {
       "close": 37.47,
@@ -5407,7 +6151,11 @@
       "take_profit": 39.25,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 5,
+      "news_total": 9,
+      "top_headline": "中国船舶：控股子公司联合签订逾10亿美元造船合同",
+      "sort_score": 115.0
     },
     {
       "close": 37.92,
@@ -5436,7 +6184,11 @@
       "take_profit": 42.84,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 76.2
     },
     {
       "close": 17.57,
@@ -5465,7 +6217,11 @@
       "take_profit": 14.97,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 61.9
     },
     {
       "close": 46.02,
@@ -5494,7 +6250,11 @@
       "take_profit": 51.92,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 80.7
     },
     {
       "close": 19.61,
@@ -5523,7 +6283,11 @@
       "take_profit": 21.87,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 66.4
     },
     {
       "close": 14.710000000000004,
@@ -5551,7 +6315,11 @@
       "take_profit": 19.67,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 90.9
     },
     {
       "close": 10.17,
@@ -5580,7 +6348,11 @@
       "take_profit": 11.37,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 5,
+      "top_headline": "137股今日获机构买入评级",
+      "sort_score": 77.0
     },
     {
       "close": 19.01,
@@ -5608,7 +6380,11 @@
       "take_profit": 20.64,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 89.3
     },
     {
       "close": 19.01,
@@ -5636,7 +6412,11 @@
       "take_profit": 22.89,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 90.8
     },
     {
       "close": 20.62,
@@ -5665,7 +6445,11 @@
       "take_profit": 22.21,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "江淮汽车已回购302万股 金额7037万元",
+      "sort_score": 31.3
     },
     {
       "close": 4.46,
@@ -5694,7 +6478,11 @@
       "take_profit": 4.87,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 2,
+      "top_headline": "98股今日获机构买入评级 25股上涨空间超20%",
+      "sort_score": 57.4
     },
     {
       "close": 18.46,
@@ -5722,7 +6510,11 @@
       "take_profit": 26.05,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "今日盘中突破年线个股",
+      "sort_score": 106.0
     },
     {
       "close": 8.47,
@@ -5750,7 +6542,11 @@
       "take_profit": 9.48,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 5.41,
@@ -5779,7 +6575,11 @@
       "take_profit": 5.88,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 40.0
     },
     {
       "close": 28.64,
@@ -5808,7 +6608,11 @@
       "take_profit": 31.59,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 8,
+      "top_headline": "卧龙电驱：已回购814.42万元",
+      "sort_score": 69.1
     },
     {
       "close": 51.49,
@@ -5837,7 +6641,11 @@
       "take_profit": 55.82,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 30.2
     },
     {
       "close": 9.02,
@@ -5866,7 +6674,11 @@
       "take_profit": 7.42,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 82.2
     },
     {
       "close": 4.62,
@@ -5894,7 +6706,11 @@
       "take_profit": 5.45,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 3,
+      "news_total": 8,
+      "top_headline": "今日突破半年线个股",
+      "sort_score": 109.0
     },
     {
       "close": 27.44,
@@ -5922,7 +6738,11 @@
       "take_profit": 30.28,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 12.66,
@@ -5950,7 +6770,11 @@
       "take_profit": 16.93,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 1,
+      "news_total": 7,
+      "top_headline": "【盘中播报】160只个股突破半年线",
+      "sort_score": 95.4
     },
     {
       "close": 14.9,
@@ -5978,7 +6802,11 @@
       "take_profit": 16.54,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 5,
+      "news_total": 10,
+      "top_headline": "大商股份600694.SH)：全资子公司签订大连东港乐园项目施工总承包合同，金额约7.86亿元",
+      "sort_score": 106.2
     },
     {
       "close": 11.94,
@@ -6007,7 +6835,11 @@
       "take_profit": 13.38,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 57.9
     },
     {
       "close": 5.35,
@@ -6036,7 +6868,11 @@
       "take_profit": 5.98,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 74.6
     },
     {
       "close": 10.87,
@@ -6065,7 +6901,11 @@
       "take_profit": 12.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 68.5
     },
     {
       "close": 16.38,
@@ -6094,7 +6934,11 @@
       "take_profit": 18.18,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 4,
+      "top_headline": "安徽合力G3前移式叉车新品首发 京东230台订单交付破4000万元",
+      "sort_score": 62.8
     },
     {
       "close": 5.21,
@@ -6122,7 +6966,11 @@
       "take_profit": 6.22,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 106.0
     },
     {
       "close": 13.02,
@@ -6151,7 +6999,11 @@
       "take_profit": 14.32,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+      "plan_note": "覆盖上影高点买入；跌破上影低点（试盘失败）止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 87.2
     },
     {
       "close": 1.86,
@@ -6180,7 +7032,11 @@
       "take_profit": 1.97,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 10,
+      "top_headline": "",
+      "sort_score": 53.3
     },
     {
       "close": 15.48,
@@ -6208,7 +7064,11 @@
       "take_profit": 18.34,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 75.7
     },
     {
       "close": 5.59,
@@ -6236,7 +7096,11 @@
       "take_profit": 5.9,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 2,
+      "news_total": 10,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 106.0
     },
     {
       "close": 5.59,
@@ -6264,7 +7128,11 @@
       "take_profit": 6.62,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 2,
+      "news_total": 10,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 97.8
     },
     {
       "close": 14.590000000000002,
@@ -6293,7 +7161,11 @@
       "take_profit": 13.87,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 43.5
     },
     {
       "close": 25.28,
@@ -6322,7 +7194,11 @@
       "take_profit": 27.38,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 34.0
     },
     {
       "close": 12.65,
@@ -6351,7 +7227,11 @@
       "take_profit": 9.64,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 82.7
     },
     {
       "close": 16.28,
@@ -6380,7 +7260,11 @@
       "take_profit": 17.69,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 33.0
     },
     {
       "close": 99.03,
@@ -6409,7 +7293,11 @@
       "take_profit": 108.86,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 53.4
     },
     {
       "close": 8.55,
@@ -6438,7 +7326,11 @@
       "take_profit": 9.29,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 1,
+      "top_headline": "108股今日获机构买入评级",
+      "sort_score": 36.9
     },
     {
       "close": 13.390000000000002,
@@ -6467,7 +7359,11 @@
       "take_profit": 15.21,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 3,
+      "news_total": 7,
+      "top_headline": "三星电气2026年半年报：海外业务突破，营收利润双降",
+      "sort_score": 88.0
     },
     {
       "close": 4.16,
@@ -6496,7 +7392,11 @@
       "take_profit": 4.54,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 43.5
     },
     {
       "close": 14.94,
@@ -6525,7 +7425,11 @@
       "take_profit": 16.63,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 3,
+      "news_total": 9,
+      "top_headline": "社保基金二季度重仓股揭秘：新进166股 增持157股",
+      "sort_score": 68.4
     },
     {
       "close": 14.47,
@@ -6554,7 +7458,11 @@
       "take_profit": 16.07,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 9,
+      "top_headline": "中创智领拟斥资3亿元至4亿元回购，半数用于注销减资",
+      "sort_score": 59.5
     },
     {
       "close": 11.489999999999998,
@@ -6583,7 +7491,11 @@
       "take_profit": 12.37,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 21.5
     },
     {
       "close": 8.65,
@@ -6612,7 +7524,11 @@
       "take_profit": 9.41,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 3,
+      "top_headline": "180股今日获机构买入评级",
+      "sort_score": 38.1
     },
     {
       "close": 5.83,
@@ -6640,7 +7556,11 @@
       "take_profit": 6.26,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 3,
+      "news_total": 10,
+      "top_headline": "今日1091只个股突破五日均线",
+      "sort_score": 109.0
     },
     {
       "close": 20.980000000000004,
@@ -6669,7 +7589,11 @@
       "take_profit": 22.39,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "钼行业步入高景气周期，龙头企业收购增资扩产忙",
+      "sort_score": 17.2
     },
     {
       "close": 5.58,
@@ -6698,7 +7622,11 @@
       "take_profit": 6.35,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 80.1
     },
     {
       "close": 28.9,
@@ -6727,7 +7655,11 @@
       "take_profit": 31.42,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 35.4
     },
     {
       "close": 31.34,
@@ -6756,7 +7688,11 @@
       "take_profit": 33.84,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 28.5
     },
     {
       "close": 82.69,
@@ -6785,7 +7721,11 @@
       "take_profit": 88.75,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 33.2
     },
     {
       "close": 13.88,
@@ -6813,7 +7753,11 @@
       "take_profit": 17.25,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 79.2
     },
     {
       "close": 70.1,
@@ -6842,7 +7786,11 @@
       "take_profit": 74.28,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 3,
+      "news_total": 7,
+      "top_headline": "甘李药业：获得GZC8072片新适应症《药物临床试验批准通知书》",
+      "sort_score": 68.0
     },
     {
       "close": 12.75,
@@ -6871,7 +7819,11 @@
       "take_profit": 14.75,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 83.7
     },
     {
       "close": 20.78,
@@ -6900,7 +7852,11 @@
       "take_profit": 22.84,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 45.0
     },
     {
       "close": 9.24,
@@ -6929,7 +7885,11 @@
       "take_profit": 10.15,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "108股今日获机构买入评级",
+      "sort_score": 47.6
     },
     {
       "close": 17.74,
@@ -6958,7 +7918,11 @@
       "take_profit": 19.2,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 28.0
     },
     {
       "close": 120.69,
@@ -6987,7 +7951,11 @@
       "take_profit": 130.3,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 30.0
     },
     {
       "close": 18.9,
@@ -7016,7 +7984,11 @@
       "take_profit": 20.87,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 54.1
     },
     {
       "close": 81.23,
@@ -7045,7 +8017,11 @@
       "take_profit": 88.95,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 41.3
     },
     {
       "close": 10.54,
@@ -7074,7 +8050,11 @@
       "take_profit": 10.21,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 49.6
     },
     {
       "close": 76.63,
@@ -7103,7 +8083,11 @@
       "take_profit": 89.18,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 75.6
     },
     {
       "close": 58.56,
@@ -7132,7 +8116,11 @@
       "take_profit": 64.06,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 3,
+      "top_headline": "",
+      "sort_score": 62.2
     },
     {
       "close": 399.9,
@@ -7160,7 +8148,11 @@
       "take_profit": 443.98,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 89.2
     },
     {
       "close": 22.36,
@@ -7189,7 +8181,11 @@
       "take_profit": 25.76,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 78.6
     },
     {
       "close": 6.71,
@@ -7217,7 +8213,11 @@
       "take_profit": 7.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 6.71,
@@ -7245,7 +8245,11 @@
       "take_profit": 7.89,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 80.6
     },
     {
       "close": 22.45,
@@ -7274,7 +8278,11 @@
       "take_profit": 24.18,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "87股今日获机构买入评级 24股上涨空间超20%",
+      "sort_score": 27.5
     },
     {
       "close": 17.37,
@@ -7303,7 +8311,11 @@
       "take_profit": 19.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 59.4
     },
     {
       "close": 18.82,
@@ -7332,7 +8344,11 @@
       "take_profit": 21.0,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 4,
+      "top_headline": "53股今日获机构买入评级 9股上涨空间超20%",
+      "sort_score": 71.8
     },
     {
       "close": 38.07,
@@ -7361,7 +8377,11 @@
       "take_profit": 40.92,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 5,
+      "top_headline": "华友钴业：已回购金额7,755.41万元",
+      "sort_score": 31.4
     },
     {
       "close": 27.55,
@@ -7390,7 +8410,11 @@
       "take_profit": 31.54,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 79.2
     },
     {
       "close": 5.86,
@@ -7418,7 +8442,11 @@
       "take_profit": 6.88,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 80.0
     },
     {
       "close": 31.3,
@@ -7447,7 +8475,11 @@
       "take_profit": 33.83,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 6,
+      "top_headline": "87股今日获机构买入评级 24股上涨空间超20%",
+      "sort_score": 34.2
     },
     {
       "close": 13.47,
@@ -7476,7 +8508,11 @@
       "take_profit": 13.54,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 52.6
     },
     {
       "close": 11.43,
@@ -7505,7 +8541,11 @@
       "take_profit": 12.77,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 65.3
     },
     {
       "close": 32.96,
@@ -7534,7 +8574,11 @@
       "take_profit": 35.83,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 56.9
     },
     {
       "close": 28.68,
@@ -7563,7 +8607,11 @@
       "take_profit": 29.03,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 57.0
     },
     {
       "close": 65.01,
@@ -7592,7 +8640,11 @@
       "take_profit": 74.34,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 75.7
     },
     {
       "close": 35.67,
@@ -7620,7 +8672,11 @@
       "take_profit": 45.14,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损"
+      "plan_note": "突破压力位买入；跌破MA20（多头结构破坏）止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 96.5
     },
     {
       "close": 133.24,
@@ -7649,7 +8705,11 @@
       "take_profit": 148.13,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 10,
+      "top_headline": "98股今日获机构买入评级 25股上涨空间超20%",
+      "sort_score": 62.4
     },
     {
       "close": 20.53,
@@ -7678,7 +8738,11 @@
       "take_profit": 22.91,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 3,
+      "news_total": 7,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 77.3
     },
     {
       "close": 24.53,
@@ -7707,7 +8771,11 @@
       "take_profit": 27.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 52.1
     },
     {
       "close": 187.7,
@@ -7736,7 +8804,11 @@
       "take_profit": 214.64,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 6,
+      "news_total": 9,
+      "top_headline": "澜起科技：9月4日斥资2101.03万元回购11万股",
+      "sort_score": 91.5
     },
     {
       "close": 43.07,
@@ -7765,7 +8837,11 @@
       "take_profit": 46.4,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 97.0
     },
     {
       "close": 51.4,
@@ -7794,7 +8870,11 @@
       "take_profit": 58.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 56.0
     },
     {
       "close": 41.42,
@@ -7823,7 +8903,11 @@
       "take_profit": 47.81,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 76.0
     },
     {
       "close": 621.93,
@@ -7852,7 +8936,11 @@
       "take_profit": 668.82,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 21.9
     },
     {
       "close": 58.59,
@@ -7881,7 +8969,11 @@
       "take_profit": 64.7,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 66.2
     },
     {
       "close": 25.65,
@@ -7910,7 +9002,11 @@
       "take_profit": 28.41,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 78.9
     },
     {
       "close": 6.07,
@@ -7939,7 +9035,11 @@
       "take_profit": 6.62,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 41.0
     },
     {
       "close": 97.49,
@@ -7968,7 +9068,11 @@
       "take_profit": 107.35,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 52.4
     },
     {
       "close": 132.0,
@@ -7997,7 +9101,11 @@
       "take_profit": 122.26,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 77.5
     },
     {
       "close": 17.42,
@@ -8026,7 +9134,11 @@
       "take_profit": 19.95,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 10,
+      "top_headline": "前沿生物：上半年归母净利润1.49亿元 同比扭亏为盈",
+      "sort_score": 106.0
     },
     {
       "close": 35.07,
@@ -8055,7 +9167,11 @@
       "take_profit": 39.11,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 63.0
     },
     {
       "close": 42.69,
@@ -8084,7 +9200,11 @@
       "take_profit": 46.95,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 6,
+      "top_headline": "98股今日获机构买入评级 25股上涨空间超20%",
+      "sort_score": 49.5
     },
     {
       "close": 27.0,
@@ -8113,7 +9233,11 @@
       "take_profit": 31.34,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 7,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 82.2
     },
     {
       "close": 16.0,
@@ -8142,7 +9266,11 @@
       "take_profit": 16.65,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 66.9
     },
     {
       "close": 31.38,
@@ -8171,7 +9299,11 @@
       "take_profit": 36.14,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 4,
+      "top_headline": "78家创新药企年中考：出海与政策驱动业绩兑现，43家净利增长，2家大涨超11倍",
+      "sort_score": 81.4
     },
     {
       "close": 8.56,
@@ -8200,7 +9332,11 @@
       "take_profit": 9.44,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 57.2
     },
     {
       "close": 223.5,
@@ -8229,7 +9365,11 @@
       "take_profit": 248.03,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 9,
+      "top_headline": "上证早知道｜688347 增资扩大半导体产能；300765 创新药取得新突破",
+      "sort_score": 61.9
     },
     {
       "close": 12.84,
@@ -8258,7 +9398,11 @@
       "take_profit": 14.89,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 9,
+      "top_headline": "108股今日获机构买入评级",
+      "sort_score": 80.9
     },
     {
       "close": 81.84,
@@ -8287,7 +9431,11 @@
       "take_profit": 93.09,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 87.0
     },
     {
       "close": 35.18,
@@ -8316,7 +9464,11 @@
       "take_profit": 38.13,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 6,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 37.8
     },
     {
       "close": 48.0,
@@ -8345,7 +9497,11 @@
       "take_profit": 54.24,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 76.6
     },
     {
       "close": 177.41,
@@ -8374,7 +9530,11 @@
       "take_profit": 204.91,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 77.6
     },
     {
       "close": 31.45,
@@ -8403,7 +9563,11 @@
       "take_profit": 35.13,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 69.0
     },
     {
       "close": 8.78,
@@ -8432,7 +9596,11 @@
       "take_profit": 10.19,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 9,
+      "top_headline": "108股今日获机构买入评级",
+      "sort_score": 79.6
     },
     {
       "close": 70.11,
@@ -8461,7 +9629,11 @@
       "take_profit": 76.86,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 5,
+      "top_headline": "",
+      "sort_score": 43.9
     },
     {
       "close": 40.47,
@@ -8490,7 +9662,11 @@
       "take_profit": 44.16,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 6,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 47.9
     },
     {
       "close": 32.67,
@@ -8519,7 +9695,11 @@
       "take_profit": 36.59,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 3,
+      "top_headline": "利元亨：截至2026年6月末在手订单超50亿元 锂电占比约80%",
+      "sort_score": 73.1
     },
     {
       "close": 213.29,
@@ -8548,7 +9728,11 @@
       "take_profit": 233.68,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 8,
+      "top_headline": "佰维存储：截至2026年8月31日 公司尚未开始实施回购",
+      "sort_score": 47.7
     },
     {
       "close": 2.23,
@@ -8577,7 +9761,11 @@
       "take_profit": 2.51,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 6,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 78.4
     },
     {
       "close": 23.6,
@@ -8606,7 +9794,11 @@
       "take_profit": 25.23,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 25.7
     },
     {
       "close": 28.77,
@@ -8635,7 +9827,11 @@
       "take_profit": 33.03,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 10,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 87.4
     },
     {
       "close": 52.91,
@@ -8663,7 +9859,11 @@
       "take_profit": 58.75,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损"
+      "plan_note": "突破位上沿确认买入；跌回突破位下方3%止损",
+      "news_count": 3,
+      "news_total": 7,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 109.0
     },
     {
       "close": 31.29,
@@ -8692,7 +9892,11 @@
       "take_profit": 36.24,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 7,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 81.8
     },
     {
       "close": 51.06000000000001,
@@ -8721,7 +9925,11 @@
       "take_profit": 58.19,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 1,
+      "top_headline": "",
+      "sort_score": 88.1
     },
     {
       "close": 103.55,
@@ -8750,7 +9958,11 @@
       "take_profit": 116.16,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 8,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 83.0
     },
     {
       "close": 95.57,
@@ -8779,7 +9991,11 @@
       "take_profit": 102.85,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 34.6
     },
     {
       "close": 55.81,
@@ -8808,7 +10024,11 @@
       "take_profit": 63.26,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 76.2
     },
     {
       "close": 40.08,
@@ -8837,7 +10057,11 @@
       "take_profit": 44.78,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 2,
+      "news_total": 10,
+      "top_headline": "社保基金持有73只科创板股：新进27股，增持13股",
+      "sort_score": 68.7
     },
     {
       "close": 122.4,
@@ -8866,7 +10090,11 @@
       "take_profit": 135.68,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 10,
+      "top_headline": "",
+      "sort_score": 55.2
     },
     {
       "close": 213.33,
@@ -8895,7 +10123,11 @@
       "take_profit": 232.26,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 41.6
     },
     {
       "close": 41.02,
@@ -8924,7 +10156,11 @@
       "take_profit": 47.57,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 0,
+      "top_headline": "",
+      "sort_score": 77.8
     },
     {
       "close": 24.28,
@@ -8953,7 +10189,11 @@
       "take_profit": 26.32,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 32.7
     },
     {
       "close": 14.3,
@@ -8982,7 +10222,11 @@
       "take_profit": 15.9,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 63.3
     },
     {
       "close": 22.02,
@@ -9011,7 +10255,11 @@
       "take_profit": 24.24,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 1,
+      "news_total": 9,
+      "top_headline": "净利润同比增长74%创新高 半导体设备龙头业绩分化",
+      "sort_score": 51.4
     },
     {
       "close": 93.32,
@@ -9040,7 +10288,11 @@
       "take_profit": 100.42,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 2,
+      "top_headline": "",
+      "sort_score": 23.9
     },
     {
       "close": 15.08,
@@ -9069,7 +10321,11 @@
       "take_profit": 16.47,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 36.8
     },
     {
       "close": 16.19,
@@ -9098,7 +10354,11 @@
       "take_profit": 18.01,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 77.0
     },
     {
       "close": 20.8,
@@ -9127,7 +10387,11 @@
       "take_profit": 21.48,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 4,
+      "top_headline": "",
+      "sort_score": 53.1
     },
     {
       "close": 15.47,
@@ -9156,7 +10420,11 @@
       "take_profit": 16.52,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 12.0
     },
     {
       "close": 6.93,
@@ -9185,7 +10453,11 @@
       "take_profit": 7.62,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 10,
+      "top_headline": "",
+      "sort_score": 46.7
     },
     {
       "close": 8.86,
@@ -9214,7 +10486,11 @@
       "take_profit": 10.29,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 7,
+      "top_headline": "",
+      "sort_score": 100.0
     },
     {
       "close": 12.57,
@@ -9243,7 +10519,11 @@
       "take_profit": 13.88,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损"
+      "plan_note": "起涨位上方1%确认承接买入；跌破起涨位3%止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 51.9
     },
     {
       "close": 7.38,
@@ -9272,7 +10552,11 @@
       "take_profit": 8.4,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 8,
+      "top_headline": "",
+      "sort_score": 50.1
     },
     {
       "close": 6.7,
@@ -9301,7 +10585,11 @@
       "take_profit": 7.65,
       "risk_reward": 3.0,
       "entry_state": "待确认",
-      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损"
+      "plan_note": "突破阴线高点买入；跌破阴线低点（洗盘结构破坏）止损",
+      "news_count": 0,
+      "news_total": 9,
+      "top_headline": "",
+      "sort_score": 45.6
     },
     {
       "close": 12.1,
@@ -9330,7 +10618,11 @@
       "take_profit": 12.1,
       "risk_reward": 3.0,
       "entry_state": "已触发",
-      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损"
+      "plan_note": "回踩缺口上沿不补时买入；缺口回补即形态失效止损",
+      "news_count": 0,
+      "news_total": 6,
+      "top_headline": "",
+      "sort_score": 54.7
     }
   ]
 }
