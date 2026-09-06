@@ -8,10 +8,12 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "scripts"))
 from ashare_monitor.config import load  # noqa: E402
 from ashare_monitor.signals import (  # noqa: E402
     break_ma20, entry_exit_plan, oversold_reversal, position_strategy,
 )
+from export_dashboard import build_klines  # noqa: E402
 
 cfg = load(ROOT / "config.yaml")
 NAME2KEY = {
@@ -104,6 +106,16 @@ def main() -> int:
     latest["generated_at"] = scan_time
     latest["published_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     latest_path.write_text(json.dumps(latest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    # 重建 klines.json（用含新信号的 latest 信号集），否则新标的一进详情 K 线为空
+    try:
+        klines = build_klines(latest["signals"], ROOT / "data" / "cache")
+        (ROOT / "docs" / "data" / "klines.json").write_text(
+            json.dumps(klines, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+        print(f"klines.json rebuilt: {len(klines.get('stocks', {}))} stocks")
+    except Exception as exc:
+        print(f"klines rebuild failed: {exc}")
+
     print(f"as_of={as_of} env={env} new_signals={len(new_rows)} total_signals={len(latest['signals'])}")
     print("counts=", json.dumps(counts, ensure_ascii=False))
     return 0
