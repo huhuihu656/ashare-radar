@@ -30,6 +30,8 @@
     "龙回头二次启动": "dragon",
     "均线多头发散": "ma",
     "低位仙人指路": "shadow",
+    "超跌反转": "reversal",
+    "恰好突破20日线": "ma20",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
 
@@ -199,6 +201,8 @@
     ["dragon", "龙回头二次启动", "dragon_pullback"],
     ["ma", "均线多头发散", "ma_divergence"],
     ["shadow", "低位仙人指路", "low_shadow"],
+    ["reversal", "超跌反转", "oversold_reversal"],
+    ["ma20", "突破20日线", "break_ma20"],
   ];
 
   function renderExtraChips(counts) {

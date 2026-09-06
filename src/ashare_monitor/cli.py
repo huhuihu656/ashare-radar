@@ -37,6 +37,7 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
     rows = scan_frame(frame, cfg.support_retest, cfg.breakout, cfg.risk,
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
                       cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
+                      cfg.oversold_reversal, cfg.break_ma20,
                       limit_pct=limit_pct)
     money = moneyflow.loc[symbol] if moneyflow is not None and symbol in moneyflow.index else None
     for row in rows:

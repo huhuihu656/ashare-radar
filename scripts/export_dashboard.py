@@ -58,6 +58,8 @@ SIGNAL_COUNT_KEYS = {
     "龙回头二次启动": "dragon_pullback",
     "均线多头发散": "ma_divergence",
     "低位仙人指路": "low_shadow",
+    "超跌反转": "oversold_reversal",
+    "恰好突破20日线": "break_ma20",
 }
 
 

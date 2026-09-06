@@ -208,6 +208,7 @@ def evaluate_symbol(symbol: str, frame: pd.DataFrame, window: list[str],
         rows = scan_frame(slice_, cfg.support_retest, cfg.breakout, cfg.risk,
                           cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
                           cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
+                          cfg.oversold_reversal, cfg.break_ma20,
                           limit_pct=pct)
         # 同一信号同股 15 个交易日内只取首个（贴近实盘持仓节奏，且剪枝）
         fresh_rows = []

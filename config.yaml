@@ -99,3 +99,27 @@ low_shadow:              # 低位仙人指路
   shadow_vol_ratio: 1.2           # 上影日量 >= 5日均量1.2倍
   support_days: 5                 # 上影日低点守住近5日支撑
   vol_ma_days: 5
+
+# 超跌反转（缩量企稳 / 多指标共振）——抄底反转一族
+oversold_reversal:
+  enabled: true
+  rsi_period: 14
+  rsi_threshold: 30.0            # RSI < 30 超卖
+  bb_period: 20
+  bb_std: 2.0                    # 布林带 ±2σ
+  volume_contraction_ratio: 0.5  # 近5日均量 < 近20日均量*0.5（缩量）
+  volume_quantile: 0.15          # 近5日均量位于近60日最低15%分位（地量）
+  stab_days: 3                   # 近3日未创新低（企稳）
+  shadow_ratio: 2.0              # 下影 >= 实体*2
+  min_resonance: 3               # 多指标共振项数（至少3，且需含长下影或MACD背离）
+  ma_period: 20
+  ma_slow: 60
+
+# 恰好突破20日线（右侧转折）
+break_ma20:
+  enabled: true
+  ma_period: 20
+  below_days: 5                  # 前5日收盘 < MA20
+  min_vol_ratio: 1.5             # 今日量 >= 前5日均量*1.5
+  max_gain_60_pct: 0.40          # 60日涨幅受限（非高位）
+  vol_ma_days: 5

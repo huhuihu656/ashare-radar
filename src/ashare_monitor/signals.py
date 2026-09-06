@@ -5,11 +5,13 @@ import pandas as pd
 
 from .config import (
     BoxBreakoutConfig,
+    BreakMa20Config,
     BreakoutConfig,
     DragonConfig,
     EngulfingConfig,
     LimitUpGapConfig,
     MaDivergenceConfig,
+    OversoldReversalConfig,
     RiskConfig,
     ShadowTestConfig,
     SupportConfig,
@@ -472,6 +474,118 @@ def sideways_breakout(frame: pd.DataFrame, cfg: BreakoutConfig) -> dict | None:
     }
 
 
+def _rsi(close: pd.Series, period: int = 14) -> pd.Series:
+    delta = close.diff()
+    gain = delta.clip(lower=0.0).rolling(period).mean()
+    loss = (-delta.clip(upper=0.0)).rolling(period).mean()
+    rs = gain / loss.replace(0, float("nan"))
+    out = 100 - 100 / (1 + rs)
+    return out.fillna(100.0)
+
+
+def _ema(series: pd.Series, span: int) -> pd.Series:
+    return series.ewm(span=span, adjust=False).mean()
+
+
+def _macd(close: pd.Series, fast=12, slow=26, signal=9):
+    dif = _ema(close, fast) - _ema(close, slow)
+    dea = _ema(dif, signal)
+    return dif, dea, (dif - dea) * 2
+
+
+def oversold_reversal(frame: pd.DataFrame, cfg: OversoldReversalConfig, risk: RiskConfig) -> dict | None:
+    """超跌反转：缩量企稳（地量+止跌企稳）或 多指标共振（下轨/RSI/长下影/MACD背离）。
+
+    抄底一族，逆势；必须低位 + 抛压衰竭证据，仓位要小、止损要严。
+    """
+    if not cfg.enabled or len(frame) < 60:
+        return None
+    close = frame.close.astype(float)
+    high = frame.high.astype(float)
+    low = frame.low.astype(float)
+    open_ = frame.open.astype(float)
+    vol = frame.volume.astype(float)
+    if not (position_ok(frame, risk) and low_zone_ok(frame, risk)):
+        return None
+    ma20 = close.rolling(cfg.ma_period).mean()
+    today = frame.iloc[-1]
+    c = float(close.iloc[-1]); o = float(open_.iloc[-1]); l = float(low.iloc[-1])
+    below_ma = c < ma20.iloc[-1]
+    # --- A 缩量企稳 ---
+    vol5 = float(vol.iloc[-5:].mean())
+    vol20 = float(vol.iloc[-20:].mean())
+    vol_contraction = vol20 > 0 and vol5 < vol20 * cfg.volume_contraction_ratio
+    vol_rank = float((vol.iloc[-60:] <= vol5).mean())       # vol5 在近60日的分位（越小越低）
+    vol_ground = vol_rank <= cfg.volume_quantile
+    prior_low = float(low.iloc[-cfg.stab_days - 1])
+    no_new_low = l >= prior_low * 0.995
+    mild_stab = no_new_low and c >= o                        # 未跌破近期低点且未放量大阴
+    A = vol_contraction and vol_ground and mild_stab
+    # --- B 多指标共振 ---
+    rsi = float(_rsi(close, cfg.rsi_period).iloc[-1])
+    bb_sd = float(close.iloc[-cfg.bb_period:].std())
+    lower_band = float(ma20.iloc[-1]) - cfg.bb_std * bb_sd
+    touch_lower = c <= lower_band
+    rsi_oversold = rsi < cfg.rsi_threshold
+    body = abs(c - o)
+    lower_shadow = min(o, c) - l
+    long_shadow = body > 0 and lower_shadow >= body * cfg.shadow_ratio
+    dif, _dea, _hist = _macd(close)
+    price_low20 = float(low.iloc[-20:].min())
+    dif_min20 = float(dif.iloc[-20:].min())
+    macd_div = (c <= price_low20 * 1.01) and dif.iloc[-1] > dif_min20
+    n_res = sum(1 for x in (touch_lower, rsi_oversold, long_shadow, macd_div) if x)
+    B = n_res >= cfg.min_resonance and (long_shadow or macd_div) and below_ma
+    if not (A or B):
+        return None
+    which = "缩量企稳" if A else "多指标共振"
+    if A and B:
+        score = 100.0
+    elif A:
+        score = round(100 * (0.50 * min(vol20 / max(vol5, 1e-9) * 0.5, 1.0) + 0.30 * (1 - vol_rank) + 0.20), 1)
+    else:
+        score = round(100 * (0.40 * (n_res / 4.0) + 0.30 * max(0.0, min(1.0, (cfg.rsi_threshold - rsi) / cfg.rsi_threshold)) +
+                             0.30 * (1.0 if macd_div else 0.5)), 1)
+    return {
+        **_base_row(frame), "signal": "超跌反转", "score": score,
+        "sub_signal": which, "rsi": round(rsi, 1), "touch_lower": bool(touch_lower),
+        "long_shadow": bool(long_shadow), "macd_div": bool(macd_div),
+        "vol_contraction": bool(vol_contraction), "volume_ground": bool(vol_ground),
+        "near_low": round(prior_low, 3),
+        "note": f"超跌反转（{which}）：逆势探底、抛压衰竭；需严格止损、轻仓。",
+    }
+
+
+def break_ma20(frame: pd.DataFrame, cfg: BreakMa20Config, risk: RiskConfig) -> dict | None:
+    """恰好突破20日线：前N日收盘<MA20、今日放量站上MA20，且非高位（右侧转折）。"""
+    if not cfg.enabled or len(frame) < 30:
+        return None
+    close = frame.close.astype(float)
+    vol = frame.volume.astype(float)
+    ma20 = close.rolling(cfg.ma_period).mean()
+    before = frame.iloc[-(cfg.below_days + 1):-1]
+    ma_before = ma20.iloc[-(cfg.below_days + 1):-1]
+    below_before = len(before) == cfg.below_days and bool((before.close < ma_before).all())
+    c = float(close.iloc[-1])
+    broke = below_before and c > float(ma20.iloc[-1])
+    vol_ma5 = float(vol.iloc[-cfg.vol_ma_days - 1:-1].mean())
+    vol_ok = vol_ma5 > 0 and float(vol.iloc[-1]) >= vol_ma5 * cfg.min_vol_ratio
+    gain60 = c / float(close.iloc[-61]) - 1 if len(frame) > 61 else 0.0
+    not_high = gain60 <= cfg.max_gain_60_pct
+    if not (broke and vol_ok and not_high and position_ok(frame, risk)):
+        return None
+    score = round(100 * min(1.0, 0.45 * min(float(vol.iloc[-1]) / vol_ma5 / 2.0, 1.0) +
+                            0.30 * min(max(0.0, (c - float(ma20.iloc[-1])) / float(ma20.iloc[-1])) / 0.03, 1.0) +
+                            0.25 * max(0.0, 1.0 - gain60 / cfg.max_gain_60_pct)), 1)
+    return {
+        **_base_row(frame), "signal": "恰好突破20日线", "score": score,
+        "ma20": round(float(ma20.iloc[-1]), 3),
+        "broke_above_pct": round((c / float(ma20.iloc[-1]) - 1) * 100, 2),
+        "prior_gain_60d_pct": round(gain60 * 100, 2),
+        "note": "放量站上20日线（右侧转折）；需站稳MA20、防假突破冲高回落",
+    }
+
+
 def position_strategy(row: dict, market_env: str = "未知") -> dict:
     """Research-reference position sizing for a signal row.
 
@@ -590,6 +704,20 @@ def entry_exit_plan(row: dict) -> dict:
         if sh and sl:
             entry, stop, target = round(sh * 1.005, 2), round(sl * 0.99, 2), None
             note = "覆盖上影高点买入；跌破上影低点（试盘失败）止损"
+    elif kind == "超跌反转":
+        near = row.get("near_low")
+        if near:
+            entry, stop = round(c, 2), round(near * 0.985, 2)
+            if entry > stop:
+                target = round(entry + 3 * (entry - stop), 2)   # 1:3
+                note = "企稳/反转确认后买入；跌破企稳低点（抛压未衰竭）止损"
+    elif kind == "恰好突破20日线":
+        ma20v = row.get("ma20")
+        if ma20v:
+            entry, stop = round(c, 2), round(ma20v * 0.97, 2)
+            if entry > stop:
+                target = round(entry + 3 * (entry - stop), 2)   # 1:3
+                note = "放量站稳20日线买入；跌破MA20（假突破）止损"
     if entry is None or stop is None or entry <= stop:
         return {}
     if target is None:
@@ -618,6 +746,8 @@ def scan_frame(
     dragon_cfg: DragonConfig,
     ma_cfg: MaDivergenceConfig,
     shadow_cfg: ShadowTestConfig,
+    oversold_cfg: OversoldReversalConfig,
+    break_ma20_cfg: BreakMa20Config,
     limit_pct: float = 0.10,
 ) -> list[dict]:
     clean = frame.copy().sort_index()
@@ -654,6 +784,14 @@ def scan_frame(
             out.append(row)
     if shadow_cfg.enabled:
         row = low_shadow_test(clean, shadow_cfg, risk)
+        if row:
+            out.append(row)
+    if oversold_cfg.enabled:
+        row = oversold_reversal(clean, oversold_cfg, risk)
+        if row:
+            out.append(row)
+    if break_ma20_cfg.enabled:
+        row = break_ma20(clean, break_ma20_cfg, risk)
         if row:
             out.append(row)
     return out

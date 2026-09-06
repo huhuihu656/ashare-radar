@@ -131,6 +131,34 @@ class ShadowTestConfig:
 
 
 @dataclass(frozen=True)
+class OversoldReversalConfig:
+    """超跌反转（缩量企稳 / 多指标共振）。抄底反转一族。"""
+    enabled: bool = True
+    rsi_period: int = 14
+    rsi_threshold: float = 30.0
+    bb_period: int = 20
+    bb_std: float = 2.0
+    volume_contraction_ratio: float = 0.5   # 近5日均量 < 近20日均量*0.5
+    volume_quantile: float = 0.15           # 近5日均量位于近60日最低15%分位
+    stab_days: int = 3                      # 近3日未创新低（企稳）
+    shadow_ratio: float = 2.0               # 下影 >= 实体*2
+    min_resonance: int = 3                  # 多指标共振项数（至少3）
+    ma_period: int = 20
+    ma_slow: int = 60
+
+
+@dataclass(frozen=True)
+class BreakMa20Config:
+    """恰好突破20日线（放量站上MA20，右侧转折）。"""
+    enabled: bool = True
+    ma_period: int = 20
+    below_days: int = 5                     # 前N日收盘 < MA20
+    min_vol_ratio: float = 1.5              # 今日量 >= 前5日均量*1.5
+    max_gain_60_pct: float = 0.40           # 60日涨幅受限（非高位）
+    vol_ma_days: int = 5
+
+
+@dataclass(frozen=True)
 class Config:
     scan: ScanConfig = field(default_factory=ScanConfig)
     support_retest: SupportConfig = field(default_factory=SupportConfig)
@@ -142,6 +170,8 @@ class Config:
     dragon_pullback: DragonConfig = field(default_factory=DragonConfig)
     ma_divergence: MaDivergenceConfig = field(default_factory=MaDivergenceConfig)
     low_shadow: ShadowTestConfig = field(default_factory=ShadowTestConfig)
+    oversold_reversal: OversoldReversalConfig = field(default_factory=OversoldReversalConfig)
+    break_ma20: BreakMa20Config = field(default_factory=BreakMa20Config)
 
 
 def load(path: str | Path) -> Config:
@@ -158,4 +188,6 @@ def load(path: str | Path) -> Config:
         dragon_pullback=DragonConfig(**raw.get("dragon_pullback", {})),
         ma_divergence=MaDivergenceConfig(**raw.get("ma_divergence", {})),
         low_shadow=ShadowTestConfig(**raw.get("low_shadow", {})),
+        oversold_reversal=OversoldReversalConfig(**raw.get("oversold_reversal", {})),
+        break_ma20=BreakMa20Config(**raw.get("break_ma20", {})),
     )
