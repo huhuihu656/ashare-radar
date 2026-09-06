@@ -31,7 +31,7 @@ def _notify_cfg() -> dict:
     try:
         import json
         secret = json.loads((ROOT / "data" / "notify_secret.json").read_text(encoding="utf-8"))
-        for k in ("wechat_sendkey", "wecom_webhook", "pushplus_token", "callback_url", "token"):
+        for k in ("wechat_sendkey", "wecom_webhook", "pushplus_token", "callback_url", "token", "serverchan_url"):
             if secret.get(k):
                 cfg[k] = secret[k]
         if secret.get("enabled") is not None:
@@ -53,7 +53,8 @@ def send(title: str, content: str = "") -> bool:
     webhook = str(cfg.get("wecom_webhook") or "")
     token = str(cfg.get("pushplus_token") or "")
     cb_token = str(cfg.get("token") or "")
-    if not (cb or key or webhook or token):
+    sc_url = str(cfg.get("serverchan_url") or "")
+    if not (sc_url or cb or key or webhook or token):
         if not _LOGGED:
             print("[notify] 未配置微信通知渠道（notify.*），已静默跳过。", flush=True)
             _LOGGED = True
@@ -61,6 +62,9 @@ def send(title: str, content: str = "") -> bool:
     text = f"{title}\n{content}".strip()
     try:
         import requests
+        if sc_url:
+            r = requests.post(sc_url, data={"title": title, "desp": content}, timeout=15)
+            return bool(r.ok)
         if cb:
             cb_key = str(cfg.get("key") or "")
             sep = "&" if "?" in cb else "?"
