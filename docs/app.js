@@ -306,6 +306,17 @@
         { text: `覆盖量比 ${cleanText(item.cover_vol_ratio)}`, cls: "" },
         { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
       ],
+      reversal: [
+        { text: cleanText(item.sub_signal), cls: "" },
+        { text: `RSI ${cleanText(item.rsi)}`, cls: num(item.rsi) !== null && num(item.rsi) < 30 ? "is-down" : "" },
+        { text: item.macd_div ? "MACD背离" : "—", cls: item.macd_div ? "is-up" : "" },
+        { text: item.long_shadow ? "长下影" : (item.volume_ground ? "地量" : "—"), cls: "" },
+      ],
+      ma20: [
+        { text: `突破MA20 ${signedPct(item.broke_above_pct)}`, cls: signClass(item.broke_above_pct) },
+        { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
+        { text: `MA20 ${cleanText(item.ma20)}`, cls: "" },
+      ],
       breakout: [
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
         { text: `区间振幅 ${pct(item.range_pct)}`, cls: "" },

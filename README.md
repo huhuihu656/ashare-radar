@@ -5,6 +5,8 @@
 
 [🔗 在线演示（GitHub Pages）](https://huhuihu656.github.io/ashare-radar/) · [⭐ Star](https://github.com/huhuihu656/ashare-radar) · [📌 使用说明](#安装)
 
+![预览](docs/preview.png)
+
 在每个 A 股交易日 **15:10（北京时间，收盘后）** 扫描全市场可获取 A 股行情，生成两类候选池：
 
 1. **回踩上涨启动位**：价格处于短中期下跌结构，接近最近一段有效上涨的起涨低点；这是潜在支撑观察，不是抄底结论。
