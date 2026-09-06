@@ -26,7 +26,9 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
+import notify  # noqa: E402  微信实时通知（未配置渠道则静默）
 
 from ashare_monitor.config import load  # noqa: E402
 
@@ -38,7 +40,7 @@ LOT = 100                # A股一手 100 股
 CHASE_CAP = 0.05
 
 DEFAULTS = {
-    "initial_cash": 100_000.0,
+    "initial_cash": 20_000.0,         # 本金 20,000
     "slots": 4,                       # 轮动槽位数
     "max_positions": 8,
     "max_single_pct": 0.15,
@@ -417,6 +419,12 @@ class Rotation:
             val += p["shares"] * price
         return val
 
+    def _notify(self, title, content=""):
+        try:
+            notify.send(title, content)
+        except Exception:
+            pass
+
     def _sell(self, p, price, day, reason):
         notional = p["shares"] * price
         fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"]) + notional * self.cfg["stamp_pct"]
@@ -429,8 +437,14 @@ class Rotation:
                             "entry_price": round(p["entry_price"], 3), "exit_price": round(price, 3),
                             "shares": p["shares"], "net_pnl": round(net, 2), "win": net > 0})
         self.consec_losses = 0 if net > 0 else self.consec_losses + 1
-        if self.consec_losses >= 3:
+        if reason in ("止盈", "止损", "超时"):
+            icon = {"止盈": "✅", "止损": "🛑", "超时": "⏱"}.get(reason, "·")
+            self._notify(f"{icon} {reason} {p.get('name')} {net:+.2f}元",
+                         f"信号:{p.get('signal')} | 入场{p['entry_day']}@{p['entry_price']} | "
+                         f"{day}卖出 {p['shares']}股@{price} | {reason}")
+        if self.consec_losses >= 3 and not self.pause_until:
             self.pause_until = self._shift(day, self.cfg["pause_days"])
+            self._notify("⚠️ 连亏 3 次，暂停新开仓", f"暂停至 {self.pause_until}")
 
     def _shift(self, day, n):
         try:
@@ -531,6 +545,8 @@ class Rotation:
             self.positions.append({"symbol": p["symbol"], "name": p["name"], "signal": p["signal"],
                                    "entry_day": day, "entry_price": op, "shares": shares, "cost": notional,
                                    "buy_fee": fee, "stop": p["stop"], "target": p["target"], "score": p["score"]})
+            self._notify("📈 开仓 " + p["name"],
+                         f"信号:{p['signal']} | {day}@{op} 买入 {shares}股 | 止损 {p['stop']} 止盈 {p['target']} (1:3)")
             held.add(p["symbol"])
             empty -= 1
             self.pending = [x for x in self.pending if x is not p]
@@ -541,11 +557,15 @@ class Rotation:
             pass
 
     def _liquidate(self, day, reason):
+        closed = len(self.positions)
+        if closed == 0:
+            return
         for p in list(self.positions):
             b = self._bar(p["symbol"], day)
             price = float(b.close) if b is not None else p["entry_price"]
             self._sell(p, price, day, reason)
         self.positions = []
+        self._notify("⚠️ " + reason, f"{day} 清仓 {closed} 只，仓位转现金")
 
     def step(self, day, signals_today):
         self._settle_exits(day)
@@ -560,6 +580,9 @@ class Rotation:
         elif dd <= -self.cfg["drawdown_de_risk_pct"]:
             self.de_risk = True
         self.equity.append([day, round(self.equity_value(day), 2)])
+        self._notify("📊 轮动日报 " + day,
+                     f"净值 {self.equity_value(day):.0f} | 回撤 {dd * 100:.1f}% | "
+                     f"持仓 {len(self.positions)}/{self.cfg['slots']} | 现金 {self.cash:.0f} | 待入场 {len(self.pending)}")
         return self.snapshot(day)
 
     def snapshot(self, day):

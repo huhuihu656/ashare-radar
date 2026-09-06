@@ -123,3 +123,10 @@ break_ma20:
   min_vol_ratio: 1.5             # 今日量 >= 前5日均量*1.5
   max_gain_60_pct: 0.40          # 60日涨幅受限（非高位）
   vol_ma_days: 5
+
+# 微信实时通知（Server酱 / 企业微信机器人 / PushPlus 三选一；填一项即可）
+notify:
+  enabled: true
+  wechat_sendkey: ""      # Server酱 SendKey（例如 SCUxxxx）
+  wecom_webhook: ""       # 企业微信机器人 webhook
+  pushplus_token: ""      # PushPlus token
