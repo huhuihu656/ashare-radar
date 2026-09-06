@@ -1788,3 +1788,74 @@ td:first-child {
 .dm-row .news-headline-cell { max-width: 320px; }
 
 .score-bonus { margin: 4px 0 0; font-size: 10px; color: var(--quiet); }
+
+
+/* ---------- 信号战绩面板 ---------- */
+.tracked { margin: 34px 0 10px; }
+.tracked-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.tracked-head h2 { font-size: 20px; margin: 6px 0 0; }
+.tracked-meta { color: var(--quiet); font-size: 12px; max-width: 460px; text-align: right; }
+.tracked-kpis { margin: 0 0 18px; }
+
+/* 形态配色（--tc 由具体类设置） */
+.t-kind-support { --tc: #f0913f; }
+.t-kind-breakout { --tc: #3fd0c7; }
+.t-kind-box { --tc: #a18bff; }
+.t-kind-engulfing { --tc: #ff5d6c; }
+.t-kind-limitup { --tc: #f0b429; }
+.t-kind-dragon { --tc: #7fd8d2; }
+.t-kind-ma { --tc: #4fa3ff; }
+.t-kind-shadow { --tc: #c98bd7; }
+
+/* 分形态汇总卡 */
+.t-patterns { display: grid; grid-template-columns: repeat(auto-fit, minmax(252px, 1fr)); gap: 14px; margin: 0 0 18px; }
+.t-card { position: relative; background: linear-gradient(155deg, rgba(19, 29, 49, 0.9), rgba(9, 14, 25, 0.9)); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 12px; overflow: hidden; }
+.t-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, var(--tc, #8fa3bd), transparent); opacity: 0.85; }
+.t-card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.t-card-name { font-size: 14px; font-weight: 600; color: var(--tc, var(--ink)); }
+.t-card-cnt { font-size: 11px; color: var(--quiet); font-variant-numeric: tabular-nums; }
+.t-horizons { display: grid; gap: 4px; }
+.t-hrow { display: grid; grid-template-columns: 44px 1fr auto; gap: 8px; font-size: 12px; align-items: baseline; }
+.t-hk { color: var(--quiet); font-variant-numeric: tabular-nums; }
+.t-ha { text-align: right; font-variant-numeric: tabular-nums; }
+.t-hp { color: var(--muted); font-size: 11px; }
+.t-card-foot { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--quiet); }
+.t-card-best { color: var(--up); }
+.t-card-worst { color: var(--down); }
+
+/* 战绩表 */
+.t-table { margin-top: 14px; }
+.t-toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.t-date { white-space: nowrap; }
+.t-gap { font-variant-numeric: tabular-nums; }
+.t-gap-skip { color: var(--warn); }
+.t-gap-mark { margin-left: 4px; font-size: 10px; color: var(--warn); }
+.t-ptag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--tc, #9fb0c6); border: 1px solid rgba(158, 181, 224, 0.22); background: rgba(158, 181, 224, 0.06); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.t-ptag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--tc, #9fb0c6); }
+.t-badge { display: inline-block; font-size: 11px; border-radius: 999px; padding: 2px 9px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.t-stop { color: var(--up); background: rgba(255, 93, 108, 0.12); border: 1px solid rgba(255, 93, 108, 0.35); }
+.t-target { color: var(--down); background: rgba(51, 196, 142, 0.12); border: 1px solid rgba(51, 196, 142, 0.35); }
+.t-open { color: var(--ink); background: rgba(158, 181, 224, 0.10); border: 1px solid var(--line); }
+.t-running { color: var(--warn); background: var(--warn-soft); border: 1px solid var(--warn-line); }
+.t-more-wrap { display: flex; justify-content: center; padding: 12px; border-top: 1px solid var(--line); }
+.t-footnote { margin: 12px 4px 0; font-size: 12px; line-height: 1.7; }
+
+@media (max-width: 760px) {
+  .t-patterns { grid-template-columns: 1fr; }
+  .tracked-head { flex-direction: column; align-items: flex-start; }
+  .tracked-meta { text-align: left; max-width: none; }
+}
+
+
+/* ---------- 组合 · 模拟盘 ---------- */
+.portfolio { margin: 34px 0 10px; }
+.portfolio-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.portfolio-head h2 { font-size: 20px; margin: 6px 0 0; }
+.portfolio-meta { color: var(--quiet); font-size: 12px; max-width: 460px; text-align: right; }
+.portfolio-kpis { margin: 0 0 18px; }
+.p-weight { font-weight: 600; color: var(--ink); }
+.t-industry { white-space: nowrap; }
+@media (max-width: 760px) {
+  .portfolio-head { flex-direction: column; align-items: flex-start; }
+  .portfolio-meta { text-align: left; max-width: none; }
+}

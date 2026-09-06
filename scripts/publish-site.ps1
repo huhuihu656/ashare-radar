@@ -1,4 +1,4 @@
-﻿<#
+<#
 Publishes the daily scan to the public GitHub Pages dashboard.
 
 Pipeline: run scanner -> export sanitized payload -> commit -> push.
@@ -67,14 +67,28 @@ if ($LASTEXITCODE -ne 0) {
     exit 2
 }
 
+# Refresh the per-signal performance panel (best-effort; never blocks publish).
+Write-Host "[publish] 刷新信号战绩（tracked.json）…"
+& $python (Join-Path $ProjectRoot "scripts\signal_track.py") --out docs/data/tracked.json
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE，可能为 Tushare 不可用）；本次发布不受影响。"
+}
+
+# Refresh the paper-trading portfolio snapshot (best-effort).
+Write-Host "[publish] 刷新模拟盘组合（portfolio.json）…"
+& $python (Join-Path $ProjectRoot "scripts\portfolio.py") --mode paper --signals docs/data/latest.json --out docs/data/portfolio.json
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "[publish] 模拟盘组合刷新失败（exit=$LASTEXITCODE）；本次发布不受影响。"
+}
+
 # Commit + push only when the payload actually changed.
-$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/tracked.json docs/data/portfolio.json
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
 if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] latest.json/klines.json 无变化（同一交易日重复运行），跳过提交。"
     exit 0
 }
-git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/tracked.json docs/data/portfolio.json
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
 git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘前扫描结果" --quiet
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }

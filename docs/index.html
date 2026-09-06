@@ -288,6 +288,85 @@
         </section>
       </section>
 
+      <section class="portfolio" id="portfolio" aria-labelledby="portfolio-title">
+        <div class="portfolio-head">
+          <div>
+            <p class="eyebrow">COMPOUNDING · 模拟盘</p>
+            <h2 id="portfolio-title">组合 · 模拟盘</h2>
+          </div>
+          <p class="portfolio-meta" id="portfolio-meta">加载中…</p>
+        </div>
+        <div class="kpi-strip portfolio-kpis" aria-label="模拟盘总览" id="portfolio-kpis"></div>
+        <div class="table-card t-table">
+          <div class="table-scroll">
+            <table>
+              <caption class="sr-only">
+                模拟盘目标组合：各标的的风险分配与计划买卖点，按信号分数筛选且受集中度/大盘环境约束。
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">标的</th>
+                  <th scope="col">信号</th>
+                  <th scope="col" class="th-score">分数</th>
+                  <th scope="col" class="th-num">权重</th>
+                  <th scope="col" class="th-num">买入参考</th>
+                  <th scope="col" class="th-num">止损</th>
+                  <th scope="col" class="th-num">止盈</th>
+                  <th scope="col">行业</th>
+                </tr>
+              </thead>
+              <tbody id="portfolio-rows"></tbody>
+            </table>
+          </div>
+          <p class="t-footnote muted" id="portfolio-method"></p>
+        </div>
+      </section>
+
+      <section class="tracked" id="tracked" aria-labelledby="tracked-title">
+        <div class="tracked-head">
+          <div>
+            <p class="eyebrow">AUDIT TRAIL · 信号战绩</p>
+            <h2 id="tracked-title">信号战绩</h2>
+          </div>
+          <p class="tracked-meta" id="tracked-meta">加载中…</p>
+        </div>
+        <div class="kpi-strip tracked-kpis" aria-label="战绩总览" id="tracked-kpis"></div>
+        <div class="t-patterns" id="t-patterns" role="list"></div>
+        <div class="table-card t-table">
+          <div class="t-toolbar">
+            <div class="filter-row filter-row-chips" id="t-filters" role="group" aria-label="按信号类型筛选"></div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="sr-only">
+                历史信号逐条战绩：T+1 开盘买入后 1/5/10/20 个交易日的收益与止损止盈结果（前复权）。
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">日期</th>
+                  <th scope="col">标的</th>
+                  <th scope="col">信号</th>
+                  <th scope="col" class="th-num">买入参考</th>
+                  <th scope="col" class="th-num">T+1开盘</th>
+                  <th scope="col" class="th-num">+1日</th>
+                  <th scope="col" class="th-num">+5日</th>
+                  <th scope="col" class="th-num">+10日</th>
+                  <th scope="col" class="th-num">+20日</th>
+                  <th scope="col">结果</th>
+                </tr>
+              </thead>
+              <tbody id="t-rows"></tbody>
+            </table>
+          </div>
+          <div class="t-more-wrap">
+            <button class="btn btn-ghost" id="t-more" type="button" hidden>显示更多</button>
+          </div>
+          <p class="t-footnote muted">
+            口径：与回测同一信号引擎 — 信号用当日已收盘K线判定（无前视），T+1 开盘买入（前复权）；T+1 开盘跳空高于买入参考 5% 或低于止损价视为未入场（记「跳空」）；止损/止盈按日内最低/最高价判定，同日双触发按止损优先；20 个交易日内未触发标记为持有。历史表现不构成未来收益承诺。
+          </p>
+        </div>
+      </section>
+
       <section class="method" aria-labelledby="method-title">
         <div class="method-heading">
           <p class="eyebrow">HOW THE RADAR READS</p>

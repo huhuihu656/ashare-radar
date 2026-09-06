@@ -1064,6 +1064,287 @@
     }
   }
 
+  /* ---------- 信号战绩面板 ---------- */
+
+  const TRACKED_URL = "./data/tracked.json";
+  const T_HORIZONS = [1, 5, 10, 20];
+  const T_PATTERN_ORDER = [
+    "回踩前期起涨位", "横盘后放量突破", "箱体突破红肥绿瘦", "阳包阴反包启动",
+    "涨停跳空缺口共振", "龙回头二次启动", "均线多头发散", "低位仙人指路",
+  ];
+  const T_CHIPS = [
+    ["all", "全部"],
+    ["support", "回踩起涨位"],
+    ["breakout", "横盘放量"],
+    ["box", "箱体突破"],
+    ["engulfing", "阳包阴"],
+    ["limitup", "涨停缺口"],
+    ["dragon", "龙回头"],
+    ["ma", "均线多头"],
+    ["shadow", "仙人指路"],
+  ];
+  const trackedState = { payload: null, failed: false, pattern: "all", shown: 100 };
+  let trackedLoading = null;
+
+  async function ensureTracked() {
+    if (trackedState.payload || trackedState.failed) return trackedState.payload;
+    if (trackedLoading) return trackedLoading;
+    trackedLoading = (async () => {
+      try {
+        const response = await fetch(`${TRACKED_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload || typeof payload !== "object" || !Array.isArray(payload.signals)) {
+          throw new Error("战绩数据格式不符合约定（缺少 signals 数组）");
+        }
+        trackedState.payload = payload;
+      } catch {
+        trackedState.failed = true;
+        trackedState.payload = null;
+      } finally {
+        trackedLoading = null;
+      }
+      return trackedState.payload;
+    })();
+    return trackedLoading;
+  }
+
+  const tKindClass = (pattern) => `t-kind t-kind-${signalKind(pattern)}`;
+  const tExitMeta = (rec) => ({
+    stop: { text: `止损 @第${cleanText(rec.xd)}日`, cls: "t-stop" },
+    target: { text: `止盈 @第${cleanText(rec.xd)}日`, cls: "t-target" },
+    open: { text: "持有（20日未触发）", cls: "t-open" },
+    running: { text: "运行中", cls: "t-running" },
+  }[rec.x] || { text: "—", cls: "" });
+
+  function kpiCard(index, label, value, small, valueClass) {
+    const article = document.createElement("article");
+    article.className = "kpi";
+    add(article, "span", index, "kpi-index").setAttribute("aria-hidden", "true");
+    add(article, "span", label, "kpi-label");
+    const strong = add(article, "strong", value, "kpi-value");
+    if (valueClass) strong.className = `kpi-value ${valueClass}`;
+    add(article, "small", small);
+    return article;
+  }
+
+  function patternCard(name, st) {
+    const card = document.createElement("article");
+    card.className = `t-card ${tKindClass(name)}`;
+    const top = add(card, "div", undefined, "t-card-top");
+    add(top, "span", name, "t-card-name");
+    add(top, "span", `${number.format(st.cnt)} 条`, "t-card-cnt");
+    const horizons = add(card, "div", undefined, "t-horizons");
+    T_HORIZONS.forEach((k) => {
+      const row = add(horizons, "div", undefined, "t-hrow");
+      add(row, "span", `+${k}日`, "t-hk");
+      const avg = st[`a${k}`];
+      add(row, "span", avg === null || avg === undefined ? "—" : signedPct(avg), `t-ha ${signClass(avg)}`);
+      const pos = st[`p${k}`];
+      add(row, "span", pos === null || pos === undefined ? "—" : `正收益 ${pct(pos)}`, "t-hp");
+    });
+    const foot = add(card, "div", undefined, "t-card-foot");
+    add(foot, "span", `止盈 ${pct(st.tgt)} · 止损 ${pct(st.stp)}`, "t-card-risk");
+    if (st.b) add(foot, "span", `最佳 ${cleanText(st.b[3])} ${signedPct(st.b[0])}`, "t-card-best");
+    if (st.w) add(foot, "span", `最差 ${cleanText(st.w[3])} ${signedPct(st.w[0])}`, "t-card-worst");
+    return card;
+  }
+
+  function trackedFiltered() {
+    const payload = trackedState.payload;
+    if (!payload) return [];
+    if (trackedState.pattern === "all") return payload.signals;
+    return payload.signals.filter((rec) => signalKind(rec.p) === trackedState.pattern);
+  }
+
+  function renderTrackedRows() {
+    const tbody = $("#t-rows");
+    if (!tbody) return;
+    const rows = trackedFiltered();
+    tbody.replaceChildren(
+      ...rows.slice(0, trackedState.shown).map((rec) => {
+        const tr = document.createElement("tr");
+        add(tr, "td", prettyDate(String(rec.sd)), "t-date muted");
+        const stockCell = add(tr, "td");
+        add(stockCell, "span", cleanText(rec.n), "stock-name");
+        add(stockCell, "span", cleanText(rec.s), "stock-code");
+        const sigCell = add(tr, "td");
+        add(sigCell, "span", cleanText(rec.p), `t-ptag ${tKindClass(rec.p)}`);
+        add(tr, "td", decimal.format(rec.er), "td-num");
+        const eoCell = add(tr, "td", undefined, "td-num");
+        add(eoCell, "span", decimal.format(rec.eo), rec.g === 0 ? "t-gap t-gap-skip" : "t-gap");
+        if (rec.g === 0) add(eoCell, "span", "跳空", "t-gap-mark");
+        T_HORIZONS.forEach((k) => {
+          const v = rec[`r${k}`];
+          const cell = add(tr, "td", undefined, "td-num");
+          if (v === undefined || v === null) {
+            add(cell, "span", "—", "muted");
+          } else {
+            add(cell, "span", signedPct(v * 100), signClass(v));
+          }
+        });
+        const resCell = add(tr, "td");
+        const badge = tExitMeta(rec);
+        add(resCell, "span", badge.text, `t-badge ${badge.cls}`);
+        return tr;
+      })
+    );
+    const more = $("#t-more");
+    const remaining = rows.length - trackedState.shown;
+    if (more) {
+      more.hidden = remaining <= 0;
+      if (remaining > 0) more.textContent = `显示更多（还有 ${number.format(remaining)} 条）`;
+    }
+  }
+
+  function setTrackedChips() {
+    document.querySelectorAll("#t-filters [data-tp]").forEach((button) => {
+      const active = button.dataset.tp === trackedState.pattern;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function renderTracked() {
+    const meta = $("#tracked-meta");
+    const kpis = $("#tracked-kpis");
+    const cards = $("#t-patterns");
+    const chips = $("#t-filters");
+    if (!meta || !kpis || !cards || !chips) return;
+    const payload = trackedState.payload;
+    if (!payload) {
+      meta.textContent = "战绩数据尚未生成（首次扫描后自动发布）。";
+      return;
+    }
+    const s = payload.overall || {};
+    const range = payload.signal_range || [];
+    meta.textContent =
+      `数据截至 ${prettyDate(String(payload.data_end))} · ` +
+      `${number.format(s.cnt || 0)} 条历史信号（自 ${prettyDate(String(range[0]))} 起）`;
+
+    kpis.replaceChildren(
+      kpiCard("01", "信号总数", number.format(s.cnt || 0), "当日收盘后判定的历史信号", ""),
+      kpiCard("02", "平均 +20日收益", signedPct(s.a20), "T+1 开盘买入 · 前复权", signClass(s.a20)),
+      kpiCard("03", "+20日胜率", pct(s.p20), "第 20 个交易日收盘正收益占比", ""),
+      kpiCard("04", "止盈 / 止损率", `${pct(s.tgt)} / ${pct(s.stp)}`, "20 日内触发（同日止损优先）", "")
+    );
+
+    const patternStats = payload.patterns_summary || {};
+    cards.replaceChildren(
+      ...T_PATTERN_ORDER.filter((name) => patternStats[name]).map((name) => patternCard(name, patternStats[name]))
+    );
+
+    chips.replaceChildren(
+      ...T_CHIPS.map(([key, label]) => {
+        const count = key === "all"
+          ? payload.signals.length
+          : payload.signals.reduce((acc, rec) => acc + (signalKind(rec.p) === key ? 1 : 0), 0);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "filter-button" + (count > 0 ? " has-hits" : "");
+        button.dataset.tp = key;
+        button.setAttribute("aria-pressed", String(trackedState.pattern === key));
+        if (trackedState.pattern === key) button.classList.add("is-active");
+        add(button, "span", label, "fb-label");
+        add(button, "span", number.format(count), "fb-count");
+        return button;
+      })
+    );
+    renderTrackedRows();
+  }
+
+  function bindTracked() {
+    const chips = $("#t-filters");
+    if (chips) {
+      chips.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-tp]");
+        if (!button) return;
+        trackedState.pattern = button.dataset.tp;
+        trackedState.shown = 100;
+        setTrackedChips();
+        renderTrackedRows();
+      });
+    }
+    const more = $("#t-more");
+    if (more) {
+      more.addEventListener("click", () => {
+        trackedState.shown += 200;
+        renderTrackedRows();
+      });
+    }
+  }
+
+  /* ---------- 组合 · 模拟盘面板 ---------- */
+
+  const PORTFOLIO_URL = "./data/portfolio.json";
+  let portfolioCache = null;
+  let portfolioFailed = false;
+  let portfolioLoading = null;
+
+  async function ensurePortfolio() {
+    if (portfolioCache || portfolioFailed) return portfolioCache;
+    if (portfolioLoading) return portfolioLoading;
+    portfolioLoading = (async () => {
+      try {
+        const response = await fetch(`${PORTFOLIO_URL}?v=${Date.now()}`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload || typeof payload !== "object" || !Array.isArray(payload.positions)) {
+          throw new Error("组合数据格式不符合约定（缺少 positions 数组）");
+        }
+        portfolioCache = payload;
+      } catch {
+        portfolioFailed = true;
+        portfolioCache = null;
+      } finally {
+        portfolioLoading = null;
+      }
+      return portfolioCache;
+    })();
+    return portfolioLoading;
+  }
+
+  function renderPortfolio() {
+    const p = portfolioCache;
+    const meta = $("#portfolio-meta");
+    const kpis = $("#portfolio-kpis");
+    const tbody = $("#portfolio-rows");
+    const method = $("#portfolio-method");
+    if (!meta || !kpis || !tbody || !method) return;
+    if (!p) {
+      meta.textContent = "模拟盘组合数据尚未生成（首次扫描后自动发布）。";
+      return;
+    }
+    const risk = p.risk || {};
+    meta.textContent =
+      `数据截至 ${prettyDate(String(p.as_of))} · 大盘 ${cleanText(p.regime)} · ` +
+      `风险预算：最大回撤 ${pct(risk.max_drawdown_pct)} · 单票 ≤ ${pct(risk.max_single_pct)} · 行业 ≤ ${pct(risk.max_sector_pct)}`;
+    kpis.replaceChildren(
+      kpiCard("01", "投入仓位", pct(p.invested_pct), `大盘环境：${cleanText(p.regime)}`, ""),
+      kpiCard("02", "现金比例", pct(p.cash_pct), "未配置部分留作现金", ""),
+      kpiCard("03", "持仓数量", number.format(p.position_count), `权益参考 ${number.format(p.equity_ref)}`, ""),
+      kpiCard("04", "单票上限", pct(risk.max_single_pct), `行业集中度 ≤ ${pct(risk.max_sector_pct)}`, "")
+    );
+    tbody.replaceChildren(
+      ...p.positions.map((pos) => {
+        const tr = document.createElement("tr");
+        const stockCell = add(tr, "td");
+        add(stockCell, "span", cleanText(pos.name), "stock-name");
+        add(stockCell, "span", cleanText(pos.symbol), "stock-code");
+        const sigCell = add(tr, "td");
+        add(sigCell, "span", cleanText(pos.signal), `t-ptag ${tKindClass(pos.signal)}`);
+        add(tr, "td", decimal.format(pos.score), "td-num");
+        add(tr, "td", pct(pos.weight_pct), "td-num p-weight");
+        add(tr, "td", decimal.format(pos.entry_ref), "td-num");
+        add(tr, "td", decimal.format(pos.stop), "td-num");
+        add(tr, "td", pos.target == null ? "—" : decimal.format(pos.target), "td-num");
+        add(tr, "td", cleanText(pos.industry), "t-industry muted");
+        return tr;
+      })
+    );
+    method.textContent = p.method || "";
+  }
+
   /* ---------- 控件绑定 ---------- */
 
   function bindControls() {
@@ -1100,4 +1381,7 @@
   renderOverview();
   setFilterButtons();
   loadData();
+  bindTracked();
+  ensureTracked().then(() => renderTracked());
+  ensurePortfolio().then(() => renderPortfolio());
 })();
