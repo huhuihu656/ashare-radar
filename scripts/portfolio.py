@@ -55,6 +55,8 @@ DEFAULTS = {
     "rotation_time_stop": 20,          # 轮动（超跌反转）时间止损 20 交易日
     "min_risk_reward": 3.0,            # 只开 1:3 盈亏比的仓
     "pause_days": 5,                   # 连亏熔断暂停天数（约 1 周）
+    "slippage_pct": 0.002,             # 成交滑点（买入上浮/卖出下浮 0.2%）
+    "min_turnover": 5_000_000.0,       # 日成交额下限（元），过低视为流动性差、买不进
     "lot": LOT,
 }
 
@@ -465,14 +467,17 @@ class Rotation:
                 still.append(p)
                 continue
             held = self.sidx[day] - self.sidx[p["entry_day"]]
+            sl = self.cfg["slippage_pct"]
             if float(b.low) <= p["stop"]:
-                self._sell(p, p["stop"], day, "止损")
+                # 止损：若开盘已跌破止损（跳空向下），按更差的开盘价成交（保守）
+                exit_p = float(b.open) if float(b.open) < p["stop"] else p["stop"]
+                self._sell(p, exit_p * (1 - sl), day, "止损")
                 continue
             if p["target"] is not None and float(b.high) >= p["target"]:
-                self._sell(p, p["target"], day, "止盈")
+                self._sell(p, p["target"] * (1 - sl), day, "止盈")
                 continue
             if held >= self.cfg["rotation_time_stop"]:
-                self._sell(p, float(b.close), day, "超时")
+                self._sell(p, float(b.close) * (1 - sl), day, "超时")
                 continue
             still.append(p)
         self.positions = still
@@ -523,30 +528,33 @@ class Rotation:
                 continue
             if float(b.high) == float(b.low):   # 一字板，无法正常成交
                 continue
+            if op * float(b.volume) < self.cfg["min_turnover"]:   # 日成交额过低，流动性差，买不进
+                continue
             slot_w = self.cfg["target_invested_pct"] / self.cfg["slots"]
             if self.de_risk:
                 slot_w *= 0.5
             equity = self.equity_value(day)
             budget = equity * slot_w
-            shares = int(budget / op / self.cfg["lot"]) * self.cfg["lot"]
+            fill = op * (1 + self.cfg["slippage_pct"])           # 买入滑点，接受稍高价
+            shares = int(budget / fill / self.cfg["lot"]) * self.cfg["lot"]
             if shares < self.cfg["lot"]:
                 continue
-            notional = shares * op
+            notional = shares * fill
             fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"])
             cost = notional + fee
             if cost > self.cash:
-                shares = int(self.cash * 0.995 / op / self.cfg["lot"]) * self.cfg["lot"]
+                shares = int(self.cash * 0.995 / fill / self.cfg["lot"]) * self.cfg["lot"]
                 if shares < self.cfg["lot"]:
                     continue
-                notional = shares * op
+                notional = shares * fill
                 fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"])
                 cost = notional + fee
             self.cash -= cost
             self.positions.append({"symbol": p["symbol"], "name": p["name"], "signal": p["signal"],
-                                   "entry_day": day, "entry_price": op, "shares": shares, "cost": notional,
+                                   "entry_day": day, "entry_price": fill, "shares": shares, "cost": notional,
                                    "buy_fee": fee, "stop": p["stop"], "target": p["target"], "score": p["score"]})
             self._notify("📈 开仓 " + p["name"],
-                         f"信号:{p['signal']} | {day}@{op} 买入 {shares}股 | 止损 {p['stop']} 止盈 {p['target']} (1:3)")
+                         f"信号:{p['signal']} | {day}@{fill:.2f} 买入 {shares}股 | 止损 {p['stop']} 止盈 {p['target']} (1:3)")
             held.add(p["symbol"])
             empty -= 1
             self.pending = [x for x in self.pending if x is not p]
@@ -563,7 +571,7 @@ class Rotation:
         for p in list(self.positions):
             b = self._bar(p["symbol"], day)
             price = float(b.close) if b is not None else p["entry_price"]
-            self._sell(p, price, day, reason)
+            self._sell(p, price * (1 - self.cfg["slippage_pct"]), day, reason)
         self.positions = []
         self._notify("⚠️ " + reason, f"{day} 清仓 {closed} 只，仓位转现金")
 
