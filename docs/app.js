@@ -1319,33 +1319,42 @@
       meta.textContent = "模拟盘组合数据尚未生成（首次扫描后自动发布）。";
       return;
     }
-    const risk = p.risk || {};
+    const slots = p.slots || {};
+    const riskState = p.defensive ? "熔断·现金" : (p.de_risk ? "半仓·风控" : "正常");
     meta.textContent =
-      `数据截至 ${prettyDate(String(p.as_of))} · 大盘 ${cleanText(p.regime)} · ` +
-      `风险预算：最大回撤 ${pct(risk.max_drawdown_pct)} · 单票 ≤ ${pct(risk.max_single_pct)} · 行业 ≤ ${pct(risk.max_sector_pct)}`;
+      `数据截至 ${prettyDate(String(p.as_of))} · 风险状态 ${riskState} · 回撤 ${signedPct(p.drawdown_pct)}` +
+      (p.pause_until && p.pause_until > String(p.as_of) ? ` · 暂停至 ${prettyDate(String(p.pause_until))}` : "") +
+      (p.consec_losses ? ` · 连亏 ${p.consec_losses}` : "");
     kpis.replaceChildren(
-      kpiCard("01", "投入仓位", pct(p.invested_pct), `大盘环境：${cleanText(p.regime)}`, ""),
-      kpiCard("02", "现金比例", pct(p.cash_pct), "未配置部分留作现金", ""),
-      kpiCard("03", "持仓数量", number.format(p.position_count), `权益参考 ${number.format(p.equity_ref)}`, ""),
-      kpiCard("04", "单票上限", pct(risk.max_single_pct), `行业集中度 ≤ ${pct(risk.max_sector_pct)}`, "")
+      kpiCard("01", "组合净值", number.format(p.equity), `峰值 ${number.format(p.peak)}`, signClass(p.equity - p.peak)),
+      kpiCard("02", "现金", number.format(p.cash), `占净值 ${pct((p.cash / p.equity) * 100)}`, ""),
+      kpiCard("03", "持仓", `${number.format(slots.filled)}/${number.format(slots.total)}`, "轮动槽位", ""),
+      kpiCard("04", "最大回撤", signedPct((p.equity / p.peak - 1) * 100), "当前自峰值回撤", "is-down")
     );
+    const positions = p.positions || [];
     tbody.replaceChildren(
-      ...p.positions.map((pos) => {
+      ...positions.map((pos) => {
         const tr = document.createElement("tr");
         const stockCell = add(tr, "td");
         add(stockCell, "span", cleanText(pos.name), "stock-name");
         add(stockCell, "span", cleanText(pos.symbol), "stock-code");
         const sigCell = add(tr, "td");
         add(sigCell, "span", cleanText(pos.signal), `t-ptag ${tKindClass(pos.signal)}`);
-        add(tr, "td", decimal.format(pos.score), "td-num");
-        add(tr, "td", pct(pos.weight_pct), "td-num p-weight");
-        add(tr, "td", decimal.format(pos.entry_ref), "td-num");
+        add(tr, "td", prettyDate(String(pos.entry_day)), "t-date muted");
+        add(tr, "td", decimal.format(pos.entry_price), "td-num");
+        add(tr, "td", decimal.format(pos.current), "td-num");
         add(tr, "td", decimal.format(pos.stop), "td-num");
         add(tr, "td", pos.target == null ? "—" : decimal.format(pos.target), "td-num");
-        add(tr, "td", cleanText(pos.industry), "t-industry muted");
+        add(tr, "td", signedPct(pos.pnl_pct), `td-num ${signClass(pos.pnl_pct)}`);
         return tr;
       })
     );
+    if (positions.length === 0) {
+      const tr = document.createElement("tr");
+      const td = add(tr, "td", "暂无持仓 —— 下一交易日收盘扫描后，达标信号将在次日开盘进入。", "muted");
+      td.colSpan = 8;
+      tbody.append(tr);
+    }
     method.textContent = p.method || "";
   }
 

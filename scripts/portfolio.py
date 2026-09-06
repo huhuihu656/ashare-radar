@@ -39,6 +39,7 @@ CHASE_CAP = 0.05
 
 DEFAULTS = {
     "initial_cash": 100_000.0,
+    "slots": 4,                       # 轮动槽位数
     "max_positions": 8,
     "max_single_pct": 0.15,
     "max_sector_pct": 0.40,
@@ -49,6 +50,9 @@ DEFAULTS = {
     "max_drawdown_pct": 0.18,          # 回撤熔断：清仓进现金
     "drawdown_de_risk_pct": 0.10,      # 回撤超 10%：仓位减半
     "time_stop_days": 40,
+    "rotation_time_stop": 20,          # 轮动（超跌反转）时间止损 20 交易日
+    "min_risk_reward": 3.0,            # 只开 1:3 盈亏比的仓
+    "pause_days": 5,                   # 连亏熔断暂停天数（约 1 周）
     "lot": LOT,
 }
 
@@ -371,13 +375,283 @@ def paper_target(cfg: dict, signals: list[dict], industry: dict[str, str],
     }
 
 
+class Rotation:
+    """N 槽位每日轮动状态机：只做 超跌反转/恰好突破20日线，1:3 止盈止损，槽位完成即换新达标股。
+
+    口径：信号日 T 收盘判定 -> T+1 开盘买入（跳空>5%或低于止损放弃，一字板跳过）；
+    止盈=入场+3×风险(1:3)、止损=证伪位，同日双触发按止损优先；20 交易日未达标按收盘时间止。
+    复利：槽位等权、每周推进，现金预留；回撤>10% 半仓、>18% 切现金；连亏 3 次暂停 1 周。
+    """
+    FAMILIES = ("超跌反转", "恰好突破20日线")
+
+    def __init__(self, cfg, frames, sessions, sidx):
+        self.cfg = cfg
+        self.frames = frames
+        self.sessions = sessions
+        self.sidx = sidx
+        self.cash = float(cfg["initial_cash"])
+        self.positions = []
+        self.pending = []
+        self.equity = []
+        self.trades = []
+        self.peak = float(cfg["initial_cash"])
+        self.defensive = False
+        self.de_risk = False
+        self.consec_losses = 0
+        self.pause_until = ""
+
+    def _bar(self, symbol, day):
+        f = self.frames.get(symbol)
+        if f is None:
+            return None
+        ts = pd.Timestamp(day)
+        if ts in f.index:
+            return f.loc[ts]
+        return None
+
+    def equity_value(self, day):
+        val = self.cash
+        for p in self.positions:
+            b = self._bar(p["symbol"], day)
+            price = float(b.close) if b is not None else p["entry_price"]
+            val += p["shares"] * price
+        return val
+
+    def _sell(self, p, price, day, reason):
+        notional = p["shares"] * price
+        fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"]) + notional * self.cfg["stamp_pct"]
+        proceeds = notional - fee
+        self.cash += proceeds
+        cost = p["cost"] + p["buy_fee"]
+        net = proceeds - cost
+        self.trades.append({"symbol": p["symbol"], "name": p.get("name"), "signal": p.get("signal"),
+                            "entry_day": p["entry_day"], "exit_day": day, "reason": reason,
+                            "entry_price": round(p["entry_price"], 3), "exit_price": round(price, 3),
+                            "shares": p["shares"], "net_pnl": round(net, 2), "win": net > 0})
+        self.consec_losses = 0 if net > 0 else self.consec_losses + 1
+        if self.consec_losses >= 3:
+            self.pause_until = self._shift(day, self.cfg["pause_days"])
+
+    def _shift(self, day, n):
+        try:
+            i = self.sidx[day]
+            j = min(i + n, len(self.sessions) - 1)
+            return self.sessions[j]
+        except Exception:
+            return day
+
+    def _settle_exits(self, day):
+        still = []
+        for p in self.positions:
+            if day <= p["entry_day"]:
+                still.append(p)
+                continue
+            b = self._bar(p["symbol"], day)
+            if b is None:
+                still.append(p)
+                continue
+            held = self.sidx[day] - self.sidx[p["entry_day"]]
+            if float(b.low) <= p["stop"]:
+                self._sell(p, p["stop"], day, "止损")
+                continue
+            if p["target"] is not None and float(b.high) >= p["target"]:
+                self._sell(p, p["target"], day, "止盈")
+                continue
+            if held >= self.cfg["rotation_time_stop"]:
+                self._sell(p, float(b.close), day, "超时")
+                continue
+            still.append(p)
+        self.positions = still
+
+    def _queue(self, day, signals_today):
+        # 只收两类、RR>=1:3 的信号进入待入场队列（次日开盘买）
+        for s in signals_today:
+            if s.get("signal") not in self.FAMILIES:
+                continue
+            rr = float(s.get("risk_reward") or 0)
+            if rr < self.cfg["min_risk_reward"]:
+                continue
+            if not s.get("entry_price") or not s.get("stop_loss"):
+                continue
+            self.pending.append({
+                "symbol": str(s.get("symbol") or "").zfill(6), "name": s.get("name"), "signal": s.get("signal"),
+                "score": float(s.get("sort_score") or s.get("score") or 0),
+                "entry_ref": float(s["entry_price"]), "stop": float(s["stop_loss"]),
+                "target": float(s["take_profit"]) if s.get("take_profit") is not None else None,
+                "risk_reward": rr, "signal_day": day})
+        # 同股只保留分数最高的
+        best = {}
+        for p in self.pending:
+            k = p["symbol"]
+            if k not in best or p["score"] > best[k]["score"]:
+                best[k] = p
+        self.pending = list(best.values())
+
+    def _fill(self, day):
+        if self.defensive:
+            return
+        if self.pause_until and day <= self.pause_until:
+            return
+        held = {p["symbol"] for p in self.positions}
+        empty = self.cfg["slots"] - len(self.positions)
+        if empty <= 0:
+            return
+        cands = sorted([p for p in self.pending if p["signal_day"] < day and p["symbol"] not in held],
+                       key=lambda p: -p["score"])
+        for p in cands:
+            if empty <= 0:
+                break
+            b = self._bar(p["symbol"], day)
+            if b is None:
+                continue
+            op = float(b.open)
+            if op <= 0 or op > p["entry_ref"] * (1 + CHASE_CAP) or op < p["stop"]:
+                continue
+            if float(b.high) == float(b.low):   # 一字板，无法正常成交
+                continue
+            slot_w = self.cfg["target_invested_pct"] / self.cfg["slots"]
+            if self.de_risk:
+                slot_w *= 0.5
+            equity = self.equity_value(day)
+            budget = equity * slot_w
+            shares = int(budget / op / self.cfg["lot"]) * self.cfg["lot"]
+            if shares < self.cfg["lot"]:
+                continue
+            notional = shares * op
+            fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"])
+            cost = notional + fee
+            if cost > self.cash:
+                shares = int(self.cash * 0.995 / op / self.cfg["lot"]) * self.cfg["lot"]
+                if shares < self.cfg["lot"]:
+                    continue
+                notional = shares * op
+                fee = max(self.cfg["commission_min"], notional * self.cfg["commission_pct"])
+                cost = notional + fee
+            self.cash -= cost
+            self.positions.append({"symbol": p["symbol"], "name": p["name"], "signal": p["signal"],
+                                   "entry_day": day, "entry_price": op, "shares": shares, "cost": notional,
+                                   "buy_fee": fee, "stop": p["stop"], "target": p["target"], "score": p["score"]})
+            held.add(p["symbol"])
+            empty -= 1
+            self.pending = [x for x in self.pending if x is not p]
+        # 清理过期的待入场信号（>3 交易日，避免久拖）
+        try:
+            self.pending = [p for p in self.pending if self.sidx[day] - self.sidx[p["signal_day"]] <= 3]
+        except Exception:
+            pass
+
+    def _liquidate(self, day, reason):
+        for p in list(self.positions):
+            b = self._bar(p["symbol"], day)
+            price = float(b.close) if b is not None else p["entry_price"]
+            self._sell(p, price, day, reason)
+        self.positions = []
+
+    def step(self, day, signals_today):
+        self._settle_exits(day)
+        self._queue(day, signals_today)
+        self._fill(day)
+        val = self.equity_value(day)
+        self.peak = max(self.peak, val)
+        dd = val / self.peak - 1 if self.peak else 0.0
+        if dd <= -self.cfg["max_drawdown_pct"] and not self.defensive:
+            self.defensive = True
+            self._liquidate(day, "熔断清仓")
+        elif dd <= -self.cfg["drawdown_de_risk_pct"]:
+            self.de_risk = True
+        self.equity.append([day, round(self.equity_value(day), 2)])
+        return self.snapshot(day)
+
+    def snapshot(self, day):
+        val = self.equity_value(day)
+        dd = val / self.peak - 1 if self.peak else 0.0
+        prices = []
+        for p in self.positions:
+            b = self._bar(p["symbol"], day)
+            cur = float(b.close) if b is not None else p["entry_price"]
+            prices.append({"symbol": p["symbol"], "name": p["name"], "signal": p["signal"],
+                           "entry_day": p["entry_day"], "entry_price": round(p["entry_price"], 2),
+                           "shares": p["shares"], "stop": round(p["stop"], 2),
+                           "target": round(p["target"], 2) if p["target"] is not None else None,
+                           "current": round(cur, 2), "pnl_pct": round((cur / p["entry_price"] - 1) * 100, 2)})
+        return {
+            "day": day, "cash": round(self.cash, 2), "equity": round(val, 2),
+            "drawdown_pct": round(dd * 100, 2), "peak": round(self.peak, 2),
+            "slots": {"total": self.cfg["slots"], "filled": len(self.positions)},
+            "defensive": self.defensive, "de_risk": self.de_risk,
+            "consec_losses": self.consec_losses, "pause_until": self.pause_until,
+            "positions": prices, "trades": self.trades[-8:],
+            "equity_curve": self.equity,
+        }
+
+    def to_dict(self):
+        return {"cash": self.cash, "positions": self.positions, "pending": self.pending,
+                "equity": self.equity, "trades": self.trades, "peak": self.peak,
+                "defensive": self.defensive, "de_risk": self.de_risk,
+                "consec_losses": self.consec_losses, "pause_until": self.pause_until}
+
+    @classmethod
+    def from_dict(cls, d, cfg, frames, sessions, sidx):
+        r = cls(cfg, frames, sessions, sidx)
+        r.cash = float(d.get("cash", cfg["initial_cash"]))
+        r.positions = d.get("positions", [])
+        r.pending = d.get("pending", [])
+        r.equity = d.get("equity", [])
+        r.trades = d.get("trades", [])
+        r.peak = float(d.get("peak", cfg["initial_cash"]))
+        r.defensive = bool(d.get("defensive", False))
+        r.de_risk = bool(d.get("de_risk", False))
+        r.consec_losses = int(d.get("consec_losses", 0))
+        r.pause_until = str(d.get("pause_until", ""))
+        return r
+
+
+def _load_sessions(cache_dir: Path) -> list[str]:
+    """全市场交易日历（所有缓存日期列的并集）。缓存到 data/meta_sessions.json。"""
+    p = ROOT / "data" / "meta_sessions.json"
+    if p.exists():
+        try:
+            s = json.loads(p.read_text(encoding="utf-8"))
+            if s:
+                return s
+        except Exception:
+            pass
+    days = set()
+    for f in sorted(cache_dir.glob("*.csv")):
+        try:
+            df = pd.read_csv(f, usecols=["date"])
+            days.update(pd.to_datetime(df["date"]).dt.strftime("%Y%m%d").tolist())
+        except Exception:
+            continue
+    sessions = sorted(days)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(sessions, ensure_ascii=False), encoding="utf-8")
+    return sessions
+
+
+def _load_frames_for(cache_dir: Path, symbols) -> dict[str, pd.DataFrame]:
+    """只加载指定符号的日线（当日轮动用不到全部 5066 只，避免每天读全量）。"""
+    frames = {}
+    for sym in symbols:
+        f = cache_dir / f"{sym}.csv"
+        if f.exists():
+            try:
+                frame = pd.read_csv(f, parse_dates=["date"]).sort_values("date").set_index("date")
+                frame = frame[~frame.index.duplicated(keep="last")]
+                frames[sym] = frame
+            except Exception:
+                continue
+    return frames
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="组合引擎（模拟盘/回测）")
+    ap = argparse.ArgumentParser(description="组合引擎（模拟盘/回测/轮动）")
     ap.add_argument("--signals", default="docs/data/latest.json")
     ap.add_argument("--prices", default="data/cache")
-    ap.add_argument("--mode", choices=["backtest", "paper"], default="backtest")
+    ap.add_argument("--mode", choices=["backtest", "paper", "rotation"], default="backtest")
     ap.add_argument("--out", default="data/portfolio_backtest.json")
     ap.add_argument("--config", default="config.yaml")
+    ap.add_argument("--today", default="", help="轮动模式：本次处理的交易日 yyyymmdd")
     args = ap.parse_args()
 
     cfg = dict(DEFAULTS)
@@ -400,6 +674,41 @@ def main() -> int:
         payload = paper_target(cfg, signals, industry, as_of, equity_ref)
         out = ROOT / args.out
         out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 0
+
+    if args.mode == "rotation":
+        state_path = ROOT / "data" / "portfolio_state.json"
+        sessions = _load_sessions(ROOT / args.prices)
+        sidx = {d: i for i, d in enumerate(sessions)}
+        signals_today, as_of = _load_signals_latest(ROOT / args.signals)
+        today = args.today or (str(as_of) if as_of > 0 else (sessions[-1] if sessions else ""))
+        if not today or today not in sidx:
+            print(f"[rot] 今天 {today} 无行情数据，不推进（等下一交易日扫描后运行）。", flush=True)
+            return 0
+        # 只加载股票：信号池 + 已有持仓/待入场
+        state_old = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
+        needed = {str(s.get("symbol") or "").zfill(6) for s in signals_today}
+        needed |= {p["symbol"] for p in state_old.get("positions", [])}
+        needed |= {p["symbol"] for p in state_old.get("pending", [])}
+        frames = _load_frames_for(ROOT / args.prices, needed)
+        if state_path.exists():
+            rot = Rotation.from_dict(state_old, cfg, frames, sessions, sidx)
+        else:
+            rot = Rotation(cfg, frames, sessions, sidx)
+        snap = rot.step(today, signals_today)
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps(rot.to_dict(), ensure_ascii=False) + "\n", encoding="utf-8")
+        out = ROOT / args.out
+        out.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "schema_version": 1, "as_of": int(today),
+            "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "method": ("轮动模拟盘：只做超跌反转+恰好突破20日线，1:3止盈止损（RR<3.0不开仓），T+1开盘、跳空>5%或一字板不入场，"
+                       "20交易日时间止；槽位完成即换入新达标股；回撤>10%半仓、>18%切现金、连亏3次暂停1周。仅研究模拟，不下真实订单。"),
+            **snap,
+        }
         out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0

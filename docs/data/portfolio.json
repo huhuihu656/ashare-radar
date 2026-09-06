@@ -1,114 +1,27 @@
 {
   "schema_version": 1,
   "as_of": 20260904,
-  "generated_at": "2026-09-06T14:38:43+00:00",
-  "equity_ref": 100000.0,
-  "invested_pct": 35.0,
-  "cash_pct": 65.0,
-  "regime": "偏弱",
-  "position_count": 8,
-  "risk": {
-    "max_single_pct": 15.0,
-    "max_sector_pct": 40.0,
-    "max_drawdown_pct": 18.0
+  "generated_at": "2026-09-06T15:31:50+00:00",
+  "method": "轮动模拟盘：只做超跌反转+恰好突破20日线，1:3止盈止损（RR<3.0不开仓），T+1开盘、跳空>5%或一字板不入场，20交易日时间止；槽位完成即换入新达标股；回撤>10%半仓、>18%切现金、连亏3次暂停1周。仅研究模拟，不下真实订单。",
+  "day": "20260904",
+  "cash": 100000.0,
+  "equity": 100000.0,
+  "drawdown_pct": 0.0,
+  "peak": 100000.0,
+  "slots": {
+    "total": 4,
+    "filled": 0
   },
-  "method": "模拟盘：当日信号按信号分数优先+单票 ≤ 15%/行业 ≤ 40% 集中度+大盘环境降仓（偏弱 35%/中性 70%/偏强 90%），目标投入 70%；T+1 开盘按计划价/止损/止盈执行。仅研究模拟，不下真实订单。",
-  "positions": [
-    {
-      "symbol": "600150",
-      "name": "中国船舶",
-      "signal": "横盘后放量突破",
-      "score": 115.0,
-      "weight": 0.15,
-      "industry": "船舶",
-      "entry_ref": 35.53,
-      "stop": 34.29,
-      "target": 39.25,
-      "weight_pct": 4.8
-    },
-    {
-      "symbol": "002567",
-      "name": "唐人神",
-      "signal": "横盘后放量突破",
-      "score": 109.0,
-      "weight": 0.15,
-      "industry": "饲料",
-      "entry_ref": 3.93,
-      "stop": 3.79,
-      "target": 4.35,
-      "weight_pct": 4.8
-    },
-    {
-      "symbol": "600616",
-      "name": "金枫酒业",
-      "signal": "均线多头发散",
-      "score": 109.0,
-      "weight": 0.1,
-      "industry": "红黄酒",
-      "entry_ref": 4.52,
-      "stop": 4.21,
-      "target": 5.45,
-      "weight_pct": 3.2
-    },
-    {
-      "symbol": "601949",
-      "name": "中国出版",
-      "signal": "横盘后放量突破",
-      "score": 109.0,
-      "weight": 0.1,
-      "industry": "出版业",
-      "entry_ref": 5.66,
-      "stop": 5.46,
-      "target": 6.26,
-      "weight_pct": 3.2
-    },
-    {
-      "symbol": "688563",
-      "name": "航材股份",
-      "signal": "横盘后放量突破",
-      "score": 109.0,
-      "weight": 0.15,
-      "industry": "航空",
-      "entry_ref": 53.2,
-      "stop": 51.35,
-      "target": 58.75,
-      "weight_pct": 4.8
-    },
-    {
-      "symbol": "600694",
-      "name": "大商股份",
-      "signal": "横盘后放量突破",
-      "score": 106.2,
-      "weight": 0.15,
-      "industry": "百货",
-      "entry_ref": 14.98,
-      "stop": 14.46,
-      "target": 16.54,
-      "weight_pct": 4.8
-    },
-    {
-      "symbol": "002157",
-      "name": "正邦科技",
-      "signal": "横盘后放量突破",
-      "score": 106.0,
-      "weight": 0.15,
-      "industry": "农业综合",
-      "entry_ref": 3.16,
-      "stop": 3.05,
-      "target": 3.49,
-      "weight_pct": 4.8
-    },
-    {
-      "symbol": "600506",
-      "name": "统一股份",
-      "signal": "均线多头发散",
-      "score": 106.0,
-      "weight": 0.15,
-      "industry": "石油加工",
-      "entry_ref": 17.8,
-      "stop": 15.05,
-      "target": 26.05,
-      "weight_pct": 4.8
-    }
+  "defensive": false,
+  "de_risk": false,
+  "consec_losses": 0,
+  "pause_until": "",
+  "positions": [],
+  "trades": [],
+  "equity_curve": [
+    [
+      "20260904",
+      100000.0
+    ]
   ]
 }

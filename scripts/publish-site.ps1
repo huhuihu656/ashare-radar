@@ -74,11 +74,11 @@ if ($LASTEXITCODE -ne 0) {
     Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE，可能为 Tushare 不可用）；本次发布不受影响。"
 }
 
-# Refresh the paper-trading portfolio snapshot (best-effort).
-Write-Host "[publish] 刷新模拟盘组合（portfolio.json）…"
-& $python (Join-Path $ProjectRoot "scripts\portfolio.py") --mode paper --signals docs/data/latest.json --out docs/data/portfolio.json
+# Refresh the paper-trading rotation portfolio (best-effort).
+Write-Host "[publish] 轮动模拟盘推进（portfolio.json）…"
+& $python (Join-Path $ProjectRoot "scripts\portfolio.py") --mode rotation --signals docs/data/latest.json --out docs/data/portfolio.json
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 模拟盘组合刷新失败（exit=$LASTEXITCODE）；本次发布不受影响。"
+    Write-Warning "[publish] 轮动模拟盘推进失败（exit=$LASTEXITCODE）；本次发布不受影响。"
 }
 
 # Commit + push only when the payload actually changed.
