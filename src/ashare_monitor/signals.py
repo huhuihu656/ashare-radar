@@ -707,14 +707,14 @@ def entry_exit_plan(row: dict) -> dict:
     elif kind == "超跌反转":
         near = row.get("near_low")
         if near:
-            entry, stop = round(c, 2), round(near * 0.985, 2)
+            entry, stop = round(close, 2), round(near * 0.985, 2)
             if entry > stop:
                 target = round(entry + 3 * (entry - stop), 2)   # 1:3
                 note = "企稳/反转确认后买入；跌破企稳低点（抛压未衰竭）止损"
     elif kind == "恰好突破20日线":
         ma20v = row.get("ma20")
         if ma20v:
-            entry, stop = round(c, 2), round(ma20v * 0.97, 2)
+            entry, stop = round(close, 2), round(ma20v * 0.97, 2)
             if entry > stop:
                 target = round(entry + 3 * (entry - stop), 2)   # 1:3
                 note = "放量站稳20日线买入；跌破MA20（假突破）止损"
