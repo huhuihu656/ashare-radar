@@ -91,6 +91,13 @@ if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] 核心数据已推送到 GitHub；Pages 稍后自动更新。"
 }
 
+# ---- 微信通知（Server酱，非阻塞：失败不影响发布）----
+Write-Host "[publish] 发送微信通知…"
+& $python (Join-Path $ProjectRoot "scripts\daily_notify.py")
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "[publish] 微信通知发送失败（exit=$LASTEXITCODE）；发布不受影响。"
+}
+
 # ---- 第二批：战绩追踪与模拟盘（重计算，非阻塞，单独提交）----
 Write-Host "[publish] 刷新信号战绩（tracked.json）…"
 & $python (Join-Path $ProjectRoot "scripts\signal_track.py") --out docs/data/tracked.json
