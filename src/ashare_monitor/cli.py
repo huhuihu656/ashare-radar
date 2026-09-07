@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.progress import track
 
 from .config import Config, load
-from .data import (filter_universe, get_universe, history_for,
+from .data import (_ts_pro, filter_universe, get_universe, history_for,
                    index_frame, is_ashare_trading_day, market_regime, polite_pause)
 from .data import refresh_history_cache_bulk
 from .signals import entry_exit_plan, position_strategy, scan_frame
@@ -69,14 +69,32 @@ def scan_day() -> str:
 
     now = datetime.now()
     today = now.strftime("%Y%m%d")
-    try:
-        pro = _ts_pro()
-        cal = pro.trade_cal(exchange="SSE",
-                            start_date=(now - _td(days=14)).strftime("%Y%m%d"),
-                            end_date=today, is_open="1")
-        days = sorted(cal["cal_date"].astype(str).tolist()) if cal is not None else []
-    except Exception:
-        days = []
+    days: list[str] = []
+    last_error = None
+    for attempt in range(3):
+        try:
+            pro = _ts_pro()
+            if pro is not None:
+                cal = pro.trade_cal(exchange="SSE",
+                                    start_date=(now - _td(days=14)).strftime("%Y%m%d"),
+                                    end_date=today, is_open="1")
+                if cal is not None and not cal.empty:
+                    days = sorted(cal["cal_date"].astype(str).tolist())
+                    break
+        except Exception as error:
+            last_error = error
+        import time as _time
+
+        _time.sleep(2.0 + attempt * 2.0)
+    if not days:
+        # Tushare 日历不可用时的兜底：周一到周五视为交易日（节假日由扫描守卫再核）
+        import calendar as _cal
+
+        cursor = now.date()
+        while _cal.weekday(cursor.year, cursor.month, cursor.day) >= 5:
+            cursor -= _td(days=1)
+        days = [cursor.strftime("%Y%m%d")]
+        console.print(f"[yellow]Tushare 日历不可用（{last_error}），按工作日兜底：{days[0]}[/yellow]")
     if now.time() < datetime.strptime("15:10", "%H:%M").time():
         days = [d for d in days if d < today]
     if not days:

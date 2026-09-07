@@ -73,36 +73,43 @@ if ($LASTEXITCODE -ne 0) {
     exit 2
 }
 
-# Refresh the per-signal performance panel (best-effort; never blocks publish).
+# ---- 第一批：核心数据立即提交推送（保证按时上线）----
+$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
+if ([string]::IsNullOrWhiteSpace($status)) {
+    Write-Host "[publish] 核心数据无变化，跳过提交。"
+} else {
+    git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+    if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
+    git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘扫描结果" --quiet
+    if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
+    git push origin main
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error -ErrorAction Continue "git push 失败。请检查本机 git/SSH 配置与网络。"
+        exit 2
+    }
+    Write-Host "[publish] 核心数据已推送到 GitHub；Pages 稍后自动更新。"
+}
+
+# ---- 第二批：战绩追踪与模拟盘（重计算，非阻塞，单独提交）----
 Write-Host "[publish] 刷新信号战绩（tracked.json）…"
 & $python (Join-Path $ProjectRoot "scripts\signal_track.py") --out docs/data/tracked.json
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE，可能为 Tushare 不可用）；本次发布不受影响。"
+    Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE）；核心发布不受影响。"
 }
-
-# Refresh the paper-trading rotation portfolio (best-effort).
 Write-Host "[publish] 轮动模拟盘推进（portfolio.json）…"
 & $python (Join-Path $ProjectRoot "scripts\portfolio.py") --mode rotation --signals docs/data/latest.json --out docs/data/portfolio.json
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 轮动模拟盘推进失败（exit=$LASTEXITCODE）；本次发布不受影响。"
+    Write-Warning "[publish] 轮动模拟盘推进失败（exit=$LASTEXITCODE）；核心发布不受影响。"
+}
+$status2 = git status --porcelain -- docs/data/tracked.json docs/data/portfolio.json
+if ($LASTEXITCODE -ne 0) { Write-Warning "[publish] git status(2) 失败" }
+elseif (-not [string]::IsNullOrWhiteSpace($status2)) {
+    git add -- docs/data/tracked.json docs/data/portfolio.json
+    git commit -m "docs: 更新信号战绩与模拟盘" --quiet
+    if ($LASTEXITCODE -eq 0) { git push origin main }
 }
 
-# Commit + push only when the payload actually changed.
-$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/tracked.json docs/data/portfolio.json
-if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
-if ([string]::IsNullOrWhiteSpace($status)) {
-    Write-Host "[publish] latest.json/klines.json 无变化（同一交易日重复运行），跳过提交。"
-    exit 0
-}
-git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/tracked.json docs/data/portfolio.json
-if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
-git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘前扫描结果" --quiet
-if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
-git push origin main
-if ($LASTEXITCODE -ne 0) {
-    Write-Error -ErrorAction Continue "git push 失败。请检查本机 git/SSH 配置与网络。"
-    exit 2
-}
 Write-Host "[publish] 已推送到 GitHub；Pages 稍后自动更新。"
 Stop-Transcript | Out-Null
 exit 0
