@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#05080f" />
     <meta
@@ -14,8 +14,8 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23f0913f' stroke-width='1.6' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23f0913f' stroke-width='1.4' opacity='0.7'/%3E%3Cpath d='M16 16 L25 7.5' stroke='%23f0913f' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f0913f'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./styles.css?v=15" />
-    <script defer src="./app.js?v=15"></script>
+    <link rel="stylesheet" href="./styles.css?v=16" />
+    <script defer src="./app.js?v=16"></script>
   </head>
   <body>
     <a class="skip-link" href="#signals">跳到候选池</a>
@@ -288,41 +288,7 @@
         </section>
       </section>
 
-      <section class="portfolio" id="portfolio" aria-labelledby="portfolio-title">
-        <div class="portfolio-head">
-          <div>
-            <p class="eyebrow">COMPOUNDING · 模拟盘</p>
-            <h2 id="portfolio-title">组合 · 模拟盘</h2>
-          </div>
-          <p class="portfolio-meta" id="portfolio-meta">加载中…</p>
-        </div>
-        <div class="kpi-strip portfolio-kpis" aria-label="模拟盘总览" id="portfolio-kpis"></div>
-        <div class="table-card t-table">
-          <div class="table-scroll">
-            <table>
-              <caption class="sr-only">
-                模拟盘目标组合：各标的的风险分配与计划买卖点，按信号分数筛选且受集中度/大盘环境约束。
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">标的</th>
-                  <th scope="col">信号</th>
-                  <th scope="col" class="th-num">入场日</th>
-                  <th scope="col" class="th-num">入场价</th>
-                  <th scope="col" class="th-num">现价</th>
-                  <th scope="col" class="th-num">止损</th>
-                  <th scope="col" class="th-num">止盈</th>
-                  <th scope="col" class="th-num">盈亏</th>
-                </tr>
-              </thead>
-              <tbody id="portfolio-rows"></tbody>
-            </table>
-          </div>
-          <p class="t-footnote muted" id="portfolio-method"></p>
-        </div>
-      </section>
-
-      <section class="tracked" id="tracked" aria-labelledby="tracked-title">
+            <section class="tracked" id="tracked" aria-labelledby="tracked-title">
         <div class="tracked-head">
           <div>
             <p class="eyebrow">AUDIT TRAIL · 信号战绩</p>
@@ -394,6 +360,9 @@
       </div>
       <p>
         本网站为研究预警，不构成投资建议；文中「资金进入」等表述仅为量价代理，不代表真实资金流向。历史规律、技术信号及数据质量均不能保证未来表现。
+      </p>
+      <p class="mirror-line">
+        访问异常时备用镜像（国内 CDN）：<a href="https://cdn.jsdelivr.net/gh/huhuihu656/ashare-radar@main/docs/index.html" rel="noopener">cdn.jsdelivr.net/gh/huhuihu656/ashare-radar</a>
       </p>
     </footer>
 

@@ -97,16 +97,11 @@ Write-Host "[publish] 刷新信号战绩（tracked.json）…"
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE）；核心发布不受影响。"
 }
-Write-Host "[publish] 轮动模拟盘推进（portfolio.json）…"
-& $python (Join-Path $ProjectRoot "scripts\portfolio.py") --mode rotation --signals docs/data/latest.json --out docs/data/portfolio.json
-if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 轮动模拟盘推进失败（exit=$LASTEXITCODE）；核心发布不受影响。"
-}
-$status2 = git status --porcelain -- docs/data/tracked.json docs/data/portfolio.json
+$status2 = git status --porcelain -- docs/data/tracked.json
 if ($LASTEXITCODE -ne 0) { Write-Warning "[publish] git status(2) 失败" }
 elseif (-not [string]::IsNullOrWhiteSpace($status2)) {
-    git add -- docs/data/tracked.json docs/data/portfolio.json
-    git commit -m "docs: 更新信号战绩与模拟盘" --quiet
+    git add -- docs/data/tracked.json
+    git commit -m "docs: 更新信号战绩" --quiet
     if ($LASTEXITCODE -eq 0) { git push origin main }
 }
 

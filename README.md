@@ -1,6 +1,5 @@
 # A 股收盘前信号监测（研究预警版）
 
-> **AI 量化研究站**：多技术形态自动扫描 A 股，每日收盘后给出候选池 + 买卖点计划 + 模拟盘轮动 + 微信实时提醒。
 > 每个交易日 15:10 自动更新。
 
 [🔗 在线演示（GitHub Pages）](https://huhuihu656.github.io/ashare-radar/) · [⭐ Star](https://github.com/huhuihu656/ashare-radar) · [📌 使用说明](#安装)
@@ -24,6 +23,13 @@
 - **仅存实时盘中快照**（14:40 扫描的当日价格/量）来自免费实时行情源——Tushare 无盘中全市场接口，这是付费源无法覆盖的一环；当日收盘后的正式数据全部来自 Tushare。
 
 免费源（新浪/腾讯/东财）降级为最终回退：任一环节失败不中断扫描，报告如实标注。token 缺失或积分不足时自动回到纯免费模式。
+
+## 访问与可靠性
+
+- **主站**：https://huhuihu656.github.io/ashare-radar/ （GitHub Pages）
+- **备用镜像**（国内 CDN，主站不可达时使用）：https://cdn.jsdelivr.net/gh/huhuihu656/ashare-radar@main/docs/index.html
+- 站点内置 Service Worker：首次访问后，静态资源离线可用；数据文件网络失败时自动回退到最近缓存（页面标注数据时间），任何网络条件下不白屏。
+- PC / 移动端自适应（含刘海屏安全区适配）。
 
 ## 安装
 
