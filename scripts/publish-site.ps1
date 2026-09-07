@@ -1,4 +1,4 @@
-<#
+﻿<#
 Publishes the daily scan to the public GitHub Pages dashboard.
 
 Pipeline: run scanner -> export sanitized payload -> commit -> push.
@@ -38,6 +38,12 @@ $ErrorActionPreference = "Stop"
 $env:NO_PROXY = "*"
 $env:no_proxy = "*"
 Set-Location $ProjectRoot
+# 日志：便于诊断定时任务失败原因（data/logs/，每日一个文件）
+$logDir = Join-Path $ProjectRoot "data\logs"
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+$logFile = Join-Path $logDir ("publish-" + (Get-Date -Format 'yyyyMMdd') + ".log")
+Start-Transcript -Path $logFile -Append | Out-Null
+Write-Host ("[publish] " + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + " 开始")
 $python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $configPath = Join-Path $ProjectRoot $Config
 if (!(Test-Path -LiteralPath $python)) { throw "找不到虚拟环境：$python（先按 README 安装）" }
@@ -98,4 +104,5 @@ if ($LASTEXITCODE -ne 0) {
     exit 2
 }
 Write-Host "[publish] 已推送到 GitHub；Pages 稍后自动更新。"
+Stop-Transcript | Out-Null
 exit 0

@@ -59,20 +59,40 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
     return rows
 
 
+def scan_day() -> str:
+    """最新已完成交易日。
+
+    收盘后（>=15:10）且今日为交易日 → 今日；否则回退到最近的交易日。
+    保证任何时刻补跑（如开机补跑、次日晨跑）数据都标注正确日期。
+    """
+    from datetime import timedelta as _td
+
+    now = datetime.now()
+    today = now.strftime("%Y%m%d")
+    try:
+        pro = _ts_pro()
+        cal = pro.trade_cal(exchange="SSE",
+                            start_date=(now - _td(days=14)).strftime("%Y%m%d"),
+                            end_date=today, is_open="1")
+        days = sorted(cal["cal_date"].astype(str).tolist()) if cal is not None else []
+    except Exception:
+        days = []
+    if now.time() < datetime.strptime("15:10", "%H:%M").time():
+        days = [d for d in days if d < today]
+    if not days:
+        raise RuntimeError("近14日无可用 A 股交易日，无法扫描。")
+    return days[-1]
+
+
 def scan(config_path: str) -> int:
     cfg = load(config_path)
-    try:
-        if not is_ashare_trading_day():
-            console.print("[yellow]今天不是 A 股交易日，已跳过扫描。[/yellow]")
-            return 0
-    except Exception as error:
-        console.print(f"[red]无法核验 A 股交易日历，为避免使用过期行情已停止：{error}[/red]")
-        return 2
-    today_str = datetime.now().strftime("%Y%m%d")
+    day = scan_day()
+    console.print(f"[cyan]扫描基准日：{day}[/cyan]")
+    today_str = day
     try:
         universe = filter_universe(get_universe(today_str), cfg.scan.exclude_st, cfg.scan.include_boards)
     except Exception as error:
-        console.print(f"[red]无法获取当日收盘股票池（需 15:10 后运行）：{error}[/red]")
+        console.print(f"[red]无法获取收盘股票池：{error}[/red]")
         return 2
     # 大盘环境：一次请求，写入审计并可选过滤信号。
     regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
@@ -88,7 +108,7 @@ def scan(config_path: str) -> int:
     else:
         console.print("[yellow]Tushare 资金流不可用（token/积分不足），信号仅含量价代理。[/yellow]")
     cache_dir = Path(cfg.scan.cache_dir)
-    report_dir = Path(cfg.scan.output_dir) / datetime.now().strftime("%Y%m%d")
+    report_dir = Path(cfg.scan.output_dir) / day
     report_dir.mkdir(parents=True, exist_ok=True)
     signals: list[dict] = []
     failures: list[dict] = []
@@ -130,6 +150,7 @@ def scan(config_path: str) -> int:
     (report_dir / "signals.json").write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
     metadata = {
         "scan_time": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "scan_day": day,
         "universe_count": len(records), "signal_count": len(signals), "failure_count": len(failures),
         "failures": failures, "config": str(Path(config_path).resolve()),
         "market": regime,
