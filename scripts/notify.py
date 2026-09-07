@@ -67,13 +67,14 @@ def send(title: str, content: str = "") -> bool:
             return bool(r.ok)
         if cb:
             cb_key = str(cfg.get("key") or "")
-            sep = "&" if "?" in cb else "?"
-            url = f"{cb}{sep}token={cb_token}" if cb_token else cb
             headers = {"Content-Type": "application/json"}
             if cb_key:
                 headers["Authorization"] = f"Bearer {cb_key}"
-            r = requests.post(url, json={"title": title, "content": content, "text": text},
-                              headers=headers, timeout=15)
+            # token 放 JSON body（不放 URL query，避免日志/代理泄露）
+            payload = {"title": title, "content": content, "text": text}
+            if cb_token:
+                payload["token"] = cb_token
+            r = requests.post(cb, json=payload, headers=headers, timeout=15)
             return bool(r.ok)
         if key:
             r = requests.post(f"https://sctapi.ftqq.com/{key}.send",
@@ -83,7 +84,7 @@ def send(title: str, content: str = "") -> bool:
             r = requests.post(webhook, json={"msgtype": "text", "text": {"content": text}}, timeout=15)
             return bool(r.ok)
         if token:
-            r = requests.post("http://www.pushplus.plus/send",
+            r = requests.post("https://www.pushplus.plus/send",
                               json={"token": token, "title": title, "content": content}, timeout=15)
             return bool(r.ok)
     except Exception as exc:

@@ -30,3 +30,6 @@ data/backtest_moneyflow.csv
 data/backtest_report.json
 data/sector_backtest_report.json
 data/mainline_backtest_report.json
+
+# 本地通知密钥（含 Server酱/PushPlus 凭证，永不提交）
+data/notify_secret.json
