@@ -1399,6 +1399,11 @@
 
   bindControls();
   bindGranularity();
+  // 深链：?day=YYYYMMDD 直达该日历史存档视图
+  const dayParam = new URLSearchParams(location.search).get("day");
+  if (dayParam && /^\d{8}$/.test(dayParam)) {
+    setTimeout(() => viewArchiveDay(dayParam), 300);
+  }
   renderOverview();
   setFilterButtons();
   loadData();
