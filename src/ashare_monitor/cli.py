@@ -12,8 +12,9 @@ from rich.console import Console
 from rich.progress import track
 
 from .config import Config, load
-from .data import (_ts_pro, filter_universe, get_universe, history_for,
-                   index_frame, is_ashare_trading_day, market_regime, polite_pause)
+from .data import (_ts_pro, cache_latest_date, filter_universe, get_universe,
+                   history_for, index_frame, is_ashare_trading_day,
+                   market_regime, polite_pause)
 from .data import refresh_history_cache_bulk
 from .signals import entry_exit_plan, position_strategy, scan_frame
 from .news_factor import news_counts, sort_score
@@ -117,9 +118,22 @@ def scan(config_path: str) -> int:
     console.print(f"[cyan]大盘环境：{regime['state']}（指数 {regime['close']}，MA20 {regime['ma20']}，MA60 {regime['ma60']}）[/cyan]")
     # 付费数据源（Tushare）：先增量刷新全市场历史缓存（批量、秒级），
     # 再拉真实主力资金流标注；任何一步失败都软降级。
-    written, sessions = refresh_history_cache_bulk(Path(cfg.scan.cache_dir), cfg.scan.lookback_days)
+    cache_dir = Path(cfg.scan.cache_dir)
+    written, sessions = refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
     if sessions:
         console.print(f"[green]Tushare 行情缓存：更新 {written} 只 / {sessions} 个交易日[/green]")
+    # 保护：Tushare 日线发布可能晚于任务时间；等待当日缓存就绪（最多 8 分钟）
+    import time as _time
+
+    for attempt in range(8):
+        if cache_latest_date(cache_dir) == day:
+            break
+        console.print(f"[yellow]当日({day})行情尚未入库，等待 60s 重试（{attempt + 1}/8）…[/yellow]")
+        _time.sleep(60)
+        refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
+    if cache_latest_date(cache_dir) != day:
+        console.print(f"[red]当日({day})行情仍未入库，为避免用旧行情误标今日，停止本次扫描。[/red]")
+        return 2
     moneyflow = latest_moneyflow()
     if moneyflow is not None:
         console.print(f"[green]Tushare 资金流：{len(moneyflow)} 只（净流入 {int((moneyflow.net_mf_amount > 0).sum())} 只）[/green]")

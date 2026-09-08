@@ -134,6 +134,25 @@ def _download_history(symbol: str, start: date) -> pd.DataFrame:
     return frame
 
 
+def cache_latest_date(cache_dir: Path) -> str | None:
+    """缓存中最新交易日的 YYYYMMDD（任一成分股 csv 的最大日期）。"""
+    cache_dir = Path(cache_dir)
+    if not cache_dir.exists():
+        return None
+    latest = None
+    for path in cache_dir.glob("*.csv"):
+        try:
+            dates = pd.read_csv(path, usecols=["date"])["date"]
+            if dates.empty:
+                continue
+            day = str(dates.max()).replace("-", "")[:8]
+            if latest is None or day > latest:
+                latest = day
+        except Exception:
+            continue
+    return latest
+
+
 def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force: bool = False) -> tuple[int, int]:
     """Refresh the whole price cache from Tushare, one session per call pair.
 

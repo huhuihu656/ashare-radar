@@ -26,9 +26,9 @@ $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$runner`""
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $ProjectRoot
 # 本机 ScheduledTasks 模块无 Monthly 参数集：工作日 15:20 每日触发，
 # monthly_mainline.py 内置"本月首个交易日"守卫，非首日秒退。
-$trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At "15:20"
+$trigger = New-ScheduledTaskTrigger -Daily -DaysInterval 1 -At "15:20"
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) `
     -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
     -Description "Monthly mainline-sector detection (first trading day guarded); research only." -Force | Out-Null
-Write-Host "Created task '$TaskName': 工作日 15:20（脚本内置首交易日守卫，仅月初首个交易日生效）。"
+Write-Host "Created task '$TaskName': daily 15:20 (script guards calendar day 2 of month)."

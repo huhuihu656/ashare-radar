@@ -108,14 +108,13 @@ def minmax(values: pd.Series) -> pd.Series:
     return (values - lo) / (hi - lo)
 
 
-def is_first_trading_day_of_month(pro) -> bool:
-    today = date.today()
-    cal = pro.trade_cal(exchange="SSE", start_date=today.strftime("%Y%m"),
-                        end_date=today.strftime("%Y%m"), is_open="1")
-    if cal is None or cal.empty:
-        return False
-    first = cal["cal_date"].astype(str).min()
-    return first == today.strftime("%Y%m%d")
+def is_mainline_day() -> bool:
+    """每月 2 号（日历日）才运行主线判定（--force 可手动覆盖）。
+
+    2 号即使逢周末/节假日也运行：因子取自缓存中最近交易日的数据，
+    不依赖当日行情。
+    """
+    return date.today().day == 2
 
 
 def load_members(pro) -> pd.DataFrame:
@@ -317,8 +316,8 @@ def main() -> None:
     if pro is None:
         print("Tushare 不可用，中止。")
         raise SystemExit(2)
-    if not args.force and not is_first_trading_day_of_month(pro):
-        print("今天不是本月首个交易日，跳过主线判定。")
+    if not args.force and not is_mainline_day():
+        print("今天不是每月 2 号，跳过主线判定（每月 2 号 15:20 自动运行）。")
         return
 
     members = load_members(pro)
