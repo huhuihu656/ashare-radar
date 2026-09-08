@@ -139,6 +139,10 @@
       </section>
 
       <section class="workspace" id="signals" aria-labelledby="signals-title">
+        <div class="archive-banner" id="archive-banner" hidden>
+          <span id="archive-banner-text"></span>
+          <button class="btn btn-ghost btn-sm" id="back-latest" type="button">返回最新</button>
+        </div>
         <aside class="filter-rail">
           <p class="panel-kicker">SIGNAL DESK</p>
           <h2 id="signals-title">候选池</h2>
@@ -188,6 +192,12 @@
           </div>
 
           <button class="reset-button" id="reset-filters" type="button">重置筛选</button>
+
+          <details class="archive-panel" id="archive-panel">
+            <summary>历史档案 <span class="archive-count" id="archive-count"></span></summary>
+            <p class="archive-hint">切换任意交易日，查看当日全局扫描存档。</p>
+            <div class="archive-days" id="archive-days" role="listbox" aria-label="历史档案日期"></div>
+          </details>
           <p class="rail-footnote">分数 ∈ [0, 100]，为规则化强度评分，不代表收益方向。</p>
         </aside>
 

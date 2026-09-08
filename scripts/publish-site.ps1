@@ -21,7 +21,8 @@ param(
     [string]$ProjectRoot = "",
     [string]$Config = "config.yaml",
     [double]$MinCoverage = 0.5,
-    [switch]$SkipScan
+    [switch]$SkipScan,
+    [switch]$NoNotify
 )
 
 # $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
@@ -41,8 +42,8 @@ Set-Location $ProjectRoot
 # 日志：便于诊断定时任务失败原因（data/logs/，每日一个文件）
 $logDir = Join-Path $ProjectRoot "data\logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
-$logFile = Join-Path $logDir ("publish-" + (Get-Date -Format 'yyyyMMdd') + ".log")
-Start-Transcript -Path $logFile -Append | Out-Null
+$logFile = Join-Path $logDir ("publish-" + (Get-Date -Format 'yyyyMMdd-HHmmss') + "-" + $PID + ".log")
+try { Start-Transcript -Path $logFile -Append | Out-Null } catch { Write-Warning "日志不可写，继续执行：$_" }
 Write-Host ("[publish] " + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + " 开始")
 $python = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
 $configPath = Join-Path $ProjectRoot $Config
@@ -74,12 +75,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ---- 第一批：核心数据立即提交推送（保证按时上线）----
-$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/archive
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
 if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] 核心数据无变化，跳过提交。"
 } else {
-    git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json
+    git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/archive docs/data/archive
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
     git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘扫描结果" --quiet
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
@@ -91,11 +92,15 @@ if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] 核心数据已推送到 GitHub；Pages 稍后自动更新。"
 }
 
-# ---- 微信通知（Server酱，非阻塞：失败不影响发布）----
+# ---- 微信通知（Server酱，非阻塞：失败不影响发布；-NoNotify 时跳过）----
+if ($NoNotify) {
+    Write-Host "[publish] -NoNotify：跳过微信通知。"
+} else {
 Write-Host "[publish] 发送微信通知…"
 & $python (Join-Path $ProjectRoot "scripts\daily_notify.py")
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "[publish] 微信通知发送失败（exit=$LASTEXITCODE）；发布不受影响。"
+}
 }
 
 # ---- 第二批：战绩追踪与模拟盘（重计算，非阻塞，单独提交）----

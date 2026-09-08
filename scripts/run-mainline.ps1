@@ -17,5 +17,5 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "主线判定失败（exit=$LASTEXITCODE）。"
     exit 2
 }
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ProjectRoot "scripts\publish-site.ps1") -SkipScan
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ProjectRoot "scripts\publish-site.ps1") -SkipScan -NoNotify
 exit $LASTEXITCODE

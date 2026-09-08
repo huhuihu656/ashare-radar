@@ -186,18 +186,37 @@ def export(reports_dir: Path, output: Path, min_coverage: float = 0.0,
     return payload
 
 
+def archive_payload(payload: dict[str, Any], archive_dir: Path) -> None:
+    """每日档案：docs/data/archive/<as_of>.json + 倒序索引 index.json。
+
+    网站可切换任意历史日期查看当日全局数据（候选表/统计/主线均按当日存档）。
+    """
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    day = str(payload.get("as_of") or "")
+    if not day:
+        return
+    (archive_dir / f"{day}.json").write_text(
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    days = sorted((f.stem for f in archive_dir.glob("*.json") if f.stem != "index"), reverse=True)
+    (archive_dir / "index.json").write_text(
+        json.dumps({"days": days}, ensure_ascii=False), encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="导出静态股票监测网页数据")
     parser.add_argument("--reports-dir", default="data/reports")
     parser.add_argument("--out", default="docs/data/latest.json")
     parser.add_argument("--min-coverage", type=float, default=0.0)
     parser.add_argument("--klines-out", default=None, help="K线数据输出（默认与 --out 同目录的 klines.json）")
+    parser.add_argument("--archive-dir", default=None, help="每日档案目录（默认与 --out 同目录的 archive/）")
     args = parser.parse_args()
     if not 0 <= args.min_coverage <= 1:
         parser.error("--min-coverage 必须在 0 到 1 之间")
     klines_out = Path(args.klines_out) if args.klines_out else Path(args.out).parent / "klines.json"
+    archive_dir = Path(args.archive_dir) if args.archive_dir else Path(args.out).parent / "archive"
     try:
         payload = export(Path(args.reports_dir), Path(args.out), args.min_coverage, klines_out)
+        archive_payload(payload, archive_dir)
     except Exception as error:
         print(f"Dashboard export failed: {error}", file=sys.stderr)
         return 2

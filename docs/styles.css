@@ -1867,3 +1867,16 @@ td:first-child {
   body { padding-left: max(0px, env(safe-area-inset-left)); padding-right: max(0px, env(safe-area-inset-right)); }
   footer { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
 }
+
+
+/* ---------- 历史档案 ---------- */
+.archive-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); border-radius: 10px; padding: 8px 14px; margin-bottom: 12px; font-size: 13px; }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.archive-panel { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.archive-panel summary { cursor: pointer; font-size: 13px; color: var(--ink); font-weight: 600; }
+.archive-count { color: var(--quiet); font-weight: 400; }
+.archive-hint { font-size: 11px; color: var(--quiet); margin: 6px 0 8px; }
+.archive-days { display: flex; flex-wrap: wrap; gap: 6px; }
+.archive-day { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.archive-day:hover { color: var(--ink); border-color: var(--line-strong); }
+.archive-day.is-active { background: var(--breakout-soft); border-color: var(--breakout-line); color: var(--breakout-bright); font-weight: 600; }

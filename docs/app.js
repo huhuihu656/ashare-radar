@@ -7,7 +7,7 @@
   const STALE_HOURS = 72; // 距 generated_at 超过该时长提示可能过期
   const STALE_MS = STALE_HOURS * 3600 * 1000;
 
-  const state = { payload: null, loaded: false, signal: "all", query: "", board: "all" };
+  const state = { payload: null, loaded: false, signal: "all", query: "", board: "all", viewingDay: null };
   const $ = (selector) => document.querySelector(selector);
 
   const number = new Intl.NumberFormat("zh-CN");
@@ -962,6 +962,75 @@
     });
   }
 
+  /* ---------- 历史档案日历 ---------- */
+
+  const ARCHIVE_INDEX_URL = "./data/archive/index.json";
+  let archiveDays = [];
+
+  async function loadArchiveIndex() {
+    try {
+      const res = await fetch(`${ARCHIVE_INDEX_URL}?v=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const idx = await res.json();
+      archiveDays = Array.isArray(idx.days) ? idx.days : [];
+    } catch { archiveDays = []; }
+    renderArchivePanel();
+  }
+
+  function renderArchivePanel() {
+    const wrap = $("#archive-days");
+    const count = $("#archive-count");
+    if (!wrap) return;
+    if (count) count.textContent = archiveDays.length ? `(${archiveDays.length})` : "";
+    wrap.replaceChildren();
+    archiveDays.forEach((day) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "archive-day" + (state.viewingDay === day ? " is-active" : "");
+      btn.setAttribute("role", "option");
+      btn.setAttribute("aria-selected", String(state.viewingDay === day));
+      btn.textContent = `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}`;
+      btn.addEventListener("click", () => viewArchiveDay(day));
+      wrap.append(btn);
+    });
+  }
+
+  async function viewArchiveDay(day) {
+    try {
+      const res = await fetch(`./data/archive/${day}.json?v=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      state.payload = payload;
+      state.viewingDay = day;
+      state.loaded = true;
+      renderOverview();
+      setStatus("ok");
+      renderBoards();
+      renderResults();
+      renderArchivePanel();
+      const banner = $("#archive-banner");
+      const text = $("#archive-banner-text");
+      if (banner && text) {
+        text.textContent = `正在查看 ${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)} 的历史存档（${(payload.signals || []).length} 条信号）`;
+        banner.hidden = false;
+      }
+    } catch (error) {
+      const warning = $("#data-warning");
+      if (warning) {
+        warning.className = "data-warning has-message w-error";
+        warning.textContent = `加载 ${day} 存档失败：${error.message}`;
+      }
+    }
+  }
+
+  async function backToLatest() {
+    state.viewingDay = null;
+    const banner = $("#archive-banner");
+    if (banner) banner.hidden = true;
+    await loadData();
+    renderArchivePanel();
+  }
+
   /* ---------- 月度主线板块 ---------- */
 
   const MAINLINE_URL = "./data/mainline.json";
@@ -1061,6 +1130,7 @@
       renderBoards();
       renderResults();
       renderMainline();
+      loadArchiveIndex();
     } catch (error) {
       const hadData = Boolean(state.payload?.as_of);
       if (!state.loaded) state.payload = { signals: [] };
@@ -1317,6 +1387,8 @@
       renderResults();
     });
     $("#refresh-button").addEventListener("click", loadData);
+    const backBtn = $("#back-latest");
+    if (backBtn) backBtn.addEventListener("click", backToLatest);
     bindDialog();
   }
 

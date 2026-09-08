@@ -8,7 +8,7 @@ starts trading software.
 param(
     [string]$ProjectRoot = "",
     [string]$TaskName = "AshareCloseMonitor",
-    [string]$RunAt = "15:30"
+    [string]$RunAt = "15:45"
 )
 
 # $PSScriptRoot can be empty during parameter defaults on Windows PowerShell
