@@ -14,8 +14,8 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23f0913f' stroke-width='1.6' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='7.5' fill='none' stroke='%23f0913f' stroke-width='1.4' opacity='0.7'/%3E%3Cpath d='M16 16 L25 7.5' stroke='%23f0913f' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23f0913f'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="./styles.css?v=16" />
-    <script defer src="./app.js?v=16"></script>
+    <link rel="stylesheet" href="./styles.css?v=17" />
+    <script defer src="./app.js?v=17"></script>
   </head>
   <body>
     <a class="skip-link" href="#signals">跳到候选池</a>
@@ -298,52 +298,7 @@
         </section>
       </section>
 
-            <section class="tracked" id="tracked" aria-labelledby="tracked-title">
-        <div class="tracked-head">
-          <div>
-            <p class="eyebrow">AUDIT TRAIL · 信号战绩</p>
-            <h2 id="tracked-title">信号战绩</h2>
-          </div>
-          <p class="tracked-meta" id="tracked-meta">加载中…</p>
-        </div>
-        <div class="kpi-strip tracked-kpis" aria-label="战绩总览" id="tracked-kpis"></div>
-        <div class="t-patterns" id="t-patterns" role="list"></div>
-        <div class="table-card t-table">
-          <div class="t-toolbar">
-            <div class="filter-row filter-row-chips" id="t-filters" role="group" aria-label="按信号类型筛选"></div>
-          </div>
-          <div class="table-scroll">
-            <table>
-              <caption class="sr-only">
-                历史信号逐条战绩：T+1 开盘买入后 1/5/10/20 个交易日的收益与止损止盈结果（前复权）。
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">日期</th>
-                  <th scope="col">标的</th>
-                  <th scope="col">信号</th>
-                  <th scope="col" class="th-num">买入参考</th>
-                  <th scope="col" class="th-num">T+1开盘</th>
-                  <th scope="col" class="th-num">+1日</th>
-                  <th scope="col" class="th-num">+5日</th>
-                  <th scope="col" class="th-num">+10日</th>
-                  <th scope="col" class="th-num">+20日</th>
-                  <th scope="col">结果</th>
-                </tr>
-              </thead>
-              <tbody id="t-rows"></tbody>
-            </table>
-          </div>
-          <div class="t-more-wrap">
-            <button class="btn btn-ghost" id="t-more" type="button" hidden>显示更多</button>
-          </div>
-          <p class="t-footnote muted">
-            口径：与回测同一信号引擎 — 信号用当日已收盘K线判定（无前视），T+1 开盘买入（前复权）；T+1 开盘跳空高于买入参考 5% 或低于止损价视为未入场（记「跳空」）；止损/止盈按日内最低/最高价判定，同日双触发按止损优先；20 个交易日内未触发标记为持有。历史表现不构成未来收益承诺。
-          </p>
-        </div>
-      </section>
-
-      <section class="method" aria-labelledby="method-title">
+                  <section class="method" aria-labelledby="method-title">
         <div class="method-heading">
           <p class="eyebrow">HOW THE RADAR READS</p>
           <h2 id="method-title">两条可复盘的研究路径</h2>

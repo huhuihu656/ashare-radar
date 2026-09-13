@@ -110,19 +110,6 @@ if ($LASTEXITCODE -ne 0) {
 }
 }
 
-# ---- 第二批：战绩追踪与模拟盘（重计算，非阻塞，单独提交）----
-Write-Host "[publish] 刷新信号战绩（tracked.json）…"
-& $python (Join-Path $ProjectRoot "scripts\signal_track.py") --out docs/data/tracked.json
-if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 信号战绩刷新失败（exit=$LASTEXITCODE）；核心发布不受影响。"
-}
-$status2 = git status --porcelain -- docs/data/tracked.json
-if ($LASTEXITCODE -ne 0) { Write-Warning "[publish] git status(2) 失败" }
-elseif (-not [string]::IsNullOrWhiteSpace($status2)) {
-    git add -- docs/data/tracked.json
-    git commit -m "docs: 更新信号战绩" --quiet
-    if ($LASTEXITCODE -eq 0) { git push origin main }
-}
 
 Write-Host "[publish] 已推送到 GitHub；Pages 稍后自动更新。"
 Stop-Transcript | Out-Null
