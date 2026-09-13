@@ -28,7 +28,7 @@ console = Console()
 def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
              moneyflow: pd.DataFrame | None, day: str) -> list[dict]:
     symbol = str(quote.symbol)
-    history = history_for(symbol, cache_dir, cfg.scan.lookback_days)
+    history = history_for(symbol, cache_dir, cfg.scan.lookback_days, as_of=day)
     if len(history) < cfg.scan.min_history_days:
         return []
     # 收盘后扫描：缓存已含当日真实收盘 bar，直接用；

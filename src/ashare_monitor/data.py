@@ -274,20 +274,25 @@ def _ts_pro():
     return tushare_src._TS
 
 
-def history_for(symbol: str, cache_dir: Path, lookback_days: int) -> pd.DataFrame:
+def history_for(symbol: str, cache_dir: Path, lookback_days: int,
+                as_of: str | None = None) -> pd.DataFrame:
     """Return cached, forward-adjusted daily bars.
 
-    Cache is intentionally refreshed if its most recent date is older than today.
-    It never merges a live pre-close snapshot into the cache, preventing an
-    incomplete candle from contaminating later research.
+    Cache is refreshed only when it does not yet cover the scan day (`as_of`,
+    YYYYMMDD; default today).  Comparing against the scan day instead of "now"
+    prevents a historical backfill from triggering a per-symbol download storm
+    (the bulk refresh already guarantees coverage).  A live pre-close snapshot
+    is never merged into the cache, preventing an incomplete candle from
+    contaminating later research.
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = _cache_path(cache_dir, symbol)
     today = pd.Timestamp.today().normalize()
+    target = pd.Timestamp(as_of).normalize() if as_of else today
     cached = pd.DataFrame()
     if path.exists():
         cached = pd.read_csv(path, parse_dates=["date"]).set_index("date").sort_index()
-    refresh_needed = cached.empty or cached.index.max().normalize() < today
+    refresh_needed = cached.empty or cached.index.max().normalize() < target
     if refresh_needed:
         # After the initial download, request only the overlap since the final
         # cached session.  This keeps daily full-market runs practical.
@@ -296,7 +301,7 @@ def history_for(symbol: str, cache_dir: Path, lookback_days: int) -> pd.DataFram
         fresh = _download_history(symbol, start)
         # A daily endpoint can include today's unfinished bar.  Cache only known
         # historical bars; the scanner builds its one ephemeral live row below.
-        fresh = fresh[fresh.index.normalize() < today]
+        fresh = fresh[fresh.index.normalize() <= target]
         if not fresh.empty:
             cached = pd.concat([cached, fresh])
             cached = cached[~cached.index.duplicated(keep="last")].sort_index().tail(lookback_days)
