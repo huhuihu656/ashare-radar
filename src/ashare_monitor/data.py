@@ -202,11 +202,26 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
         return 0, 0
 
     frames: list[pd.DataFrame] = []
+    import time as _time
+
     for session in needed:
-        try:
-            daily = pro.daily(trade_date=session)
-            factors = pro.adj_factor(trade_date=session)
-        except Exception:
+        daily = factors = None
+        for attempt in range(4):
+            try:
+                daily = pro.daily(trade_date=session)
+                factors = pro.adj_factor(trade_date=session)
+                break
+            except Exception as error:
+                message = str(error)
+                if "频率超限" in message or "frequency" in message.lower() or "每分钟" in message:
+                    # Tushare 限频（200 次/分钟）：退避 65s 等窗口重置后重试
+                    print(f"[bulk] {session} 触发限频，退避 65s 重试（{attempt + 1}/4）", flush=True)
+                    _time.sleep(65)
+                else:
+                    break
+        # 节流：保持 ~2.5 请求/秒（150/分钟），低于 200 上限
+        _time.sleep(0.4)
+        if daily is None or factors is None:
             continue
         if daily is None or daily.empty or factors is None or factors.empty:
             continue

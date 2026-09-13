@@ -56,15 +56,22 @@ if (-not $SkipScan) {
         Write-Error -ErrorAction Continue "扫描失败（exit=$LASTEXITCODE）；保留已上线的旧数据，不发布。"
         exit 2
     }
-    # scan exits 0 both on success and on a clean non-trading-day skip; the
-    # report directory only appears when a scan actually ran today.
-    $today = Get-Date -Format 'yyyyMMdd'
-    if (!(Test-Path -LiteralPath (Join-Path $ProjectRoot "data\reports\$today\signals.json")) -or
-        !(Test-Path -LiteralPath (Join-Path $ProjectRoot "data\reports\$today\run.json"))) {
-        Write-Host "[publish] 今天不是交易日或扫描未生成报告；保留已上线数据，干净退出。"
+    # 扫描基准日可能不是"今天"（开机补跑会回退到上一交易日）：
+    # 检查最近 12 小时内生成的报告目录（其 run.json 的 scan_time 为准），
+    # 而非用 Get-Date 猜日期（曾导致补跑成功却不发布）。
+    $reportsRoot = Join-Path $ProjectRoot "data\reports"
+    $fresh = Get-ChildItem -LiteralPath $reportsRoot -Directory -Filter "20*" -ErrorAction SilentlyContinue |
+        Where-Object {
+            (Test-Path -LiteralPath (Join-Path $_.FullName "signals.json")) -and
+            (Test-Path -LiteralPath (Join-Path $_.FullName "run.json"))
+        } |
+        Where-Object { $_.LastWriteTime -gt (Get-Date).AddHours(-12) } |
+        Sort-Object Name -Descending | Select-Object -First 1
+    if (-not $fresh) {
+        Write-Host "[publish] 近 12 小时无新扫描报告；保留已上线数据，干净退出。"
         exit 3
     }
-    Write-Host "[publish] 扫描完成。"
+    Write-Host "[publish] 扫描完成（基准日 $($fresh.Name)）。"
 }
 
 # Export the newest complete report to the static payload (coverage-gated).

@@ -172,8 +172,9 @@ def build_seed(rows: list[dict]) -> dict[str, dict[str, str]]:
     for r in rows:
         if r.get("pos", 0) > 5:
             key = (r["s"], r["p"])
-            if key[1] not in seed[key[0]] or r["sd"] > seed[key[0]][key[1]]:
-                seed[key[0]][key[1]] = str(r["sd"])
+            day_str = str(r["sd"])
+            if key[1] not in seed[key[0]] or day_str > seed[key[0]][key[1]]:
+                seed[key[0]][key[1]] = day_str
     return dict(seed)
 
 

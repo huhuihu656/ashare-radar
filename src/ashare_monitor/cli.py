@@ -26,14 +26,16 @@ console = Console()
 
 
 def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
-             moneyflow: pd.DataFrame | None) -> list[dict]:
+             moneyflow: pd.DataFrame | None, day: str) -> list[dict]:
     symbol = str(quote.symbol)
     history = history_for(symbol, cache_dir, cfg.scan.lookback_days)
     if len(history) < cfg.scan.min_history_days:
         return []
-    # 收盘后扫描：缓存已含今日真实收盘 bar（refresh_history_cache_bulk 拉当日），
-    # 直接用最后一行即可，不再构造盘中模拟 bar。
-    frame = history
+    # 收盘后扫描：缓存已含当日真实收盘 bar，直接用；
+    # 历史回填（--day）时缓存可能含更晚数据，必须切到基准日为止（防未来函数）。
+    frame = history[history.index <= pd.Timestamp(day)]
+    if len(frame) < cfg.scan.min_history_days:
+        return []
     limit_pct = LIMIT_PCT_BY_BOARD.get(str(quote["board"]), 0.10)
     rows = scan_frame(frame, cfg.support_retest, cfg.breakout, cfg.risk,
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
@@ -103,15 +105,29 @@ def scan_day() -> str:
     return days[-1]
 
 
-def scan(config_path: str) -> int:
+def scan(config_path: str, day: str | None = None) -> int:
     cfg = load(config_path)
-    day = scan_day()
-    console.print(f"[cyan]扫描基准日：{day}[/cyan]")
+    backfill = bool(day)
+    day = day or scan_day()
+    console.print(f"[cyan]扫描基准日：{day}" + ("（历史回填）" if backfill else "") + "[/cyan]")
     today_str = day
-    try:
-        universe = filter_universe(get_universe(today_str), cfg.scan.exclude_st, cfg.scan.include_boards)
-    except Exception as error:
-        console.print(f"[red]无法获取收盘股票池：{error}[/red]")
+    # 保护：Tushare 日线发布可能晚于任务时间（尤其 15:20 准点跑）；
+    # 股票池获取失败时每 60s 重试，最多 8 分钟，避免"行情尚未发布"直接失败。
+    import time as _t
+
+    universe = None
+    last_error = None
+    for attempt in range(9):
+        try:
+            universe = filter_universe(get_universe(today_str), cfg.scan.exclude_st, cfg.scan.include_boards)
+            break
+        except Exception as error:
+            last_error = error
+            if attempt < 8:
+                console.print(f"[yellow]股票池获取失败（{str(error)[:80]}），等待 60s 重试（{attempt + 1}/8）…[/yellow]")
+                _t.sleep(60)
+    if universe is None:
+        console.print(f"[red]无法获取收盘股票池：{last_error}[/red]")
         return 2
     # 大盘环境：一次请求，写入审计并可选过滤信号。
     regime = market_regime(index_frame(), cfg.risk.weak_market_ma)
@@ -125,14 +141,20 @@ def scan(config_path: str) -> int:
     # 保护：Tushare 日线发布可能晚于任务时间；等待当日缓存就绪（最多 8 分钟）
     import time as _time
 
+    def cache_ready() -> bool:
+        latest = cache_latest_date(cache_dir)
+        if latest is None:
+            return False
+        return latest >= day if backfill else latest == day
+
     for attempt in range(8):
-        if cache_latest_date(cache_dir) == day:
+        if cache_ready():
             break
-        console.print(f"[yellow]当日({day})行情尚未入库，等待 60s 重试（{attempt + 1}/8）…[/yellow]")
+        console.print(f"[yellow]({day})行情尚未入库，等待 60s 重试（{attempt + 1}/8）…[/yellow]")
         _time.sleep(60)
         refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
-    if cache_latest_date(cache_dir) != day:
-        console.print(f"[red]当日({day})行情仍未入库，为避免用旧行情误标今日，停止本次扫描。[/red]")
+    if not cache_ready():
+        console.print(f"[red]({day})行情仍未入库，为避免用旧行情误标，停止本次扫描。[/red]")
         return 2
     moneyflow = latest_moneyflow()
     if moneyflow is not None:
@@ -146,7 +168,7 @@ def scan(config_path: str) -> int:
     failures: list[dict] = []
     records = [row for _, row in universe.iterrows()]
     with ThreadPoolExecutor(max_workers=cfg.scan.workers) as pool:
-        future_map = {pool.submit(_scan_one, row, cfg, cache_dir, regime["state"], moneyflow): row for row in records}
+        future_map = {pool.submit(_scan_one, row, cfg, cache_dir, regime["state"], moneyflow, day): row for row in records}
         for future in track(as_completed(future_map), total=len(future_map), description="扫描 A 股"):
             quote = future_map[future]
             try:
@@ -201,6 +223,8 @@ def main() -> None:
     commands = parser.add_subparsers(dest="command", required=True)
     scan_parser = commands.add_parser("scan")
     scan_parser.add_argument("--config", default="config.yaml")
+    scan_parser.add_argument("--day", default=None,
+                             help="扫描基准日 YYYYMMDD（历史回填用，默认自动取最近已完成交易日）")
     commands.add_parser("universe")
     args = parser.parse_args()
     if args.command == "universe":
@@ -212,7 +236,9 @@ def main() -> None:
             raise SystemExit(2)
         console.print(f"收盘股票池：{len(universe)} 只")
         raise SystemExit(0)
-    raise SystemExit(scan(args.config))
+    if args.day is not None and (len(args.day) != 8 or not args.day.isdigit()):
+        parser.error("--day 必须是 YYYYMMDD 格式")
+    raise SystemExit(scan(args.config, args.day))
 
 
 if __name__ == "__main__":
