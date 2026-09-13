@@ -37,9 +37,12 @@ if ($tz.Id -ne "China Standard Time") {
 $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $ProjectRoot 'scripts\publish-site.ps1')`""
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments -WorkingDirectory $ProjectRoot
 $trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At $RunAt
+# 备份触发：16:30 兜底（若 15:20 因行情未发布而失败；已发布则脚本自动早退）
+$triggerBackup = New-ScheduledTaskTrigger -Weekly -WeeksInterval 1 -DaysOfWeek Monday, Tuesday, Wednesday, Thursday, Friday -At "16:30"
+# 电池供电时也运行（笔记本拔电不跳过）+ 睡眠可唤醒 + 错过立即补跑
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
-    -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
+    -MultipleInstances IgnoreNew -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger @($trigger, $triggerBackup) -Settings $settings `
     -Description "A-share post-close research scanner; no automated trading." -Force | Out-Null
 Write-Host "Created or updated task '$TaskName': weekdays at $RunAt."
 Write-Host ('Remove with: Unregister-ScheduledTask -TaskName "{0}" -Confirm:$false' -f $TaskName)

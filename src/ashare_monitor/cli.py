@@ -117,14 +117,14 @@ def scan(config_path: str, day: str | None = None) -> int:
 
     universe = None
     last_error = None
-    for attempt in range(9):
+    for attempt in range(26):
         try:
             universe = filter_universe(get_universe(today_str), cfg.scan.exclude_st, cfg.scan.include_boards)
             break
         except Exception as error:
             last_error = error
-            if attempt < 8:
-                console.print(f"[yellow]股票池获取失败（{str(error)[:80]}），等待 60s 重试（{attempt + 1}/8）…[/yellow]")
+            if attempt < 25:
+                console.print(f"[yellow]股票池获取失败（{str(error)[:80]}），等待 60s 重试（{attempt + 1}/25）…[/yellow]")
                 _t.sleep(60)
     if universe is None:
         console.print(f"[red]无法获取收盘股票池：{last_error}[/red]")
@@ -147,10 +147,10 @@ def scan(config_path: str, day: str | None = None) -> int:
             return False
         return latest >= day if backfill else latest == day
 
-    for attempt in range(8):
+    for attempt in range(25):
         if cache_ready():
             break
-        console.print(f"[yellow]({day})行情尚未入库，等待 60s 重试（{attempt + 1}/8）…[/yellow]")
+        console.print(f"[yellow]({day})行情尚未入库，等待 60s 重试（{attempt + 1}/25）…[/yellow]")
         _time.sleep(60)
         refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
     if not cache_ready():

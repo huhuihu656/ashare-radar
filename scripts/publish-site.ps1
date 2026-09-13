@@ -50,7 +50,21 @@ $configPath = Join-Path $ProjectRoot $Config
 if (!(Test-Path -LiteralPath $python)) { throw "找不到虚拟环境：$python（先按 README 安装）" }
 if (!(Test-Path -LiteralPath $configPath)) { throw "找不到配置文件：$configPath" }
 
+# 若当日数据已发布，跳过扫描（16:30 备份触发防重复；-SkipScan 时不做此检查）
 if (-not $SkipScan) {
+    $today = Get-Date -Format 'yyyyMMdd'
+    $now = Get-Date
+    if ($now.Hour -ge 15) {
+        $published = $null
+        try {
+            $published = (Get-Content -LiteralPath (Join-Path $ProjectRoot "docs\data\latest.json") -Raw -Encoding UTF8 | ConvertFrom-Json).as_of
+        } catch { $published = $null }
+        if ($published -eq $today) {
+            Write-Host "[publish] 当日($today)数据已发布，跳过扫描与推送。"
+            Stop-Transcript | Out-Null
+            exit 0
+        }
+    }
     & $python -m ashare_monitor.cli scan --config $configPath
     if ($LASTEXITCODE -ne 0) {
         Write-Error -ErrorAction Continue "扫描失败（exit=$LASTEXITCODE）；保留已上线的旧数据，不发布。"
@@ -97,17 +111,17 @@ if ([string]::IsNullOrWhiteSpace($status)) {
         exit 2
     }
     Write-Host "[publish] 核心数据已推送到 GitHub；Pages 稍后自动更新。"
-}
 
-# ---- 微信通知（Server酱，非阻塞：失败不影响发布；-NoNotify 时跳过）----
-if ($NoNotify) {
-    Write-Host "[publish] -NoNotify：跳过微信通知。"
-} else {
-Write-Host "[publish] 发送微信通知…"
-& $python (Join-Path $ProjectRoot "scripts\daily_notify.py")
-if ($LASTEXITCODE -ne 0) {
-    Write-Warning "[publish] 微信通知发送失败（exit=$LASTEXITCODE）；发布不受影响。"
-}
+    # ---- 微信通知（仅在有新数据推送时发送，避免无变化时重复打扰；-NoNotify 跳过）----
+    if ($NoNotify) {
+        Write-Host "[publish] -NoNotify：跳过微信通知。"
+    } else {
+        Write-Host "[publish] 发送微信通知…"
+        & $python (Join-Path $ProjectRoot "scripts\daily_notify.py")
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "[publish] 微信通知发送失败（exit=$LASTEXITCODE）；发布不受影响。"
+        }
+    }
 }
 
 

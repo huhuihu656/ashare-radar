@@ -27,8 +27,9 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments
 # 本机 ScheduledTasks 模块无 Monthly 参数集：工作日 15:20 每日触发，
 # monthly_mainline.py 内置"本月首个交易日"守卫，非首日秒退。
 $trigger = New-ScheduledTaskTrigger -Daily -DaysInterval 1 -At "15:20"
+# 电池供电时也运行 + 睡眠可唤醒 + 错过立即补跑
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1) `
-    -MultipleInstances IgnoreNew
+    -MultipleInstances IgnoreNew -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
     -Description "Monthly mainline-sector detection (first trading day guarded); research only." -Force | Out-Null
 Write-Host "Created task '$TaskName': daily 15:20 (script guards calendar day 2 of month)."
