@@ -1,0 +1,91 @@
+name: daily-scan
+
+# 每个交易日 15:20 北京时间 = 07:20 UTC 云端定时扫描。
+# 不依赖本机开关机状态；本机计划任务仅作备份。
+on:
+  schedule:
+    - cron: "20 7 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      NO_PROXY: "*"
+      no_proxy: "*"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -e . requests
+
+      - name: Restore price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: cache.tar.gz
+          key: ashare-cache-${{ github.run_id }}
+          restore-keys: |
+            ashare-cache-
+
+      - name: Unpack cache
+        run: |
+          if [ -f cache.tar.gz ]; then
+            tar -xzf cache.tar.gz -C .
+            echo "cache restored: $(ls data/cache | wc -l) files"
+          else
+            echo "cold start: full history will be fetched"
+          fi
+
+      - name: Scan (post-close)
+        env:
+          TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+        run: python -m ashare_monitor.cli scan --config config.yaml
+
+      - name: Export dashboard payloads
+        run: python scripts/export_dashboard.py --reports-dir data/reports --out docs/data/latest.json --min-coverage 0.5
+
+      - name: WeChat notify (Server酱)
+        env:
+          SERVERCHAN_URL: ${{ secrets.SERVERCHAN_URL }}
+        run: |
+          if [ -n "$SERVERCHAN_URL" ]; then
+            printf '{"serverchan_url":"%s","enabled":true}' "$SERVERCHAN_URL" > data/notify_secret.json
+            python scripts/daily_notify.py || echo "notify failed (non-fatal)"
+          else
+            echo "SERVERCHAN_URL not set; skip notify"
+          fi
+
+      - name: Save price cache
+        run: tar -czf cache.tar.gz -C data cache
+
+      - name: Store cache
+        uses: actions/cache/save@v4
+        with:
+          path: cache.tar.gz
+          key: ashare-cache-${{ github.run_id }}
+
+      - name: Publish to Pages branch
+        run: |
+          git config user.name "ashare-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          if git diff --cached --quiet; then
+            echo "no data change; nothing to publish"
+          else
+            git commit -m "docs: daily scan $(date -u +%Y-%m-%d)"
+            git push
+          fi
