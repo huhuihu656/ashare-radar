@@ -65,6 +65,22 @@ if (-not $SkipScan) {
             exit 0
         }
     }
+    # 云端优先：若今日云端 daily-scan 已成功发布，本机跳过（备份角色，防重复扫描/通知）
+    try {
+        $runs = Invoke-RestMethod -Uri "https://api.github.com/repos/huhuihu656/ashare-radar/actions/workflows/daily-scan.yml/runs?per_page=10" -TimeoutSec 20 -Headers @{ "User-Agent" = "ashare-local-backup" }
+        $todayCn = (Get-Date).ToString("yyyy-MM-dd")
+        $cloudOk = $runs.workflow_runs | Where-Object {
+            ([datetime]$_.created_at).ToUniversalTime().AddHours(8).ToString("yyyy-MM-dd") -eq $todayCn -and $_.conclusion -eq "success"
+        } | Select-Object -First 1
+        if ($cloudOk) {
+            Write-Host "[publish] 云端今日已成功发布（run $($cloudOk.id)），本机跳过。"
+            Stop-Transcript | Out-Null
+            exit 0
+        }
+    } catch {
+        Write-Host "[publish] 云端状态检查失败（$($_.Exception.Message)），继续本机扫描兜底。"
+    }
+
     & $python -m ashare_monitor.cli scan --config $configPath
     if ($LASTEXITCODE -ne 0) {
         Write-Error -ErrorAction Continue "扫描失败（exit=$LASTEXITCODE）；保留已上线的旧数据，不发布。"
@@ -105,6 +121,7 @@ if ([string]::IsNullOrWhiteSpace($status)) {
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
     git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘扫描结果" --quiet
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }
+    git pull --rebase origin main 2>$null | Out-Null
     git push origin main
     if ($LASTEXITCODE -ne 0) {
         Write-Error -ErrorAction Continue "git push 失败。请检查本机 git/SSH 配置与网络。"
