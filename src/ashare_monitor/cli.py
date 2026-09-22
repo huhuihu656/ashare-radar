@@ -46,7 +46,7 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
     for row in rows:
         row.update({"symbol": symbol, "name": str(quote["name"]), "board": str(quote["board"]),
                     "market_env": market_state,
-                    "scan_time": datetime.now().astimezone().isoformat(timespec="seconds")})
+                    "scan_time": _now_cn().isoformat(timespec="seconds")})
         if money is not None:
             net = float(money.net_mf_amount) if pd.notna(money.net_mf_amount) else None
             row["mf_date"] = str(money.mf_date)
@@ -62,6 +62,19 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
     return rows
 
 
+def _now_cn() -> datetime:
+    """当前北京时间（云端 runner 本地时间是 UTC，交易日/收盘判断必须用北京时间）。"""
+    from datetime import timedelta as _td
+    from datetime import timezone as _tz
+
+    try:
+        from zoneinfo import ZoneInfo
+
+        return datetime.now(ZoneInfo("Asia/Shanghai"))
+    except Exception:
+        return datetime.now(_tz(_td(hours=8)))
+
+
 def scan_day() -> str:
     """最新已完成交易日。
 
@@ -70,7 +83,7 @@ def scan_day() -> str:
     """
     from datetime import timedelta as _td
 
-    now = datetime.now()
+    now = _now_cn()
     today = now.strftime("%Y%m%d")
     days: list[str] = []
     last_error = None
@@ -203,7 +216,7 @@ def scan(config_path: str, day: str | None = None) -> int:
     result.to_csv(report_dir / "signals.csv", index=False, encoding="utf-8-sig")
     (report_dir / "signals.json").write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
     metadata = {
-        "scan_time": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "scan_time": _now_cn().isoformat(timespec="seconds"),
         "scan_day": day,
         "universe_count": len(records), "signal_count": len(signals), "failure_count": len(failures),
         "failures": failures, "config": str(Path(config_path).resolve()),
