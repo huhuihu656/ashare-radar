@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
+      # Linux runner env vars are case-sensitive; uppercase is enough.
       NO_PROXY: "*"
-      no_proxy: "*"
     steps:
       - uses: actions/checkout@v4
         with:
