@@ -183,7 +183,9 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
     all_sessions = sorted(cal["cal_date"].astype(str).tolist())
 
     if force or not any(cache_dir.iterdir()):
-        needed = all_sessions
+        # 冷启动只需覆盖形态最长回看（约 160 根K线）：抓最近 200 个交易日
+        # 即可（配合并行抓取约 3 分钟）；force=True（全量重建）仍取全窗口。
+        needed = all_sessions if force else all_sessions[-200:]
     else:
         # Cache files are sorted oldest -> newest; the freshest cached bar sits
         # on the last row.  Fetch only sessions strictly newer than it.  A
@@ -201,33 +203,50 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
     if not needed:
         return 0, 0
 
-    frames: list[pd.DataFrame] = []
+    import threading
     import time as _time
+    from concurrent.futures import ThreadPoolExecutor
 
-    for session in needed:
-        daily = factors = None
+    # 全局请求节流：任意两次 Tushare 请求间隔 >=0.4s（≈150 次/分钟 < 200 上限）
+    _ts_lock = threading.Lock()
+    _ts_next = [0.0]
+
+    def _ts_throttle() -> None:
+        with _ts_lock:
+            wait = _ts_next[0] - _time.monotonic()
+            if wait > 0:
+                _time.sleep(wait)
+            _ts_next[0] = _time.monotonic() + 0.4
+
+    def fetch_session(session: str):
+        """一个交易日：daily + adj_factor（供并行调用）。"""
         for attempt in range(4):
             try:
+                _ts_throttle()
                 daily = pro.daily(trade_date=session)
+                _ts_throttle()
                 factors = pro.adj_factor(trade_date=session)
-                break
+                if daily is None or daily.empty or factors is None or factors.empty:
+                    return None
+                merged = daily.merge(factors[["ts_code", "adj_factor"]], on="ts_code", how="inner")
+                merged["trade_date"] = session
+                return merged[["ts_code", "trade_date", "adj_factor", "open", "high", "low", "close", "vol"]]
             except Exception as error:
                 message = str(error)
                 if "频率超限" in message or "frequency" in message.lower() or "每分钟" in message:
-                    # Tushare 限频（200 次/分钟）：退避 65s 等窗口重置后重试
                     print(f"[bulk] {session} 触发限频，退避 65s 重试（{attempt + 1}/4）", flush=True)
                     _time.sleep(65)
-                else:
-                    break
-        # 节流：保持 ~2.5 请求/秒（150/分钟），低于 200 上限
-        _time.sleep(0.4)
-        if daily is None or factors is None:
-            continue
-        if daily is None or daily.empty or factors is None or factors.empty:
-            continue
-        merged = daily.merge(factors[["ts_code", "adj_factor"]], on="ts_code", how="inner")
-        merged["trade_date"] = session
-        frames.append(merged[["ts_code", "trade_date", "adj_factor", "open", "high", "low", "close", "vol"]])
+                    continue
+                return None
+        return None
+
+    frames: list[pd.DataFrame] = []
+    # 3 线程并行：隐藏跨洋/跨网延迟（冷启动约 4 倍加速）；
+    # 节流器保证总请求速率仍低于 200/分钟。
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        for result in pool.map(fetch_session, needed):
+            if result is not None:
+                frames.append(result)
     if not frames:
         return 0, 0
     all_raw = pd.concat(frames, ignore_index=True)
