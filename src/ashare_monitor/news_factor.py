@@ -60,15 +60,16 @@ def build_news_cache(symbols: list[str], cache_dir: Path,
     today = date.today()
     since = (today - timedelta(days=days * 3)).strftime("%Y%m%d")
     out: dict[str, list[dict]] = {}
-    for symbol in symbols:
+
+    def fetch_one(symbol: str):
         try:
             import akshare as ak
 
             raw = ak.stock_news_em(symbol=symbol)
         except Exception:
-            continue
+            return symbol, None
         if raw is None or raw.empty:
-            continue
+            return symbol, None
         items = []
         for _, row in raw.head(20).iterrows():
             title = str(row.get("新闻标题", "")).strip()
@@ -77,8 +78,15 @@ def build_news_cache(symbols: list[str], cache_dir: Path,
                 continue
             pos = classify_text(title)
             items.append({"date": day, "title": title, "pos": bool(pos)})
-        if items:
-            out[symbol] = items
+        return symbol, (items or None)
+
+    # 8 线程并行：跨网逐只抓取慢，并行后信号新闻约 1~2 分钟完成
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for symbol, items in pool.map(fetch_one, symbols):
+            if items:
+                out[symbol] = items
     cache_path(cache_dir, today.strftime("%Y%m%d")).write_text(
         json.dumps(out, ensure_ascii=False), encoding="utf-8")
     return out
