@@ -179,16 +179,37 @@ def session_fetched(cache_dir: Path, session: str) -> bool:
     return session in _load_done_sessions(cache_dir)
 
 
+def adjust_bars_forward(group: pd.DataFrame, base: float) -> pd.DataFrame:
+    """把一只股票的一组成交记录转成前复权 K 线（date/open/high/low/close/volume）。
+
+    **整根 K 线一起复权**：open/high/low/close 同乘 `adj_factor / base`（base 为该股
+    最新的 adj_factor）。只缩放 close 会把 close 与 open/high/low 放到两个价格基准上，
+    任何"拿 low/high 去比由复权收盘价算出的水平位"的信号（布林下轨探底针、低位仙人
+    指路、回踩前期起涨位…）都会在基准漂移期静默失真。volume 保持原始手数不复权。
+    """
+    scale = group["adj_factor"] / base
+    return pd.DataFrame({
+        "date": pd.to_datetime(group["trade_date"]),
+        "open": pd.to_numeric(group["open"], errors="coerce") * scale,
+        "high": pd.to_numeric(group["high"], errors="coerce") * scale,
+        "low": pd.to_numeric(group["low"], errors="coerce") * scale,
+        "close": pd.to_numeric(group["close"], errors="coerce") * scale,
+        "volume": pd.to_numeric(group["vol"], errors="coerce"),
+    }).dropna()
+
+
 def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force: bool = False) -> tuple[int, int]:
     """Refresh the whole price cache from Tushare, one session per call pair.
 
     Paid-source bulk refresh: each `daily` + `adj_factor` call returns the whole
-    market for one session (~0.5s together), so even a full 320-session rebuild
+    market for one session (~0.5s together), so even a full 448-session rebuild
     takes a few minutes instead of per-stock downloads.  Forward adjustment is
-    computed manually -- close * factor / factor(latest for the symbol) -- which
-    we verified equals pro_bar(adj="qfq") exactly (diff 0.0000).  After the
-    first rebuild, routine refreshes only fetch sessions newer than the newest
-    cached bar, so daily runs are nearly instant.
+    computed manually -- every OHLC column times factor / factor(latest for the
+    symbol) -- which we verified equals pro_bar(adj="qfq") exactly (diff 0.0000).
+    Adjusting the whole bar matters: scaling only `close` leaves `open/high/low`
+    on the raw scale, and a signal that compares a raw low/high against a level
+    derived from adjusted closes is then measuring two different price bases.
+    Routine refreshes fetch only sessions missing from the per-session manifest.
 
     Cache format stays the existing one: CSV with a `date` column, then
     open/high/low/close/volume.  Returns (symbols_written, sessions_fetched).
@@ -296,14 +317,7 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
         base = float(latest_factor[symbol])
         if base <= 0:
             continue
-        bars = pd.DataFrame({
-            "date": pd.to_datetime(group["trade_date"]),
-            "open": pd.to_numeric(group["open"], errors="coerce"),
-            "high": pd.to_numeric(group["high"], errors="coerce"),
-            "low": pd.to_numeric(group["low"], errors="coerce"),
-            "close": pd.to_numeric(group["close"], errors="coerce") * group["adj_factor"] / base,
-            "volume": pd.to_numeric(group["vol"], errors="coerce"),
-        }).dropna()
+        bars = adjust_bars_forward(group, base)
         if bars.empty:
             continue
         path = cache_dir / f"{symbol}.csv"
