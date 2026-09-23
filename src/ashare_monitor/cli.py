@@ -214,7 +214,7 @@ def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) 
                "wave_gain_pct", "pullback_pct", "second_vol_ratio", "prior_high",
                "ma_gap_pct", "shadow_ratio", "shadow_vol_ratio", "cover_vol_ratio", "prior_gain_60d_pct",
                "bb_lower", "bb_mid", "pierce_pct", "today_high", "today_low",
-               "ene_upper", "ene_lower", "trend_gap_pct", "touch_depth_pct"]
+               "ene_upper", "ene_lower", "slope_pct", "trend_gap_pct", "touch_depth_pct"]
     result = pd.DataFrame(signals)
     if result.empty:
         result = pd.DataFrame(columns=columns)

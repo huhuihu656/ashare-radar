@@ -149,9 +149,9 @@ ene_pullback:
   ene_period: 20             # 轨道线中轨均线周期 N
   upper_pct: 0.09            # 上轨 = 中轨 x (1+0.09)，M1=9
   lower_pct: 0.10            # 下轨 = 中轨 x (1-0.10)，M2=10
-  ma_short_period: 20        # 趋势快线
-  ma_long_period: 60         # 趋势慢线
-  trend_slope_days: 5        # MA60 上行判定回看天数
-  min_trend_gap_pct: 0.0     # MA20 高于 MA60 的最小幅度
-  strong_gap_pct: 0.08       # 打分饱和的乖离上限
+  ma_short_period: 20        # 快线（要求上行）
+  ma_long_period: 60         # 慢线（要求收盘在其上方）
+  trend_slope_days: 5        # 快线上行回看天数
+  min_slope_pct: 0.0         # 快线上行的最小幅度
+  strong_slope_pct: 0.03     # 打分饱和的快线涨幅
   deep_touch_pct: 4.0        # 打分饱和的触轨深度上限

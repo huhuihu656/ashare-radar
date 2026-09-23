@@ -410,6 +410,17 @@ def test_ene_rejects_downtrend_even_when_band_is_touched() -> None:
     assert ene_lower_touch(frame, EneConfig(), RISK) is None
 
 
+def test_ene_rejects_when_ma20_not_rising() -> None:
+    # 收盘仍在 MA60 上方（旧口径会放行），但 MA20 已转头下行：新口径下趋势不成立。
+    closes = np.concatenate([np.linspace(10.0, 13.0, 100), np.linspace(13.0, 12.85, 20)])
+    ma20 = closes[-20:].mean()
+    frame = _ene_frame(closes, low_last=float(ma20) * 0.88)
+    # 先确认这一帧确实满足"收盘 > MA60"（否则测的就不是新闸门了）
+    assert float(closes[-1]) > float(closes[-60:].mean())
+    assert float(closes[-20:].mean()) < float(closes[-25:-5].mean())
+    assert ene_lower_touch(frame, EneConfig(), RISK) is None
+
+
 def test_ene_rejects_high_position_after_run_up() -> None:
     # 形态完全成立，但 6 个月涨了 >100%：position_ok 拦截。
     closes = np.linspace(10.0, 21.0, 120)

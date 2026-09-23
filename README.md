@@ -88,7 +88,7 @@ ashare-monitor universe
 | 均线多头发散 | MA20金叉MA60后多头排列≥7日，回调不破MA20，量站上50日均量线且突破压力位量比≥2 | 无量假突破；大盘弱势时成功率显著下降 |
 | 低位仙人指路 | 前期涨幅≤30%的低位长上影（≥实体2倍）试盘，次日放量阳线覆盖上影高点 | 高位形态为出货信号；需后续3日不破上影低点 |
 | 布林下轨探底针 | 低位横盘（前 20 日振幅 ≤ 15%，`boll_pin.max_range_pct`）中，当日最低价跌破布林下轨（MA20 - 2σ）后收回下轨上方，收阳且收盘位于日内上半区（≥ `boll_pin.min_close_position`），下影 ≥ 实体 2 倍（`boll_pin.min_shadow_ratio`） | 收盘未收回下轨上方为破位而非探底；跌破当日最低价即形态失效 |
-| ENE下轨回踩 | 上升趋势（MA20 > MA60 且 MA60 近 5 日上行，`ene_pullback.ma_short_period` / `ma_long_period` / `trend_slope_days`）中，当日最低价跌到轨道线 ENE 下轨（中轨 MA20 × (1 − 10%)，`ene_pullback.lower_pct`） | **趋势跟随类，与其余信号不同**：不要求低位、不要求当日反弹，只叠位置涨幅上限（`risk.max_position_gain_pct`）；跌破当日最低价即形态失效 |
+| ENE下轨回踩 | 上升趋势（收盘站上 MA60 且 MA20 近 5 日上行，`ene_pullback.ma_long_period` / `ma_short_period` / `trend_slope_days`）中，当日最低价跌到轨道线 ENE 下轨（中轨 MA20 × (1 − 10%)，`ene_pullback.lower_pct`） | **趋势跟随类，与其余信号不同**：不要求低位、不要求当日反弹，只叠位置涨幅上限（`risk.max_position_gain_pct`）；跌破当日最低价即形态失效 |
 
 ## 月度主线板块（月初首个交易日自动判定）
 

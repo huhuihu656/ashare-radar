@@ -669,9 +669,10 @@ def ene_lower_touch(frame: pd.DataFrame, cfg: EneConfig, risk: RiskConfig) -> di
 
     ENE 轨道线：中轨 = MA(N)，上轨 = 中轨 x (1+M1/100)，下轨 = 中轨 x (1-M2/100)。
 
-    这是本项目第一个**趋势跟随**类信号——不要求低位、也不要求当日反弹，只要中期
-    趋势未破且回踩已到下轨。因此位置闸门**只叠 position_ok**（6 个月涨幅上限），
-    刻意不叠 low_zone_ok：后者要求处于 120 日低位分位，与"上升趋势"直接冲突。
+    上升趋势口径（2026-09-24 用户指定）：**收盘价站上 MA60，且 MA20 近 trend_slope_days 日
+    上行**。这是本项目唯一的**趋势跟随**类信号——不要求低位、也不要求当日反弹，只要趋势
+    未破且回踩已到下轨。因此位置闸门**只叠 position_ok**（6 个月涨幅上限），刻意不叠
+    low_zone_ok：后者要求处于 120 日低位分位，与"上升趋势"直接冲突。
     """
     need = max(cfg.ene_period, cfg.ma_long_period) + 30
     if not cfg.enabled or len(frame) < need:
@@ -685,37 +686,39 @@ def ene_lower_touch(frame: pd.DataFrame, cfg: EneConfig, risk: RiskConfig) -> di
     mid = float(ma_ene.iloc[-1])
     fast = float(ma_short.iloc[-1])
     slow = float(ma_long.iloc[-1])
-    if not (mid > 0 and fast > 0 and slow > 0):
-        return None
-    # 中期趋势向上：MA20 高于 MA60，且 MA60 近 trend_slope_days 日上行
-    gap = fast / slow - 1
-    if gap <= cfg.min_trend_gap_pct:
-        return None
-    if not (slow > float(ma_long.iloc[-1 - cfg.trend_slope_days])):
-        return None
-    upper = mid * (1 + cfg.upper_pct)
-    lower = mid * (1 - cfg.lower_pct)
     hi = float(high.iloc[-1])
     lo = float(low.iloc[-1])
     cl = float(close.iloc[-1])
+    if not (mid > 0 and fast > 0 and slow > 0):
+        return None
+    # 上升趋势（2026-09-24 用户口径）：收盘站上慢线，且快线近 trend_slope_days 日上行
+    if not (cl > slow):
+        return None
+    slope = fast / float(ma_short.iloc[-1 - cfg.trend_slope_days]) - 1
+    if slope <= cfg.min_slope_pct:
+        return None
+    upper = mid * (1 + cfg.upper_pct)
+    lower = mid * (1 - cfg.lower_pct)
     # 当日最低价触及下轨（"跌到"到位，不要求收盘站在下轨下方）
     if not (lo <= lower):
         return None
     if not position_ok(frame, risk):
         return None
+    gap = fast / slow - 1
     touch_depth = (lower - lo) / lower * 100
     close_pos = (cl - lo) / max(hi - lo, 1e-9)
-    score = round(100 * min(1.0, 0.40 * min(gap / cfg.strong_gap_pct, 1.0) +
+    score = round(100 * min(1.0, 0.40 * min(slope / cfg.strong_slope_pct, 1.0) +
                                 0.35 * min(touch_depth / cfg.deep_touch_pct, 1.0) +
                                 0.25 * close_pos), 1)
     return {
         **_base_row(frame), "signal": "ENE下轨回踩", "score": score,
         "ene_upper": round(upper, 3), "ene_lower": round(lower, 3),
         "ma20": round(fast, 3), "ma60": round(slow, 3),
-        "trend_gap_pct": round(gap * 100, 2), "touch_depth_pct": round(touch_depth, 2),
+        "slope_pct": round(slope * 100, 2), "trend_gap_pct": round(gap * 100, 2),
+        "touch_depth_pct": round(touch_depth, 2),
         "close_position": round(close_pos, 2),
         "today_high": round(hi, 3), "today_low": round(lo, 3),
-        "note": "上升趋势中回踩至轨道线下轨（中轨*(1-M2%)）到位；趋势未破可低吸，跌破当日低点即形态失效",
+        "note": "上升趋势（收盘站上MA60且MA20上行）中回踩至轨道线下轨到位；跌破当日低点即形态失效",
     }
 
 

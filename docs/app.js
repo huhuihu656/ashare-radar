@@ -331,7 +331,7 @@
       ],
       ene: [
         { text: `触轨深度 ${pct(item.touch_depth_pct)}`, cls: "" },
-        { text: `趋势强度 ${signedPct(item.trend_gap_pct)}`, cls: signClass(item.trend_gap_pct) },
+        { text: `趋势强度 ${signedPct(item.slope_pct)}`, cls: signClass(item.slope_pct) },
         { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
         { text: `MA20 / MA60 ${cleanText(item.ma20)} / ${cleanText(item.ma60)}`, cls: "" },
       ],
@@ -615,7 +615,8 @@
       rows.push(
         { dt: "ENE 上轨 / 下轨", dd: `${cleanText(item.ene_upper)} / ${cleanText(item.ene_lower)}` },
         { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
-        { dt: "趋势强度（MA20 高于 MA60）", dd: signedPct(item.trend_gap_pct), cls: signClass(item.trend_gap_pct) },
+        { dt: "趋势强度（MA20 近 5 日涨幅）", dd: signedPct(item.slope_pct), cls: signClass(item.slope_pct) },
+        { dt: "MA20 / MA60 乖离", dd: signedPct(item.trend_gap_pct), cls: signClass(item.trend_gap_pct) },
         { dt: "触轨深度（最低价低于下轨）", dd: pct(item.touch_depth_pct) },
         {
           dt: "收盘位置",
