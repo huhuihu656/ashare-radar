@@ -98,3 +98,14 @@ low_shadow:              # 低位仙人指路
   shadow_vol_ratio: 1.2           # 上影日量 >= 5日均量1.2倍
   support_days: 5                 # 上影日低点守住近5日支撑
   vol_ma_days: 5
+
+# 布林下轨探底针（低位横盘中，当日下探破轨被多头拉回）
+boll_pin:
+  enabled: true
+  bb_period: 20
+  bb_std: 2.0
+  min_shadow_ratio: 2.0      # 下影 >= 实体*2
+  min_close_position: 0.5    # 收盘位于日内上半区
+  consolidation_days: 20     # 前N日低位横盘
+  max_range_pct: 0.15        # 横盘振幅上限
+  min_pierce_pct: 0.0        # 破轨最小幅度

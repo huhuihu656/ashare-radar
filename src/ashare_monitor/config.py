@@ -159,6 +159,20 @@ class BreakMa20Config:
 
 
 @dataclass(frozen=True)
+class BollPinConfig:
+    """布林下轨探底针（低位横盘中，当日下探破轨被多头拉回）。"""
+    enabled: bool = True
+    bb_period: int = 20
+    bb_std: float = 2.0
+    min_shadow_ratio: float = 2.0        # 下影 >= 实体*2（探底针形）
+    min_close_position: float = 0.5      # 收盘位于日内上半区（多头占优）
+    consolidation_days: int = 20         # 前N日低位横盘（不含今日）
+    max_range_pct: float = 0.15          # 横盘振幅上限
+    min_pierce_pct: float = 0.0          # 最低价跌破下轨的最小幅度
+    vol_ma_days: int = 20
+
+
+@dataclass(frozen=True)
 class Config:
     scan: ScanConfig = field(default_factory=ScanConfig)
     support_retest: SupportConfig = field(default_factory=SupportConfig)
@@ -172,6 +186,7 @@ class Config:
     low_shadow: ShadowTestConfig = field(default_factory=ShadowTestConfig)
     oversold_reversal: OversoldReversalConfig = field(default_factory=OversoldReversalConfig)
     break_ma20: BreakMa20Config = field(default_factory=BreakMa20Config)
+    boll_pin: BollPinConfig = field(default_factory=BollPinConfig)
 
 
 def load(path: str | Path) -> Config:
@@ -190,4 +205,5 @@ def load(path: str | Path) -> Config:
         low_shadow=ShadowTestConfig(**raw.get("low_shadow", {})),
         oversold_reversal=OversoldReversalConfig(**raw.get("oversold_reversal", {})),
         break_ma20=BreakMa20Config(**raw.get("break_ma20", {})),
+        boll_pin=BollPinConfig(**raw.get("boll_pin", {})),
     )

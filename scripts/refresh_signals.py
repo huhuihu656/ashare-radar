@@ -1,4 +1,4 @@
-"""把最新搜到的达标股（超跌反转 / 恰好突破20日线）合并进 docs/data/latest.json 并发布。"""
+"""把最新搜到的达标股（超跌反转 / 恰好突破20日线 / 布林下轨探底针）合并进 docs/data/latest.json 并发布。"""
 import sys
 import json
 from datetime import datetime, timezone
@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from ashare_monitor.config import load  # noqa: E402
 from ashare_monitor.signals import (  # noqa: E402
-    break_ma20, entry_exit_plan, oversold_reversal, position_strategy,
+    boll_lower_pin, break_ma20, entry_exit_plan, oversold_reversal, position_strategy,
 )
 from export_dashboard import build_klines  # noqa: E402
 
@@ -22,8 +22,13 @@ NAME2KEY = {
     "涨停跳空缺口共振": "limitup_gap", "龙回头二次启动": "dragon_pullback",
     "均线多头发散": "ma_divergence", "低位仙人指路": "low_shadow",
     "超跌反转": "oversold_reversal", "恰好突破20日线": "break_ma20",
+    "布林下轨探底针": "boll_pin",
 }
-DETECTORS = {"超跌反转": oversold_reversal, "恰好突破20日线": break_ma20}
+DETECTORS = {
+    "超跌反转": (oversold_reversal, "oversold_reversal"),
+    "恰好突破20日线": (break_ma20, "break_ma20"),
+    "布林下轨探底针": (boll_lower_pin, "boll_pin"),
+}
 
 
 def board_of(sym: str) -> str:
@@ -77,8 +82,8 @@ def main() -> int:
             continue
         if len(frame) < 60 or frame.index[-1].strftime("%Y%m%d") < "20260901":
             continue
-        for sig_name, det in DETECTORS.items():
-            row = det(frame, getattr(cfg, "oversold_reversal" if sig_name == "超跌反转" else "break_ma20"), cfg.risk)
+        for sig_name, (det, cfg_key) in DETECTORS.items():
+            row = det(frame, getattr(cfg, cfg_key), cfg.risk)
             if not row:
                 continue
             key = (sym, row["signal"])

@@ -26,6 +26,10 @@
   --breakout-bright: #3fd0c7;
   --breakout-soft: rgba(47, 169, 166, 0.13);
   --breakout-line: rgba(47, 169, 166, 0.45);
+  --boll: #5b79f0; /* 信号 11：布林下轨探底针 */
+  --boll-bright: #8fa3ff;
+  --boll-soft: rgba(91, 121, 240, 0.13);
+  --boll-line: rgba(91, 121, 240, 0.45);
   --up: #ff5d6c; /* 涨 / 正差价（红） */
   --down: #33c48e; /* 跌 / 负差价（绿） */
   --score: #a18bff;
@@ -1101,6 +1105,12 @@ td:first-child {
   color: var(--breakout-bright);
   border-color: var(--breakout-line);
   background: var(--breakout-soft);
+}
+.signal-boll {
+  --acc: var(--boll);
+  color: var(--boll-bright);
+  border-color: var(--boll-line);
+  background: var(--boll-soft);
 }
 
 /* 现价 */

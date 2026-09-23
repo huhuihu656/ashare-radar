@@ -32,6 +32,7 @@
     "低位仙人指路": "shadow",
     "超跌反转": "reversal",
     "恰好突破20日线": "ma20",
+    "布林下轨探底针": "boll",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
 
@@ -203,6 +204,7 @@
     ["shadow", "低位仙人指路", "low_shadow"],
     ["reversal", "超跌反转", "oversold_reversal"],
     ["ma20", "突破20日线", "break_ma20"],
+    ["boll", "布林探底针", "boll_pin"],
   ];
 
   function renderExtraChips(counts) {
@@ -275,6 +277,8 @@
       ];
     }
     const vr = num(item.volume_ratio);
+    const sh = num(item.shadow_ratio);
+    const cp = num(item.close_position);
     const metricMap = {
       box: [
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
@@ -316,6 +320,12 @@
         { text: `突破MA20 ${signedPct(item.broke_above_pct)}`, cls: signClass(item.broke_above_pct) },
         { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
         { text: `MA20 ${cleanText(item.ma20)}`, cls: "" },
+      ],
+      boll: [
+        { text: `穿透下轨 ${pct(item.pierce_pct)}`, cls: "" },
+        { text: `下影倍数 ${cleanText(item.shadow_ratio)}`, cls: sh !== null && sh >= 4 ? "is-up" : "" },
+        { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
+        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
       ],
       breakout: [
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
@@ -575,6 +585,22 @@
         { dt: "上影日量比", dd: cleanText(item.shadow_vol_ratio) },
         { dt: "覆盖量比", dd: cleanText(item.cover_vol_ratio) },
         { dt: "60日涨幅", dd: signedPct(item.prior_gain_60d_pct), cls: signClass(item.prior_gain_60d_pct) },
+      );
+    } else if (kind === "boll") {
+      const pos = num(item.close_position);
+      rows.push(
+        { dt: "布林下轨 / 中轨", dd: `${cleanText(item.bb_lower)} / ${cleanText(item.bb_mid)}` },
+        { dt: "穿透下轨幅度", dd: pct(item.pierce_pct) },
+        { dt: "下影倍数", dd: cleanText(item.shadow_ratio) },
+        {
+          dt: "收盘位置",
+          dd: pos !== null ? `${(Math.max(0, Math.min(1, pos)) * 100).toFixed(1)}%` : "—",
+          meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
+          cls: pos !== null && pos >= 0.8 ? "is-up" : "",
+        },
+        { dt: "横盘振幅", dd: pct(item.range_pct) },
+        { dt: "量比", dd: cleanText(item.volume_ratio) },
+        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
       );
     }
     return rows;

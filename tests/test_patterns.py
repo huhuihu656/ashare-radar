@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from ashare_monitor.config import (
+    BollPinConfig,
     BoxBreakoutConfig,
     DragonConfig,
     EngulfingConfig,
@@ -13,6 +14,7 @@ from ashare_monitor.config import (
     ShadowTestConfig,
 )
 from ashare_monitor.signals import (
+    boll_lower_pin,
     box_breakout_bullish,
     bullish_engulfing,
     dragon_pullback,
@@ -292,6 +294,74 @@ def test_low_shadow_rejects_high_position() -> None:
     vol[-1] = 200.0
     frame = ohlc(open_, high, low, close, vol)
     assert low_shadow_test(frame, ShadowTestConfig(), RISK) is None
+
+
+# ---------------------------------------------------------------------------
+# 布林下轨探底针
+# ---------------------------------------------------------------------------
+
+def _boll_pin_frame(open_: float, high: float, low: float, close: float) -> pd.DataFrame:
+    """低位横盘基底（前期12元平台回落后于10元附近震荡，前20日振幅≈8%）＋指定的今日K线。"""
+    n = 120
+    closes = np.empty(n)
+    closes[:60] = 12.0                                             # 前期高位平台 → 相对低位
+    closes[60:-1] = np.where(np.arange(59) % 2 == 0, 9.7, 10.3)    # 低位横盘震荡
+    opens = closes.copy()
+    highs = closes + 0.1
+    lows = closes - 0.1
+    vols = np.full(n, 100.0)
+    closes[-1], opens[-1], highs[-1], lows[-1] = close, open_, high, low
+    return ohlc(opens, highs, lows, closes, vols)
+
+
+def test_boll_pin_detects_lower_band_probe_rebound() -> None:
+    # 低位横盘中下探跌破布林下轨（≈9.39）、收盘重回下轨上方并收于日内上半区，下影远长于实体。
+    frame = _boll_pin_frame(open_=9.90, high=10.25, low=9.25, close=10.05)
+    row = boll_lower_pin(frame, BollPinConfig(), RISK)
+    assert row is not None
+    assert row["signal"] == "布林下轨探底针"
+    assert row["today_low"] < row["bb_lower"] < row["close"]
+    assert row["pierce_pct"] > 0
+    assert row["shadow_ratio"] >= 2.0
+    assert row["close_position"] >= 0.5
+    assert row["range_pct"] <= 15.0
+    assert 0 <= row["score"] <= 100
+
+
+def test_boll_pin_rejects_without_piercing_lower_band() -> None:
+    # 其余条件均满足，仅最低价停在下轨上方：未跌破下轨，不构成探底。
+    frame = _boll_pin_frame(open_=9.90, high=10.05, low=9.60, close=10.00)
+    assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
+
+
+def test_boll_pin_rejects_close_below_lower_band() -> None:
+    # 跌破下轨后未能收复：收盘仍在下轨下方，无反弹（即使当日收阳也拒绝）。
+    frame = _boll_pin_frame(open_=9.05, high=9.20, low=8.75, close=9.15)
+    assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
+
+
+def test_boll_pin_rejects_bearish_close_in_lower_half() -> None:
+    # 探底并收复下轨，但收阴且收盘位于日内下半区（空头占优）。
+    frame = _boll_pin_frame(open_=9.90, high=10.45, low=9.30, close=9.85)
+    assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
+
+
+def test_boll_pin_rejects_short_lower_shadow() -> None:
+    # 探底针形不足：下影 0.30 < 实体 0.50 × 2。
+    frame = _boll_pin_frame(open_=9.60, high=10.15, low=9.30, close=10.10)
+    assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
+
+
+def test_boll_pin_rejects_high_position_after_run_up() -> None:
+    # 同样的探底针形，但出现在大涨之后的高位（10 → 20.5）：position_ok / low_zone_ok 拦截。
+    n = 120
+    close = np.concatenate([np.full(20, 10.0), np.linspace(10, 20, 40), np.full(59, 20.2), [20.5]])
+    open_ = close.copy()
+    high = close + 0.1
+    low = close - 0.1
+    open_[-1], high[-1], low[-1] = 20.3, 20.6, 19.8
+    frame = ohlc(open_, high, low, close, np.full(n, 100.0))
+    assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
 
 
 # ---------------------------------------------------------------------------

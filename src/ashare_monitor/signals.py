@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from .config import (
+    BollPinConfig,
     BoxBreakoutConfig,
     BreakMa20Config,
     BreakoutConfig,
@@ -586,6 +587,77 @@ def break_ma20(frame: pd.DataFrame, cfg: BreakMa20Config, risk: RiskConfig) -> d
     }
 
 
+def boll_lower_pin(frame: pd.DataFrame, cfg: BollPinConfig, risk: RiskConfig) -> dict | None:
+    """布林下轨探底针：低位横盘中，当日K线下探跌破布林下轨后被多头拉回。
+
+    形态要求（全部满足）：
+      - 位置：前期低位横盘（前 N 日振幅受限）且处于相对低位；
+      - 当日最低价跌破布林下轨（探底），收盘重新站回下轨上方（反弹）；
+      - 多头力度大于空头：当日收阳、收盘位于日内上半区；
+      - 探底针形：下影线 >= 实体 × ratio。
+    """
+    need = max(cfg.bb_period, cfg.consolidation_days) + 30
+    if len(frame) < need:
+        return None
+    close = frame.close.astype(float)
+    open_ = frame.open.astype(float)
+    high = frame.high.astype(float)
+    low = frame.low.astype(float)
+    ma = close.rolling(cfg.bb_period).mean()
+    sd = close.rolling(cfg.bb_period).std()
+    lower = ma - cfg.bb_std * sd
+    lb = float(lower.iloc[-1])
+    mb = float(ma.iloc[-1])
+    if not (lb > 0):
+        return None
+    hi = float(high.iloc[-1]); lo = float(low.iloc[-1])
+    op = float(open_.iloc[-1]); cl = float(close.iloc[-1])
+    # 探底：最低价跌破下轨，收盘重回下轨上方
+    if not (lo < lb * (1 - cfg.min_pierce_pct)):
+        return None
+    if not (cl > lb):
+        return None
+    # 多头占优：阳线 + 收盘在日内上半区
+    if not (cl > op):
+        return None
+    day_range = max(hi - lo, 1e-9)
+    close_pos = (cl - lo) / day_range
+    if close_pos < cfg.min_close_position:
+        return None
+    # 探底针形：下影 >= 实体 × ratio
+    body = abs(cl - op)
+    lower_shadow = min(op, cl) - lo
+    if body <= 0 or lower_shadow <= 0:
+        return None
+    # 实体趋近 0（十字星）时比值发散，封顶以免把无意义的巨数写进展示字段
+    shadow_ratio = min(lower_shadow / body, 99.0)
+    if shadow_ratio < cfg.min_shadow_ratio:
+        return None
+    # 低位横盘：前 N 日（不含今日）振幅受限
+    prior = frame.iloc[-(cfg.consolidation_days + 1):-1]
+    prior_low = float(prior.low.min())
+    prior_range = float(prior.high.max() / prior_low - 1) if prior_low > 0 else 1e9
+    if prior_range > cfg.max_range_pct:
+        return None
+    # 相对低位 + 位置守卫（6个月涨幅上限）
+    if not (position_ok(frame, risk) and low_zone_ok(frame, risk)):
+        return None
+    vol_base = float(frame.volume.iloc[-(cfg.vol_ma_days + 1):-1].mean())
+    vol_ratio = float(frame.volume.iloc[-1]) / vol_base if vol_base > 0 else 0.0
+    pierce_pct = (lb - lo) / lb * 100
+    score = round(100 * min(1, 0.35 * min(pierce_pct / 3.0, 1) + 0.30 * min(shadow_ratio / 4.0, 1) +
+                            0.20 * close_pos + 0.15 * min(vol_ratio / 2.0, 1)), 1)
+    return {
+        **_base_row(frame), "signal": "布林下轨探底针", "score": score,
+        "bb_lower": round(lb, 3), "bb_mid": round(mb, 3),
+        "pierce_pct": round(pierce_pct, 2), "shadow_ratio": round(shadow_ratio, 2),
+        "close_position": round(close_pos, 2), "range_pct": round(prior_range * 100, 2),
+        "volume_ratio": round(vol_ratio, 2),
+        "today_high": round(hi, 3), "today_low": round(lo, 3),
+        "note": "低位横盘中当日下探跌破布林下轨后被多头拉回，收盘重回下轨上方且收于日内上半区；跌破当日低点即形态失效",
+    }
+
+
 def position_strategy(row: dict, market_env: str = "未知") -> dict:
     """Research-reference position sizing for a signal row.
 
@@ -718,6 +790,11 @@ def entry_exit_plan(row: dict) -> dict:
             if entry > stop:
                 target = round(entry + 3 * (entry - stop), 2)   # 1:3
                 note = "放量站稳20日线买入；跌破MA20（假突破）止损"
+    elif kind == "布林下轨探底针":
+        th, tl = row.get("today_high"), row.get("today_low")
+        if th and tl:
+            entry, stop, target = round(th * 1.005, 2), round(tl * 0.99, 2), None
+            note = "突破探底针高点买入；跌破当日探底低点止损"
     if entry is None or stop is None or entry <= stop:
         return {}
     if target is None:
@@ -748,6 +825,7 @@ def scan_frame(
     shadow_cfg: ShadowTestConfig,
     oversold_cfg: OversoldReversalConfig,
     break_ma20_cfg: BreakMa20Config,
+    boll_pin_cfg: BollPinConfig,
     limit_pct: float = 0.10,
 ) -> list[dict]:
     clean = frame.copy().sort_index()
@@ -792,6 +870,10 @@ def scan_frame(
             out.append(row)
     if break_ma20_cfg.enabled:
         row = break_ma20(clean, break_ma20_cfg, risk)
+        if row:
+            out.append(row)
+    if boll_pin_cfg.enabled:
+        row = boll_lower_pin(clean, boll_pin_cfg, risk)
         if row:
             out.append(row)
     return out
