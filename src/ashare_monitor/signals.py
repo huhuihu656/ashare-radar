@@ -603,6 +603,11 @@ def boll_lower_pin(frame: pd.DataFrame, cfg: BollPinConfig, risk: RiskConfig) ->
     open_ = frame.open.astype(float)
     high = frame.high.astype(float)
     low = frame.low.astype(float)
+    # 数据一致性守卫：批量缓存只复权 close、open/high/low 存原始价（data.py:261-268），
+    # 窗口内若有公司行为，close 与 high/low 就不在同一价格基准上，下轨会被压低而制造假穿透。
+    recent = frame.iloc[-cfg.bb_period:]
+    if bool(((recent.close > recent.high * 1.002) | (recent.close < recent.low * 0.998)).any()):
+        return None
     ma = close.rolling(cfg.bb_period).mean()
     sd = close.rolling(cfg.bb_period).std()
     lower = ma - cfg.bb_std * sd
