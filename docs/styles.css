@@ -30,6 +30,10 @@
   --boll-bright: #8fa3ff;
   --boll-soft: rgba(91, 121, 240, 0.13);
   --boll-line: rgba(91, 121, 240, 0.45);
+  --ene: #9d6ef0; /* 信号 12：ENE 下轨回踩 */
+  --ene-bright: #b795ff;
+  --ene-soft: rgba(157, 110, 240, 0.13);
+  --ene-line: rgba(157, 110, 240, 0.45);
   --up: #ff5d6c; /* 涨 / 正差价（红） */
   --down: #33c48e; /* 跌 / 负差价（绿） */
   --score: #a18bff;
@@ -1111,6 +1115,12 @@ td:first-child {
   color: var(--boll-bright);
   border-color: var(--boll-line);
   background: var(--boll-soft);
+}
+.signal-ene {
+  --acc: var(--ene);
+  color: var(--ene-bright);
+  border-color: var(--ene-line);
+  background: var(--ene-soft);
 }
 
 /* 现价 */

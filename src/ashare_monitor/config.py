@@ -173,6 +173,25 @@ class BollPinConfig:
 
 
 @dataclass(frozen=True)
+class EneConfig:
+    """轨道线下轨回踩（上升趋势中当日跌到 ENE 下轨）。
+
+    参数默认按 20/9/10：中轨 = MA20，上轨 = 中轨x1.09，下轨 = 中轨x0.90。
+    注意这是全项目唯一的趋势跟随类信号，位置闸门只叠 position_ok。
+    """
+    enabled: bool = True
+    ene_period: int = 20             # 轨道线中轨均线周期 N
+    upper_pct: float = 0.09          # 上轨 = 中轨 x (1+0.09)，对应 M1=9
+    lower_pct: float = 0.10          # 下轨 = 中轨 x (1-0.10)，对应 M2=10
+    ma_short_period: int = 20        # 趋势判定快线
+    ma_long_period: int = 60         # 趋势判定慢线
+    trend_slope_days: int = 5        # MA60 上行判定的回看天数
+    min_trend_gap_pct: float = 0.0   # MA20 需高于 MA60 的最小幅度
+    strong_gap_pct: float = 0.08     # 打分饱和用的趋势乖离
+    deep_touch_pct: float = 4.0      # 打分饱和用的触轨深度
+
+
+@dataclass(frozen=True)
 class Config:
     scan: ScanConfig = field(default_factory=ScanConfig)
     support_retest: SupportConfig = field(default_factory=SupportConfig)
@@ -187,6 +206,7 @@ class Config:
     oversold_reversal: OversoldReversalConfig = field(default_factory=OversoldReversalConfig)
     break_ma20: BreakMa20Config = field(default_factory=BreakMa20Config)
     boll_pin: BollPinConfig = field(default_factory=BollPinConfig)
+    ene_pullback: EneConfig = field(default_factory=EneConfig)
 
 
 def load(path: str | Path) -> Config:
@@ -206,4 +226,5 @@ def load(path: str | Path) -> Config:
         oversold_reversal=OversoldReversalConfig(**raw.get("oversold_reversal", {})),
         break_ma20=BreakMa20Config(**raw.get("break_ma20", {})),
         boll_pin=BollPinConfig(**raw.get("boll_pin", {})),
+        ene_pullback=EneConfig(**raw.get("ene_pullback", {})),
     )

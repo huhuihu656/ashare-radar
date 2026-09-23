@@ -33,6 +33,7 @@
     "超跌反转": "reversal",
     "恰好突破20日线": "ma20",
     "布林下轨探底针": "boll",
+    "ENE下轨回踩": "ene",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
 
@@ -205,6 +206,7 @@
     ["reversal", "超跌反转", "oversold_reversal"],
     ["ma20", "突破20日线", "break_ma20"],
     ["boll", "布林探底针", "boll_pin"],
+    ["ene", "ENE下轨回踩", "ene_pullback"],
   ];
 
   function renderExtraChips(counts) {
@@ -326,6 +328,12 @@
         { text: `下影倍数 ${cleanText(item.shadow_ratio)}`, cls: sh !== null && sh >= 4 ? "is-up" : "" },
         { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
+      ],
+      ene: [
+        { text: `触轨深度 ${pct(item.touch_depth_pct)}`, cls: "" },
+        { text: `趋势强度 ${signedPct(item.trend_gap_pct)}`, cls: signClass(item.trend_gap_pct) },
+        { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
+        { text: `MA20 / MA60 ${cleanText(item.ma20)} / ${cleanText(item.ma60)}`, cls: "" },
       ],
       breakout: [
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
@@ -600,6 +608,21 @@
         },
         { dt: "横盘振幅", dd: pct(item.range_pct) },
         { dt: "量比", dd: cleanText(item.volume_ratio) },
+        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
+      );
+    } else if (kind === "ene") {
+      const pos = num(item.close_position);
+      rows.push(
+        { dt: "ENE 上轨 / 下轨", dd: `${cleanText(item.ene_upper)} / ${cleanText(item.ene_lower)}` },
+        { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
+        { dt: "趋势强度（MA20 高于 MA60）", dd: signedPct(item.trend_gap_pct), cls: signClass(item.trend_gap_pct) },
+        { dt: "触轨深度（最低价低于下轨）", dd: pct(item.touch_depth_pct) },
+        {
+          dt: "收盘位置",
+          dd: pos !== null ? `${(Math.max(0, Math.min(1, pos)) * 100).toFixed(1)}%` : "—",
+          meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
+          cls: pos !== null && pos >= 0.8 ? "is-up" : "",
+        },
         { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
       );
     }

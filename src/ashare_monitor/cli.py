@@ -41,6 +41,7 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
                       cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
                       cfg.oversold_reversal, cfg.break_ma20, cfg.boll_pin,
+                      cfg.ene_pullback,
                       limit_pct=limit_pct)
     money = moneyflow.loc[symbol] if moneyflow is not None and symbol in moneyflow.index else None
     for row in rows:
@@ -212,7 +213,8 @@ def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) 
                "limit_date", "gap_size_pct", "days_since_limit", "pullback_vol_ratio",
                "wave_gain_pct", "pullback_pct", "second_vol_ratio", "prior_high",
                "ma_gap_pct", "shadow_ratio", "shadow_vol_ratio", "cover_vol_ratio", "prior_gain_60d_pct",
-               "bb_lower", "bb_mid", "pierce_pct", "today_high", "today_low"]
+               "bb_lower", "bb_mid", "pierce_pct", "today_high", "today_low",
+               "ene_upper", "ene_lower", "trend_gap_pct", "touch_depth_pct"]
     result = pd.DataFrame(signals)
     if result.empty:
         result = pd.DataFrame(columns=columns)

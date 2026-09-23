@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from ashare_monitor.config import load  # noqa: E402
 from ashare_monitor.signals import (  # noqa: E402
-    boll_lower_pin, break_ma20, entry_exit_plan, oversold_reversal, position_strategy,
+    boll_lower_pin, break_ma20, ene_lower_touch, entry_exit_plan, oversold_reversal, position_strategy,
 )
 from export_dashboard import build_klines  # noqa: E402
 
@@ -23,11 +23,13 @@ NAME2KEY = {
     "均线多头发散": "ma_divergence", "低位仙人指路": "low_shadow",
     "超跌反转": "oversold_reversal", "恰好突破20日线": "break_ma20",
     "布林下轨探底针": "boll_pin",
+    "ENE下轨回踩": "ene_pullback",
 }
 DETECTORS = {
     "超跌反转": (oversold_reversal, "oversold_reversal"),
     "恰好突破20日线": (break_ma20, "break_ma20"),
     "布林下轨探底针": (boll_lower_pin, "boll_pin"),
+    "ENE下轨回踩": (ene_lower_touch, "ene_pullback"),
 }
 
 

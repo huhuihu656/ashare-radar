@@ -9,6 +9,7 @@ from .config import (
     BreakMa20Config,
     BreakoutConfig,
     DragonConfig,
+    EneConfig,
     EngulfingConfig,
     LimitUpGapConfig,
     MaDivergenceConfig,
@@ -663,6 +664,61 @@ def boll_lower_pin(frame: pd.DataFrame, cfg: BollPinConfig, risk: RiskConfig) ->
     }
 
 
+def ene_lower_touch(frame: pd.DataFrame, cfg: EneConfig, risk: RiskConfig) -> dict | None:
+    """轨道线下轨回踩：上升趋势中，当日 K 线已跌到 ENE 下轨。
+
+    ENE 轨道线：中轨 = MA(N)，上轨 = 中轨 x (1+M1/100)，下轨 = 中轨 x (1-M2/100)。
+
+    这是本项目第一个**趋势跟随**类信号——不要求低位、也不要求当日反弹，只要中期
+    趋势未破且回踩已到下轨。因此位置闸门**只叠 position_ok**（6 个月涨幅上限），
+    刻意不叠 low_zone_ok：后者要求处于 120 日低位分位，与"上升趋势"直接冲突。
+    """
+    need = max(cfg.ene_period, cfg.ma_long_period) + 30
+    if not cfg.enabled or len(frame) < need:
+        return None
+    close = frame.close.astype(float)
+    high = frame.high.astype(float)
+    low = frame.low.astype(float)
+    ma_ene = close.rolling(cfg.ene_period).mean()
+    ma_short = close.rolling(cfg.ma_short_period).mean()
+    ma_long = close.rolling(cfg.ma_long_period).mean()
+    mid = float(ma_ene.iloc[-1])
+    fast = float(ma_short.iloc[-1])
+    slow = float(ma_long.iloc[-1])
+    if not (mid > 0 and fast > 0 and slow > 0):
+        return None
+    # 中期趋势向上：MA20 高于 MA60，且 MA60 近 trend_slope_days 日上行
+    gap = fast / slow - 1
+    if gap <= cfg.min_trend_gap_pct:
+        return None
+    if not (slow > float(ma_long.iloc[-1 - cfg.trend_slope_days])):
+        return None
+    upper = mid * (1 + cfg.upper_pct)
+    lower = mid * (1 - cfg.lower_pct)
+    hi = float(high.iloc[-1])
+    lo = float(low.iloc[-1])
+    cl = float(close.iloc[-1])
+    # 当日最低价触及下轨（"跌到"到位，不要求收盘站在下轨下方）
+    if not (lo <= lower):
+        return None
+    if not position_ok(frame, risk):
+        return None
+    touch_depth = (lower - lo) / lower * 100
+    close_pos = (cl - lo) / max(hi - lo, 1e-9)
+    score = round(100 * min(1.0, 0.40 * min(gap / cfg.strong_gap_pct, 1.0) +
+                                0.35 * min(touch_depth / cfg.deep_touch_pct, 1.0) +
+                                0.25 * close_pos), 1)
+    return {
+        **_base_row(frame), "signal": "ENE下轨回踩", "score": score,
+        "ene_upper": round(upper, 3), "ene_lower": round(lower, 3),
+        "ma20": round(fast, 3), "ma60": round(slow, 3),
+        "trend_gap_pct": round(gap * 100, 2), "touch_depth_pct": round(touch_depth, 2),
+        "close_position": round(close_pos, 2),
+        "today_high": round(hi, 3), "today_low": round(lo, 3),
+        "note": "上升趋势中回踩至轨道线下轨（中轨*(1-M2%)）到位；趋势未破可低吸，跌破当日低点即形态失效",
+    }
+
+
 def position_strategy(row: dict, market_env: str = "未知") -> dict:
     """Research-reference position sizing for a signal row.
 
@@ -800,6 +856,11 @@ def entry_exit_plan(row: dict) -> dict:
         if th and tl:
             entry, stop, target = round(th * 1.005, 2), round(tl * 0.99, 2), None
             note = "突破探底针高点买入；跌破当日探底低点止损"
+    elif kind == "ENE下轨回踩":
+        th, tl = row.get("today_high"), row.get("today_low")
+        if th and tl:
+            entry, stop, target = round(th * 1.005, 2), round(tl * 0.99, 2), None
+            note = "突破当日高点买入（回踩结束确认）；跌破当日低点止损"
     if entry is None or stop is None or entry <= stop:
         return {}
     if target is None:
@@ -831,6 +892,7 @@ def scan_frame(
     oversold_cfg: OversoldReversalConfig,
     break_ma20_cfg: BreakMa20Config,
     boll_pin_cfg: BollPinConfig,
+    ene_cfg: EneConfig,
     limit_pct: float = 0.10,
 ) -> list[dict]:
     clean = frame.copy().sort_index()
@@ -879,6 +941,10 @@ def scan_frame(
             out.append(row)
     if boll_pin_cfg.enabled:
         row = boll_lower_pin(clean, boll_pin_cfg, risk)
+        if row:
+            out.append(row)
+    if ene_cfg.enabled:
+        row = ene_lower_touch(clean, ene_cfg, risk)
         if row:
             out.append(row)
     return out

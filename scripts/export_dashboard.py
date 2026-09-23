@@ -61,6 +61,7 @@ SIGNAL_COUNT_KEYS = {
     "超跌反转": "oversold_reversal",
     "恰好突破20日线": "break_ma20",
     "布林下轨探底针": "boll_pin",
+    "ENE下轨回踩": "ene_pullback",
 }
 
 

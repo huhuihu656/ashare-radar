@@ -7,6 +7,7 @@ from ashare_monitor.config import (
     BollPinConfig,
     BoxBreakoutConfig,
     DragonConfig,
+    EneConfig,
     EngulfingConfig,
     LimitUpGapConfig,
     MaDivergenceConfig,
@@ -18,6 +19,7 @@ from ashare_monitor.signals import (
     box_breakout_bullish,
     bullish_engulfing,
     dragon_pullback,
+    ene_lower_touch,
     limitup_gap,
     low_shadow_test,
     ma_divergence_breakout,
@@ -362,6 +364,75 @@ def test_boll_pin_rejects_high_position_after_run_up() -> None:
     open_[-1], high[-1], low[-1] = 20.3, 20.6, 19.8
     frame = ohlc(open_, high, low, close, np.full(n, 100.0))
     assert boll_lower_pin(frame, BollPinConfig(), RISK) is None
+
+
+# ---------------------------------------------------------------------------
+# ENE下轨回踩（轨道线下轨回踩）
+# ---------------------------------------------------------------------------
+
+def _ene_frame(closes: np.ndarray, low_last: float) -> pd.DataFrame:
+    """按给定收盘序列造 K 线，只把最后一根的最低价改成 low_last。"""
+    opens = closes.copy()
+    highs = closes * 1.005
+    lows = closes * 0.995
+    highs[-1] = max(opens[-1], closes[-1]) * 1.01
+    lows[-1] = low_last
+    return ohlc(opens, highs, lows, closes, np.full(len(closes), 100.0))
+
+
+def test_ene_detects_uptrend_touch_on_lower_band() -> None:
+    # 缓升 120 根（MA20 > MA60 且 MA60 上行），未根最低价砸到 MA20*0.90 之下。
+    frame = _ene_frame(np.linspace(10.0, 11.0, 120), low_last=9.80)
+    row = ene_lower_touch(frame, EneConfig(), RISK)
+    assert row is not None
+    assert row["signal"] == "ENE下轨回踩"
+    assert row["today_low"] <= row["ene_lower"] < row["ene_upper"]
+    assert row["trend_gap_pct"] > 0          # MA20 在 MA60 上方
+    assert row["ma20"] > row["ma60"]
+    assert row["touch_depth_pct"] >= 0
+    assert 0 <= row["score"] <= 100
+    # 下轨 = 中轨 x (1 - 10%)
+    assert abs(row["ene_lower"] / row["ma20"] - 0.90) < 1e-3
+    assert abs(row["ene_upper"] / row["ma20"] - 1.09) < 1e-3
+
+
+def test_ene_rejects_when_low_stays_above_lower_band() -> None:
+    # 趋势与位置都对，仅最低价没有踩到下轨：不算回踩到位。
+    frame = _ene_frame(np.linspace(10.0, 11.0, 120), low_last=9.95)
+    assert ene_lower_touch(frame, EneConfig(), RISK) is None
+
+
+def test_ene_rejects_downtrend_even_when_band_is_touched() -> None:
+    # 下跌趋势（MA20 < MA60）：即使砸到下轨也不成立——这是趋势跟随类，趋势必须向上。
+    closes = np.linspace(11.0, 10.0, 120)
+    ma20 = closes[-20:].mean()
+    frame = _ene_frame(closes, low_last=float(ma20) * 0.85)
+    assert ene_lower_touch(frame, EneConfig(), RISK) is None
+
+
+def test_ene_rejects_high_position_after_run_up() -> None:
+    # 形态完全成立，但 6 个月涨了 >100%：position_ok 拦截。
+    closes = np.linspace(10.0, 21.0, 120)
+    ma20 = closes[-20:].mean()
+    frame = _ene_frame(closes, low_last=float(ma20) * 0.90)
+    assert ene_lower_touch(frame, EneConfig(), RISK) is None
+
+
+def test_ene_rejects_insufficient_history() -> None:
+    frame = _ene_frame(np.linspace(10.0, 11.0, 60), low_last=9.8)
+    assert ene_lower_touch(frame, EneConfig(), RISK) is None
+
+
+def test_ene_plan_uses_day_high_and_low() -> None:
+    # 买卖点：突破当日高点买入、跌破当日低点止损、盈亏比 1:3。
+    frame = _ene_frame(np.linspace(10.0, 11.0, 120), low_last=9.80)
+    row = ene_lower_touch(frame, EneConfig(), RISK)
+    assert row is not None
+    from ashare_monitor.signals import entry_exit_plan
+    plan = entry_exit_plan(row)
+    assert plan, "ENE下轨回踩 必须有买卖点计划"
+    assert plan["entry_price"] > row["today_high"] > row["today_low"] > plan["stop_loss"]
+    assert plan["risk_reward"] == 3.0
 
 
 # ---------------------------------------------------------------------------
