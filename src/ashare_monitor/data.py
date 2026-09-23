@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from pathlib import Path
+import json
 import time
 
 import pandas as pd
@@ -153,6 +154,31 @@ def cache_latest_date(cache_dir: Path) -> str | None:
     return latest
 
 
+def _sessions_manifest_path(cache_dir: Path) -> Path:
+    return cache_dir / "_sessions.json"
+
+
+def _load_done_sessions(cache_dir: Path) -> set[str]:
+    """已成功抓取并合并进缓存的交易日集合（YYYYMMDD）。读不到就当空账本。"""
+    try:
+        payload = json.loads(_sessions_manifest_path(cache_dir).read_text(encoding="utf-8"))
+        return {str(x) for x in payload.get("sessions", [])}
+    except Exception:
+        return set()
+
+
+def _save_done_sessions(cache_dir: Path, done: set[str]) -> None:
+    path = _sessions_manifest_path(cache_dir)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps({"sessions": sorted(done)}, ensure_ascii=False), encoding="utf-8")
+    tmp.replace(path)
+
+
+def session_fetched(cache_dir: Path, session: str) -> bool:
+    """该交易日是否已成功抓取并合并（以记账清单为准，不看个别文件的新鲜度）。"""
+    return session in _load_done_sessions(cache_dir)
+
+
 def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force: bool = False) -> tuple[int, int]:
     """Refresh the whole price cache from Tushare, one session per call pair.
 
@@ -182,24 +208,20 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
         return 0, 0
     all_sessions = sorted(cal["cal_date"].astype(str).tolist())
 
-    if force or not any(cache_dir.iterdir()):
-        # 冷启动只需覆盖形态最长回看（约 160 根K线）：抓最近 200 个交易日
-        # 即可（配合并行抓取约 3 分钟）；force=True（全量重建）仍取全窗口。
-        needed = all_sessions if force else all_sessions[-200:]
+    # 逐日记账：只有真正抓成功的交易日才入账，缺的会在下次运行自动重试。
+    # 旧实现用"某个抽样文件的最新日期"推断覆盖度，造成两类静默错误——
+    # ① 某日 fetch 失败被整日丢弃后永远不再重试；② 个别文件陈旧却因抽样躲过检查。
+    done = _load_done_sessions(cache_dir)
+    cold_start = not any(cache_dir.glob("*.csv"))
+    if force:
+        needed = list(all_sessions)
+    elif not done:
+        # 无账本：要么是全新缓存，要么是存量缓存需要一次性补洞。
+        # 全新缓存只需覆盖形态最长回看（约 160 根K线），抓最近 200 个交易日即可；
+        # 存量缓存则扫全窗口，把历史上被丢掉的交易日补齐。
+        needed = all_sessions[-200:] if cold_start else list(all_sessions)
     else:
-        # Cache files are sorted oldest -> newest; the freshest cached bar sits
-        # on the last row.  Fetch only sessions strictly newer than it.  A
-        # session whose write was interrupted simply stays stale and is
-        # refetched on the next run.
-        newest = date(2000, 1, 1)
-        try:
-            sample = next(cache_dir.glob("*.csv"))
-            dates = pd.read_csv(sample, usecols=["date"], parse_dates=["date"])
-            if not dates.empty:
-                newest = max(dates.date.max().date(), newest)
-        except Exception:
-            newest = date(2000, 1, 1)
-        needed = [s for s in all_sessions if s > newest.strftime("%Y%m%d")]
+        needed = [s for s in all_sessions if s not in done]
     if not needed:
         return 0, 0
 
@@ -243,10 +265,26 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
     frames: list[pd.DataFrame] = []
     # 3 线程并行：隐藏跨洋/跨网延迟（冷启动约 4 倍加速）；
     # 节流器保证总请求速率仍低于 200/分钟。
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        for result in pool.map(fetch_session, needed):
-            if result is not None:
-                frames.append(result)
+    pending = list(needed)
+    fetched: list[str] = []
+    for attempt in range(3):
+        if not pending:
+            break
+        failed: list[str] = []
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            for session, result in zip(pending, pool.map(fetch_session, pending)):
+                if result is None:
+                    failed.append(session)
+                else:
+                    frames.append(result)
+                    fetched.append(session)
+        if failed and attempt < 2:
+            print(f"[bulk] {len(failed)} 个交易日抓取失败，重试（{attempt + 2}/3）", flush=True)
+            _time.sleep(5)
+        pending = failed
+    if pending:
+        # 不记账 → 下次运行自动重试，不留永久空洞
+        print(f"[bulk] {len(pending)} 个交易日仍失败，留待下次运行重试：{pending[:5]}", flush=True)
     if not frames:
         return 0, 0
     all_raw = pd.concat(frames, ignore_index=True)
@@ -281,6 +319,8 @@ def refresh_history_cache_bulk(cache_dir: Path, lookback_days: int = 320, force:
         bars = bars.sort_values("date")
         bars.to_csv(path, index=False, columns=["date", "open", "high", "low", "close", "volume"])
         written += 1
+    # 只把真正抓成功的交易日记账；失败的留给下次运行自动重试。
+    _save_done_sessions(cache_dir, done | set(fetched))
     return written, len(needed)
 
 

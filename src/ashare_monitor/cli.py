@@ -15,7 +15,7 @@ from .config import Config, load
 from .data import (_ts_pro, cache_latest_date, filter_universe, get_universe,
                    history_for, index_frame, is_ashare_trading_day,
                    market_regime, polite_pause)
-from .data import refresh_history_cache_bulk
+from .data import refresh_history_cache_bulk, session_fetched
 from .signals import entry_exit_plan, position_strategy, scan_frame
 from .news_factor import news_counts, sort_score
 from .tushare_src import latest_moneyflow
@@ -118,7 +118,7 @@ def scan_day() -> str:
     return days[-1]
 
 
-def scan(config_path: str, day: str | None = None) -> int:
+def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) -> int:
     cfg = load(config_path)
     backfill = bool(day)
     day = day or scan_day()
@@ -148,13 +148,17 @@ def scan(config_path: str, day: str | None = None) -> int:
     # 付费数据源（Tushare）：先增量刷新全市场历史缓存（批量、秒级），
     # 再拉真实主力资金流标注；任何一步失败都软降级。
     cache_dir = Path(cfg.scan.cache_dir)
-    written, sessions = refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
+    written, sessions = refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days, force=rebuild_cache)
     if sessions:
         console.print(f"[green]Tushare 行情缓存：更新 {written} 只 / {sessions} 个交易日[/green]")
     # 保护：Tushare 日线发布可能晚于任务时间；等待当日缓存就绪（最多 8 分钟）
     import time as _time
 
     def cache_ready() -> bool:
+        # 记账优先：cache_latest_date 取的是"任一文件"的最大日期，
+        # 只要有一只股票新鲜就会把整体判为就绪，掩盖其余股票的陈旧与缺洞。
+        if session_fetched(cache_dir, day):
+            return True
         latest = cache_latest_date(cache_dir)
         if latest is None:
             return False
@@ -165,7 +169,7 @@ def scan(config_path: str, day: str | None = None) -> int:
             break
         console.print(f"[yellow]({day})行情尚未入库，等待 60s 重试（{attempt + 1}/25）…[/yellow]")
         _time.sleep(60)
-        refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days)
+        refresh_history_cache_bulk(cache_dir, cfg.scan.lookback_days, force=rebuild_cache)
     if not cache_ready():
         console.print(f"[red]({day})行情仍未入库，为避免用旧行情误标，停止本次扫描。[/red]")
         return 2
@@ -239,6 +243,8 @@ def main() -> None:
     scan_parser.add_argument("--config", default="config.yaml")
     scan_parser.add_argument("--day", default=None,
                              help="扫描基准日 YYYYMMDD（历史回填用，默认自动取最近已完成交易日）")
+    scan_parser.add_argument("--rebuild-cache", action="store_true",
+                             help="强制全窗口重建价格缓存（补齐历史空洞、统一复权基准）")
     commands.add_parser("universe")
     args = parser.parse_args()
     if args.command == "universe":
@@ -252,7 +258,7 @@ def main() -> None:
         raise SystemExit(0)
     if args.day is not None and (len(args.day) != 8 or not args.day.isdigit()):
         parser.error("--day 必须是 YYYYMMDD 格式")
-    raise SystemExit(scan(args.config, args.day))
+    raise SystemExit(scan(args.config, args.day, args.rebuild_cache))
 
 
 if __name__ == "__main__":
