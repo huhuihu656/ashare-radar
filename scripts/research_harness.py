@@ -47,6 +47,7 @@ def _features_one(path: str):
         return None
     df = df.sort_values("date").reset_index(drop=True)
     c = df["close"].to_numpy(np.float64)
+    op = df["open"].to_numpy(np.float64)
     h = df["high"].to_numpy(np.float64)
     lo = df["low"].to_numpy(np.float64)
     v = df["volume"].to_numpy(np.float64)
@@ -79,7 +80,7 @@ def _features_one(path: str):
         # 标签原料：未来 20 日的收盘收益、以及区间内的最高/最低（用于盈亏模拟）
         "fwd": cs.shift(-HORIZON).to_numpy() / c - 1,
         "scale": vol20.to_numpy() * np.sqrt(HORIZON),
-        "close": c, "high": h, "low": lo,
+        "close": c, "high": h, "low": lo, "open": op,
         "above_ma20": (c > ma20.to_numpy()).astype(np.float64),
     }
     # 日期 -> int32 (YYYYMMDD)；不 parse_dates，省下大量解析时间
@@ -99,7 +100,7 @@ def build(verbose: bool = True):
     t_par = time.perf_counter() - t0
 
     os.makedirs(STORE, exist_ok=True)
-    cols = FEATURES + ["fwd", "scale", "close", "high", "low", "above_ma20"]
+    cols = FEATURES + ["fwd", "scale", "close", "high", "low", "open", "above_ma20"]
     arrays = {}
     for k in cols:
         arrays[k] = np.concatenate([r[k] for r in results]).astype(np.float32)
