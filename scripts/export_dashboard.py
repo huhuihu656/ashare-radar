@@ -62,6 +62,7 @@ SIGNAL_COUNT_KEYS = {
     "恰好突破20日线": "break_ma20",
     "布林下轨探底针": "boll_pin",
     "ENE下轨回踩": "ene_pullback",
+    "深跌筑底回踩前高": "deep_base",
 }
 
 

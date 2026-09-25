@@ -28,12 +28,15 @@ console = Console()
 def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
              moneyflow: pd.DataFrame | None, day: str) -> list[dict]:
     symbol = str(quote.symbol)
-    history = history_for(symbol, cache_dir, cfg.scan.lookback_days, as_of=day)
+    # 取满 deep_lookback_days 再切两种窗口：深跌筑底回踩前高需要更长历史才能看到
+    # 「前期深跌 + 底部抬高」，其余检测器仍用 lookback_days，口径不变。
+    history = history_for(symbol, cache_dir, cfg.scan.deep_lookback_days, as_of=day)
     if len(history) < cfg.scan.min_history_days:
         return []
     # 收盘后扫描：缓存已含当日真实收盘 bar，直接用；
     # 历史回填（--day）时缓存可能含更晚数据，必须切到基准日为止（防未来函数）。
-    frame = history[history.index <= pd.Timestamp(day)]
+    deep_frame = history[history.index <= pd.Timestamp(day)]
+    frame = deep_frame.tail(cfg.scan.lookback_days)
     if len(frame) < cfg.scan.min_history_days:
         return []
     limit_pct = LIMIT_PCT_BY_BOARD.get(str(quote["board"]), 0.10)
@@ -41,8 +44,8 @@ def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
                       cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
                       cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
                       cfg.oversold_reversal, cfg.break_ma20, cfg.boll_pin,
-                      cfg.ene_pullback,
-                      limit_pct=limit_pct)
+                      cfg.ene_pullback, cfg.deep_base,
+                      limit_pct=limit_pct, deep_frame=deep_frame)
     money = moneyflow.loc[symbol] if moneyflow is not None and symbol in moneyflow.index else None
     for row in rows:
         row.update({"symbol": symbol, "name": str(quote["name"]), "board": str(quote["board"]),
@@ -214,7 +217,9 @@ def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) 
                "wave_gain_pct", "pullback_pct", "second_vol_ratio", "prior_high",
                "ma_gap_pct", "shadow_ratio", "shadow_vol_ratio", "cover_vol_ratio", "prior_gain_60d_pct",
                "bb_lower", "bb_mid", "pierce_pct", "today_high", "today_low",
-               "ene_upper", "ene_lower", "slope_pct", "trend_gap_pct", "touch_depth_pct"]
+               "ene_upper", "ene_lower", "slope_pct", "trend_gap_pct", "touch_depth_pct",
+               "neck_price", "base_low", "prior_high", "drop_pct", "rebound_pct",
+               "break_pct", "retest_pct", "higher_lows", "higher_highs", "retest_low"]
     result = pd.DataFrame(signals)
     if result.empty:
         result = pd.DataFrame(columns=columns)

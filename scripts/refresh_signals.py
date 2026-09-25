@@ -11,7 +11,8 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from ashare_monitor.config import load  # noqa: E402
 from ashare_monitor.signals import (  # noqa: E402
-    boll_lower_pin, break_ma20, ene_lower_touch, entry_exit_plan, oversold_reversal, position_strategy,
+    boll_lower_pin, break_ma20, deep_base_retest, ene_lower_touch, entry_exit_plan,
+    oversold_reversal, position_strategy,
 )
 from export_dashboard import build_klines  # noqa: E402
 
@@ -24,12 +25,17 @@ NAME2KEY = {
     "超跌反转": "oversold_reversal", "恰好突破20日线": "break_ma20",
     "布林下轨探底针": "boll_pin",
     "ENE下轨回踩": "ene_pullback",
+    "深跌筑底回踩前高": "deep_base",
 }
+# (检测器, 配置名, 是否使用长窗口)。长窗口标记必须与 cli.py 的 deep_frame 口径一致：
+# 本脚本读的是整份缓存（约 448 根），若不切窗口，旧检测器会比云端（tail(320)）
+# 多认出信号，回填就会注入云端不会产出的候选。
 DETECTORS = {
-    "超跌反转": (oversold_reversal, "oversold_reversal"),
-    "恰好突破20日线": (break_ma20, "break_ma20"),
-    "布林下轨探底针": (boll_lower_pin, "boll_pin"),
-    "ENE下轨回踩": (ene_lower_touch, "ene_pullback"),
+    "超跌反转": (oversold_reversal, "oversold_reversal", False),
+    "恰好突破20日线": (break_ma20, "break_ma20", False),
+    "布林下轨探底针": (boll_lower_pin, "boll_pin", False),
+    "ENE下轨回踩": (ene_lower_touch, "ene_pullback", False),
+    "深跌筑底回踩前高": (deep_base_retest, "deep_base", True),
 }
 
 
@@ -84,8 +90,9 @@ def main() -> int:
             continue
         if len(frame) < 60 or frame.index[-1].strftime("%Y%m%d") < "20260901":
             continue
-        for sig_name, (det, cfg_key) in DETECTORS.items():
-            row = det(frame, getattr(cfg, cfg_key), cfg.risk)
+        short = frame.tail(cfg.scan.lookback_days)
+        for sig_name, (det, cfg_key, deep_window) in DETECTORS.items():
+            row = det(frame if deep_window else short, getattr(cfg, cfg_key), cfg.risk)
             if not row:
                 continue
             key = (sym, row["signal"])

@@ -8,6 +8,7 @@ from .config import (
     BoxBreakoutConfig,
     BreakMa20Config,
     BreakoutConfig,
+    DeepBaseConfig,
     DragonConfig,
     EneConfig,
     EngulfingConfig,
@@ -722,6 +723,167 @@ def ene_lower_touch(frame: pd.DataFrame, cfg: EneConfig, risk: RiskConfig) -> di
     }
 
 
+# ---------------------------------------------------------------------------
+# 摆动点识别（ZigZag）
+# ---------------------------------------------------------------------------
+
+def zigzag_pivots(high: np.ndarray, low: np.ndarray, pct: float) -> list[tuple[int, str, float]]:
+    """ZigZag 摆动点：价格自极值反向走够 pct 才确认该极值成立。
+
+    返回 ``[(下标, "H"/"L", 价格)]``，保证**高低严格交替**且**每个 bar 至多一个摆动点**。
+    这两条性质靠「记录后立刻把极值切到当前 bar 的另一侧」实现；早期版本把上行/下行
+    写成两个并排的 if，同一个 bar 会同时吐出高低两个点并制造重复摆动点，使后续所有
+    结构判断失真。首个摆动点由「第一段 pct 级别的移动」定向，本身不受 pct 幅度约束。
+    """
+    n = len(high)
+    if n < 3 or pct <= 0:
+        return []
+    start = None
+    for i in range(1, n):
+        if low[i] <= high[0] * (1 - pct):
+            start = 0
+            break
+        if high[i] >= low[0] * (1 + pct):
+            start = 1
+            break
+    if start is None:
+        return []
+    piv: list[tuple[int, str, float]] = []
+    if start == 0:
+        piv.append((0, "H", float(high[0])))
+        direction, ext_i, ext_p = -1, 1, float(low[1])
+    else:
+        piv.append((0, "L", float(low[0])))
+        direction, ext_i, ext_p = 1, 1, float(high[1])
+    for i in range(1, n):
+        if direction == 1:
+            if high[i] > ext_p:
+                ext_i, ext_p = i, float(high[i])
+            elif low[i] <= ext_p * (1 - pct):
+                if piv[-1][0] != ext_i or piv[-1][1] != "H":
+                    piv.append((ext_i, "H", ext_p))
+                direction, ext_i, ext_p = -1, i, float(low[i])
+        else:
+            if low[i] < ext_p:
+                ext_i, ext_p = i, float(low[i])
+            elif high[i] >= ext_p * (1 + pct):
+                if piv[-1][0] != ext_i or piv[-1][1] != "L":
+                    piv.append((ext_i, "L", ext_p))
+                direction, ext_i, ext_p = 1, i, float(high[i])
+    return piv
+
+
+def deep_base_retest(frame: pd.DataFrame, cfg: DeepBaseConfig, risk: RiskConfig) -> dict | None:
+    """深跌筑底回踩前高：前期深跌 -> 底部与高点持续抬高 -> 突破前高 -> 回踩不破前高。
+
+    判定链（全部满足）：
+      1. 某摆动低点 L0 相对其之前的最高摆动高点 H0 跌幅 >= min_drop_pct；
+      2. L0 之后首个摆动高点涨幅 <= max_rebound_pct（底部反弹不超过 1 倍）；
+      3. 最近 higher_swings+1 个摆动低点、摆动高点各自严格递增；
+      4. 最后一个摆动高点即颈线 neck，颈线之后最高价须超过 neck x (1+min_break_pct)；
+      5. 突破高点之后最低价 >= neck x (1-neck_tolerance_pct)，且今日收盘 >= neck。
+
+    位置闸门只叠 position_ok，**刻意不叠 low_zone_ok**：本形态要求价格已突破前高，
+    此时 120 日位置分位必然位于区间上部，低位闸门会与定义直接冲突
+    （2026-09-25 实测：19 只命中里只有 5 只能过 low_zone_ok）。
+    量能默认不设门槛（原描述未含量能条件），由 cfg.min_breakout_vol_ratio 控制。
+    """
+    if not cfg.enabled or len(frame) < cfg.min_history_days:
+        return None
+    if not position_ok(frame, risk):
+        return None
+    high = frame.high.to_numpy(dtype=float)
+    low = frame.low.to_numpy(dtype=float)
+    close = frame.close.to_numpy(dtype=float)
+    n = len(close)
+    steps = max(1, int(cfg.higher_swings))
+    piv = zigzag_pivots(high, low, cfg.swing_pct)
+    lows = [p for p in piv if p[1] == "L"]
+    if len(lows) < steps + 1:
+        return None
+    price = float(close[-1])
+    for i0, _, p0 in lows:
+        if p0 <= 0:
+            continue
+        prior_highs = [p[2] for p in piv if p[1] == "H" and p[0] < i0]
+        if not prior_highs:
+            continue
+        h0 = max(prior_highs)
+        if h0 <= 0:
+            continue
+        # 1. 前期深跌
+        if p0 / h0 - 1 > -cfg.min_drop_pct:
+            continue
+        rest = [p for p in piv if p[0] > i0]
+        if len(rest) < 2 * steps + 1 or rest[0][1] != "H":
+            continue
+        # 2. 底部反弹不超过 1 倍
+        rebound = rest[0][2] / p0 - 1
+        if rebound > cfg.max_rebound_pct:
+            continue
+        seq_lows = [p[2] for p in rest if p[1] == "L"]
+        seq_highs = [p for p in rest if p[1] == "H"]
+        if len(seq_lows) < steps or len(seq_highs) < steps + 1:
+            continue
+        # 3. 底部越抬越高 + 高点越抬越高（比较最近 steps+1 个）
+        chain_lows = [p0] + seq_lows
+        lo_from = max(0, len(chain_lows) - (steps + 1))
+        if any(chain_lows[k + 1] <= chain_lows[k] for k in range(lo_from, len(chain_lows) - 1)):
+            continue
+        hi_from = max(0, len(seq_highs) - (steps + 1))
+        if any(seq_highs[k + 1][2] <= seq_highs[k][2] for k in range(hi_from, len(seq_highs) - 1)):
+            continue
+        neck_i, _, neck = seq_highs[-1]
+        if neck <= 0 or neck_i >= n - 3:
+            continue
+        after_high = high[neck_i + 1:]
+        after_low = low[neck_i + 1:]
+        if after_high.size == 0:
+            continue
+        # 4. 突破前高
+        bi = int(np.argmax(after_high))
+        peak = float(after_high[bi])
+        break_pct = peak / neck - 1
+        if break_pct < cfg.min_break_pct:
+            continue
+        # 5. 回踩不破前高，且今日收盘站上前高
+        pullback = after_low[bi:]
+        if pullback.size < 2:
+            continue
+        retest_low = float(pullback.min())
+        retest_pct = retest_low / neck - 1
+        if retest_pct < -cfg.neck_tolerance_pct:
+            continue
+        if price < neck:
+            continue
+        if cfg.min_breakout_vol_ratio > 0:
+            vol_base = float(frame.volume.iloc[-(cfg.vol_ma_days + 1):-1].mean())
+            if vol_base <= 0:
+                continue
+            if float(frame.volume.iloc[neck_i + 1 + bi]) / vol_base < cfg.min_breakout_vol_ratio:
+                continue
+        drop_pct = (p0 / h0 - 1) * 100
+        rebound_pct = rebound * 100
+        break_pct *= 100
+        retest_pct *= 100
+        score = round(100 * min(1.0,
+                                0.30 * min(-drop_pct / 70.0, 1.0) +
+                                0.25 * min(break_pct / 5.0, 1.0) +
+                                0.25 * max(0.0, 1 - abs(retest_pct) / 5.0) +
+                                0.20 * min(len(chain_lows) / 4.0, 1.0)), 1)
+        return {
+            **_base_row(frame), "signal": "深跌筑底回踩前高", "score": score,
+            "neck_price": round(neck, 3), "base_low": round(p0, 3), "prior_high": round(h0, 3),
+            "drop_pct": round(drop_pct, 2), "rebound_pct": round(rebound_pct, 2),
+            "break_pct": round(break_pct, 2), "retest_pct": round(retest_pct, 2),
+            "higher_lows": len(chain_lows), "higher_highs": len(seq_highs),
+            "breakout_high": round(peak, 3), "retest_low": round(retest_low, 3),
+            "today_high": round(float(high[-1]), 3), "today_low": round(float(low[-1]), 3),
+            "note": "前期深跌后底部与高点持续抬高，现突破前高且回踩未破前高；跌破回踩低点即形态失效",
+        }
+    return None
+
+
 def position_strategy(row: dict, market_env: str = "未知") -> dict:
     """Research-reference position sizing for a signal row.
 
@@ -859,6 +1021,11 @@ def entry_exit_plan(row: dict) -> dict:
         if th and tl:
             entry, stop, target = round(th * 1.005, 2), round(tl * 0.99, 2), None
             note = "突破探底针高点买入；跌破当日探底低点止损"
+    elif kind == "深跌筑底回踩前高":
+        th, rl = row.get("today_high"), row.get("retest_low")
+        if th and rl:
+            entry, stop, target = round(th * 1.005, 2), round(rl * 0.99, 2), None
+            note = "突破当日高点买入（回踩结束确认）；跌破回踩低点（前高失守）止损"
     elif kind == "ENE下轨回踩":
         th, tl = row.get("today_high"), row.get("today_low")
         if th and tl:
@@ -896,11 +1063,20 @@ def scan_frame(
     break_ma20_cfg: BreakMa20Config,
     boll_pin_cfg: BollPinConfig,
     ene_cfg: EneConfig,
+    deep_base_cfg: DeepBaseConfig,
     limit_pct: float = 0.10,
+    deep_frame: pd.DataFrame | None = None,
 ) -> list[dict]:
     clean = frame.copy().sort_index()
     clean = clean[~clean.index.duplicated(keep="last")]
     clean = clean.dropna(subset=["open", "high", "low", "close", "volume"])
+    # 长窗口信号单独吃 deep_frame（更长的历史），其余检测器一律用 clean。
+    if deep_frame is None:
+        deep = clean
+    else:
+        deep = deep_frame.copy().sort_index()
+        deep = deep[~deep.index.duplicated(keep="last")]
+        deep = deep.dropna(subset=["open", "high", "low", "close", "volume"])
     out: list[dict] = []
     if support_cfg.enabled:
         row = support_retest(clean, support_cfg)
@@ -948,6 +1124,10 @@ def scan_frame(
             out.append(row)
     if ene_cfg.enabled:
         row = ene_lower_touch(clean, ene_cfg, risk)
+        if row:
+            out.append(row)
+    if deep_base_cfg.enabled:
+        row = deep_base_retest(deep, deep_base_cfg, risk)
         if row:
             out.append(row)
     return out

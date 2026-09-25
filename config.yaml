@@ -5,6 +5,8 @@
 scan:
   workers: 8
   lookback_days: 320
+  deep_lookback_days: 448    # 长窗口信号（深跌筑底回踩前高）的回看长度；
+                             # 必须 >= lookback_days 且不超过缓存实际深度
   min_history_days: 150
   exclude_st: true
   include_boards: ["主板", "创业板", "科创板", "北交所"]
@@ -155,3 +157,17 @@ ene_pullback:
   min_slope_pct: 0.0         # 快线上行的最小幅度
   strong_slope_pct: 0.03     # 打分饱和的快线涨幅
   deep_touch_pct: 4.0        # 打分饱和的触轨深度上限
+# 深跌筑底回踩前高（前期深跌 -> 底部与高点持续抬高 -> 突破前高 -> 回踩不破前高）
+# 判定链用 ZigZag 摆动点：跌幅 >= min_drop_pct 的低点之后，最近 higher_swings+1 个
+# 摆动低点与摆动高点各自严格递增，最后一个摆动高点作颈线，突破后回踩未破且今日收在颈线上方。
+# 注意：本形态**不叠 low_zone_ok**（突破创新高时位置分位必然在上部），只叠 position_ok。
+deep_base:
+  enabled: true
+  swing_pct: 0.10            # ZigZag 摆动阈值：反向走够 10% 才确认一个摆动点
+  min_drop_pct: 0.50         # 前期跌幅下限（原始需求是 70%，放宽到 50% 后才在 448 根窗口稳定触发）
+  max_rebound_pct: 1.00      # 底部反弹上限：不超过 1 倍
+  higher_swings: 2           # 需要 2 次「底部抬高 + 高点抬高」-> 比较最近 3 个摆动点
+  min_break_pct: 0.01        # 突破颈线的最小幅度
+  neck_tolerance_pct: 0.03   # 回踩允许跌破颈线的幅度
+  min_breakout_vol_ratio: 0.0  # 突破日量能下限，0 = 不检查（原描述未含量能条件）
+  min_history_days: 150      # 判定所需最少 K 线数

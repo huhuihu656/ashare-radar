@@ -34,6 +34,7 @@
     "恰好突破20日线": "ma20",
     "布林下轨探底针": "boll",
     "ENE下轨回踩": "ene",
+    "深跌筑底回踩前高": "deepbase",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
 
@@ -207,6 +208,7 @@
     ["ma20", "突破20日线", "break_ma20"],
     ["boll", "布林探底针", "boll_pin"],
     ["ene", "ENE下轨回踩", "ene_pullback"],
+    ["deepbase", "深跌筑底回踩前高", "deep_base"],
   ];
 
   function renderExtraChips(counts) {
@@ -334,6 +336,12 @@
         { text: `趋势强度 ${signedPct(item.slope_pct)}`, cls: signClass(item.slope_pct) },
         { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
         { text: `MA20 / MA60 ${cleanText(item.ma20)} / ${cleanText(item.ma60)}`, cls: "" },
+      ],
+      deepbase: [
+        { text: `前期跌幅 ${signedPct(item.drop_pct)}`, cls: signClass(item.drop_pct) },
+        { text: `突破前高 ${signedPct(item.break_pct)}`, cls: signClass(item.break_pct) },
+        { text: `回踩前高 ${signedPct(item.retest_pct)}`, cls: signClass(item.retest_pct) },
+        { text: `底部 / 高点抬高 ${cleanText(item.higher_lows)} / ${cleanText(item.higher_highs)} 次`, cls: "" },
       ],
       breakout: [
         { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
@@ -624,6 +632,17 @@
           meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
           cls: pos !== null && pos >= 0.8 ? "is-up" : "",
         },
+        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
+      );
+    } else if (kind === "deepbase") {
+      rows.push(
+        { dt: "前期高点 → 底部低点", dd: `${cleanText(item.prior_high)} → ${cleanText(item.base_low)}` },
+        { dt: "前期跌幅", dd: signedPct(item.drop_pct), cls: signClass(item.drop_pct) },
+        { dt: "底部反弹幅度", dd: signedPct(item.rebound_pct), cls: signClass(item.rebound_pct) },
+        { dt: "前高（颈线）", dd: cleanText(item.neck_price) },
+        { dt: "突破高点", dd: `${cleanText(item.breakout_high)}（${signedPct(item.break_pct)}）`, cls: "is-up" },
+        { dt: "回踩低点", dd: `${cleanText(item.retest_low)}（${signedPct(item.retest_pct)}）`, cls: signClass(item.retest_pct) },
+        { dt: "结构抬升次数", dd: `底部 ${cleanText(item.higher_lows)} 次 / 高点 ${cleanText(item.higher_highs)} 次` },
         { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
       );
     }

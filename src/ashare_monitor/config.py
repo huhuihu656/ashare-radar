@@ -9,6 +9,11 @@ import yaml
 class ScanConfig:
     workers: int = 8
     lookback_days: int = 320
+    # 长窗口信号用的回看长度，必须 >= lookback_days 且不超过缓存实际深度（约 448 根）。
+    # 单独开这个旋钮而不是直接调大 lookback_days：后者会同时改变既有信号的输入长度
+    # （2026-09-25 实测 320 -> 448 会让「回踩前期起涨位」变动 56 只），并因
+    # data.history_for 落盘前 tail(lookback_days) 而放大抓取窗口。
+    deep_lookback_days: int = 448
     min_history_days: int = 150
     exclude_st: bool = True
     include_boards: tuple[str, ...] = ("主板", "创业板", "科创板", "北交所")
@@ -193,6 +198,33 @@ class EneConfig:
 
 
 @dataclass(frozen=True)
+class DeepBaseConfig:
+    """深跌筑底回踩前高。
+
+    摆动点用 ZigZag 识别（阈值 swing_pct）。判定链：
+      1. 某摆动低点相对此前最高摆动高点跌幅 >= min_drop_pct（前期深跌）；
+      2. 该低点之后首个摆动高点涨幅 <= max_rebound_pct（底部反弹不超过 1 倍）；
+      3. 最近 higher_swings+1 个摆动低点、摆动高点各自严格递增（底部/高点越抬越高）；
+      4. 最后一个摆动高点即颈线，突破需超过 min_break_pct；
+      5. 突破后回踩最低价 >= 颈线 x (1-neck_tolerance_pct)，且今日收盘 >= 颈线。
+
+    位置闸门只叠 position_ok，刻意不叠 low_zone_ok：突破创新高时价格必然位于
+    120 日区间上部，low_zone_ok 会把本形态整体否掉（实测 19 只只过 5 只）。
+    量能默认不设门槛（用户原描述未含量能条件），留开关。
+    """
+    enabled: bool = True
+    swing_pct: float = 0.10          # ZigZag 摆动阈值
+    min_drop_pct: float = 0.50       # 前期跌幅下限（用户 2026-09-25 指定放宽到 50%）
+    max_rebound_pct: float = 1.00    # 底部反弹上限（不超过 1 倍）
+    higher_swings: int = 2           # 需要几次「抬升」→ 取最近 3 个低点/高点
+    min_break_pct: float = 0.01      # 突破颈线的最小幅度
+    neck_tolerance_pct: float = 0.03 # 回踩允许跌破颈线的幅度
+    min_breakout_vol_ratio: float = 0.0  # 突破日量能下限，0 = 不检查
+    vol_ma_days: int = 20
+    min_history_days: int = 150      # 形态需要足够长的历史
+
+
+@dataclass(frozen=True)
 class Config:
     scan: ScanConfig = field(default_factory=ScanConfig)
     support_retest: SupportConfig = field(default_factory=SupportConfig)
@@ -208,6 +240,7 @@ class Config:
     break_ma20: BreakMa20Config = field(default_factory=BreakMa20Config)
     boll_pin: BollPinConfig = field(default_factory=BollPinConfig)
     ene_pullback: EneConfig = field(default_factory=EneConfig)
+    deep_base: DeepBaseConfig = field(default_factory=DeepBaseConfig)
 
 
 def load(path: str | Path) -> Config:
@@ -228,4 +261,5 @@ def load(path: str | Path) -> Config:
         break_ma20=BreakMa20Config(**raw.get("break_ma20", {})),
         boll_pin=BollPinConfig(**raw.get("boll_pin", {})),
         ene_pullback=EneConfig(**raw.get("ene_pullback", {})),
+        deep_base=DeepBaseConfig(**raw.get("deep_base", {})),
     )
