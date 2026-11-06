@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#05080f" />
   <title>势能雷达 · 清晰上升趋势</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23e6b450' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ffd479'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./styles.css?v=34" />
-  <script defer src="./app.js?v=34"></script>
+  <link rel="stylesheet" href="./styles.css?v=36" />
+  <script defer src="./app.js?v=36"></script>
 </head>
 <body>
   <header class="topbar">
@@ -48,6 +48,32 @@
       <div class="wm"><strong id="avg-gain" class="up">—</strong><span>平均 60 日涨幅</span></div>
       <div class="wm"><strong id="max-gain">—</strong><span>最高 60 日涨幅</span></div>
       <div class="wm"><strong id="avg-mdd" class="down">—</strong><span>平均最大回撤</span></div>
+    </div>
+  </section>
+
+  <section id="stock-analysis" class="analysis" hidden aria-live="polite">
+    <div class="analysis-head">
+      <div class="an-id">
+        <h2 id="an-name">—</h2>
+        <div class="an-meta">
+          <span id="an-code" class="an-code"></span>
+          <span id="an-board" class="board-tag"></span>
+          <span id="an-asof" class="an-asof"></span>
+        </div>
+      </div>
+      <div class="an-price"><strong id="an-close">—</strong><span>最新收盘</span></div>
+      <div id="an-verdict" class="verdict"></div>
+    </div>
+    <div class="analysis-grid">
+      <div>
+        <h4>判定依据</h4>
+        <ul id="an-checks" class="checks"></ul>
+      </div>
+      <div>
+        <h4>买卖参考</h4>
+        <div id="an-plan" class="an-plan"></div>
+        <p id="an-note" class="an-note"></p>
+      </div>
     </div>
   </section>
 

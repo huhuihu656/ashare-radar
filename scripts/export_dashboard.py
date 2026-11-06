@@ -158,6 +158,86 @@ def build_klines(signals: list[dict[str, Any]], cache_dir: Path) -> dict[str, An
     }
 
 
+BOARD_LIMIT = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
+
+
+def build_universe(report_dir: Path, cache_dir: Path) -> dict[str, Any]:
+    """全市场逐只技术指标与买卖参考价，供网页搜索任意个股。
+
+    「实时」只能到最近一次收盘：静态站没有行情 API，盘中价格无法获取。
+    """
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root / "src"))
+    from ashare_monitor.config import load
+    from ashare_monitor.signals import clear_uptrend, uptrend_metrics
+
+    cfg = load(root / "config.yaml")
+    uni_path = report_dir / "universe.json"
+    if not uni_path.exists():
+        return {"as_of": report_dir.name, "params": {}, "stocks": {}}
+    try:
+        universe = _read_json(uni_path)
+    except Exception:
+        return {"as_of": report_dir.name, "params": {}, "stocks": {}}
+
+    c = cfg.clear_uptrend
+    stocks: dict[str, Any] = {}
+    for item in universe:
+        sym = str(item.get("symbol") or "").zfill(6)
+        path = cache_dir / f"{sym}.csv"
+        if not sym or not path.exists():
+            continue
+        try:
+            frame = pd.read_csv(path, parse_dates=["date"]).sort_values("date").set_index("date")
+            frame = frame[~frame.index.duplicated(keep="last")].dropna(
+                subset=["open", "high", "low", "close", "volume"])
+        except Exception:
+            continue
+        if len(frame) < c.min_history_days:
+            continue
+        f = frame.tail(cfg.scan.lookback_days)
+        limit_pct = BOARD_LIMIT.get(str(item.get("board")), 0.10)
+        m = uptrend_metrics(f, c, limit_pct)
+        if m is None:
+            continue
+        qualified = clear_uptrend(f, c, cfg.risk, limit_pct) is not None
+        entry = round(m["px"], 2)
+        stop = round(m["ma20"] * 0.97, 2)
+        stocks[sym] = {
+            "name": item.get("name") or sym,
+            "board": item.get("board") or "",
+            "close": entry,
+            "er": round(m["er"], 3),
+            "gain60": round(m["gain_60"], 4),
+            "mdd": round(m["mdd"], 4),
+            "ext": round(m["ext"], 4),
+            "p95": round(m["p95"], 4),
+            "ma20": round(m["ma20"], 3),
+            "ma20prev": round(m["ma20_prev"], 3),
+            "ma60": round(m["ma60"], 3),
+            "lim": m["limit_ups"],
+            "lows": bool(m["higher_lows"]),
+            "highs": bool(m["higher_highs"]),
+            "q": qualified,
+            "entry": entry if qualified else None,
+            "stop": stop if qualified else None,
+            "target": round(entry + 3 * (entry - stop), 2) if qualified else None,
+        }
+    return {
+        "as_of": report_dir.name,
+        "params": {
+            "min_gain_60": c.min_gain_60,
+            "max_ext_pct": c.max_ext_pct,
+            "min_efficiency": c.min_efficiency,
+            "max_daily_p95": c.max_daily_p95,
+            "max_drawdown": c.max_drawdown,
+            "max_limit_ups": c.max_limit_ups,
+            "ma20_slope_days": c.ma20_slope_days,
+        },
+        "stocks": stocks,
+    }
+
+
 def export(reports_dir: Path, output: Path, min_coverage: float = 0.0,
            klines_output: Path | None = None) -> dict[str, Any]:
     report_dir, signals, run = find_latest_report(reports_dir)
@@ -206,6 +286,13 @@ def main() -> int:
     try:
         payload = export(Path(args.reports_dir), Path(args.out), args.min_coverage, klines_out)
         archive_payload(payload, archive_dir)
+        report_dir, _, _ = find_latest_report(Path(args.reports_dir))
+        universe = build_universe(report_dir, Path(args.reports_dir).parent / "cache")
+        universe_out = Path(args.out).parent / "universe.json"
+        universe_out.parent.mkdir(parents=True, exist_ok=True)
+        universe_out.write_text(json.dumps(universe, ensure_ascii=False, separators=(",", ":")),
+                                encoding="utf-8")
+        print(f"Universe payload: {len(universe.get('stocks', {}))} stocks -> {universe_out}")
     except Exception as error:
         print(f"Dashboard export failed: {error}", file=sys.stderr)
         return 2

@@ -133,6 +133,48 @@ body { min-height: 100vh; }
 }
 .wm span { font-size: 11px; color: var(--quiet); letter-spacing: 0.06em; }
 
+/* ---------------- 个股分析 ---------------- */
+
+.analysis {
+  margin: 18px 24px 0; padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+.analysis-head { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.an-id h2 { margin: 0; font-size: 22px; }
+.an-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--quiet); font-size: 12px; }
+.an-code { font-family: var(--mono); }
+.an-asof { color: var(--quiet); }
+.an-price { display: flex; flex-direction: column; align-items: flex-end; margin-left: auto; }
+.an-price strong { font-size: 32px; font-weight: 700; color: var(--gold-bright); font-family: var(--mono); }
+.an-price span { font-size: 11px; color: var(--quiet); }
+.verdict {
+  padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.verdict.pass { color: #07130e; background: linear-gradient(135deg, #6fe3b4, var(--down)); }
+.verdict.fail { color: #2b0709; background: linear-gradient(135deg, #ff9aa4, var(--up)); }
+.analysis-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; margin-top: 18px; }
+.analysis h4 { margin: 0 0 10px; font-size: 11px; letter-spacing: 0.1em; color: var(--quiet); font-weight: 600; }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.checks li { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 8px; font-size: 13px; }
+.checks .ck { font-family: var(--mono); font-size: 13px; }
+.checks .ck.ok { color: var(--down); }
+.checks .ck.no { color: var(--up); }
+.checks .cv { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.an-plan dl { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0; }
+.an-plan dt { color: var(--quiet); font-size: 12px; }
+.an-plan dd { margin: 0; font-family: var(--mono); font-size: 13px; text-align: right; }
+.an-note { margin: 14px 0 0; color: var(--quiet); font-size: 12px; line-height: 1.6; }
+
+@media (max-width: 900px) {
+  .analysis { margin: 14px 12px 0; padding: 16px; }
+  .analysis-grid { grid-template-columns: 1fr; gap: 18px; }
+  .analysis-head { gap: 14px; }
+  .an-price { margin-left: 0; align-items: flex-start; }
+}
+
 /* ---------------- 榜单 ---------------- */
 
 .board { padding: 0 24px 40px; }

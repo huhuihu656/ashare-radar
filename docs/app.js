@@ -3,6 +3,7 @@
 
   const LATEST_URL = new URLSearchParams(location.search).get("data") || "./data/latest.json";
   const KLINE_URL = "./data/klines.json";
+  const UNIVERSE_URL = "./data/universe.json";
   const ARCHIVE_INDEX_URL = "./data/archive/index.json";
   const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -22,9 +23,10 @@
     archiveDay: "",
     board: "all",
     query: "",
-    sortKey: "score",
-    sortDir: -1,
+    sortKey: "close",
+    sortDir: 1,
     openSymbol: null,
+    universe: null,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -147,11 +149,11 @@
     return rows;
   }
 
-  function rowHtml(item, idx) {
+  function rowHtml(item, idx, isTop) {
     return `
       <td class="col-rank">${idx + 1}</td>
       <td class="col-name">
-        ${idx === 0 ? '<span class="badge-top1">TOP 1</span>' : ""}
+        ${isTop ? '<span class="badge-top1">TOP 1</span>' : ""}
         <span class="name">${esc(item.name)}</span>
         <span class="code">${esc(item.symbol)}</span>
         <span class="board-tag">${esc(item.board)}</span>
@@ -175,19 +177,30 @@
     const empty = $("#empty-state");
     empty.hidden = rows.length > 0;
     if (!rows.length) {
-      empty.textContent = state.payload ? "没有符合当前筛选的候选。" : "正在加载…";
+      const analyzing = !$("#stock-analysis")?.hidden;
+      empty.textContent = !state.payload
+        ? "正在加载…"
+        : analyzing
+          ? "该股不在今日候选榜中，技术分析见上方。"
+          : "没有符合当前筛选的候选。";
       return;
     }
 
+    const topSymbol = (state.payload?.signals || []).reduce((best, s) => {
+      const v = num(s.score);
+      return v !== null && (best === null || v > best.v) ? { sym: String(s.symbol), v } : best;
+    }, null)?.sym;
+
     const frag = document.createDocumentFragment();
     rows.forEach((item, idx) => {
+      const isTop = String(item.symbol) === topSymbol;
       const tr = document.createElement("tr");
-      tr.className = `row-main${idx === 0 ? " is-top1" : ""}`;
+      tr.className = `row-main${isTop ? " is-top1" : ""}`;
       tr.dataset.symbol = String(item.symbol);
       tr.tabIndex = idx === 0 ? 0 : -1;
       tr.setAttribute("role", "button");
       tr.setAttribute("aria-expanded", "false");
-      tr.innerHTML = rowHtml(item, idx);
+      tr.innerHTML = rowHtml(item, idx, isTop);
       frag.append(tr);
     });
     body.append(frag);
@@ -485,6 +498,112 @@
     });
   }
 
+  /* ---------------- 个股分析（搜索任意股票） ---------------- */
+
+  function hideAnalysis() {
+    const panel = $("#stock-analysis");
+    if (panel) panel.hidden = true;
+  }
+
+  function findStock(query) {
+    const stocks = state.universe?.stocks;
+    if (!stocks) return null;
+    const q = query.trim();
+    if (!q) return null;
+    if (/^\d{6}$/.test(q)) {
+      return stocks[q] ? { symbol: q, s: stocks[q] } : null;
+    }
+    const hits = Object.entries(stocks).filter(([, v]) => v.name === q);
+    return hits.length === 1 ? { symbol: hits[0][0], s: hits[0][1] } : null;
+  }
+
+  function checksFor(s, p) {
+    const pct = (v) => `${(v * 100).toFixed(1)}%`;
+    return [
+      ["收盘 > MA20 > MA60", s.close > s.ma20 && s.ma20 > s.ma60, `${s.close} / ${s.ma20} / ${s.ma60}`],
+      [`MA20 近 ${p.ma20_slope_days} 日上行`, s.ma20 > s.ma20prev, `${s.ma20prev} → ${s.ma20}`],
+      [`60 日涨幅 ≥ ${pct(p.min_gain_60)}`, s.gain60 >= p.min_gain_60, pct(s.gain60)],
+      [`偏离 MA20 ≤ ${pct(p.max_ext_pct)}`, s.ext <= p.max_ext_pct, pct(s.ext)],
+      [`趋势效率 ER ≥ ${p.min_efficiency}`, s.er >= p.min_efficiency, s.er.toFixed(3)],
+      [`日涨跌 p95 < ${pct(p.max_daily_p95)}`, s.p95 < p.max_daily_p95, pct(s.p95)],
+      [`60 日最大回撤 > -${pct(p.max_drawdown)}`, s.mdd > -p.max_drawdown, pct(s.mdd)],
+      [`近 20 日涨停 ≤ ${p.max_limit_ups} 次`, s.lim <= p.max_limit_ups, `${s.lim} 次`],
+    ];
+  }
+
+  function showAnalysis(symbol, s) {
+    const panel = $("#stock-analysis");
+    if (!panel) return;
+    const p = state.universe?.params || {};
+    const checks = checksFor(s, p);
+    const passed = checks.filter((c) => c[1]).length;
+    const qualified = Boolean(s.q);
+
+    $("#an-name").textContent = s.name;
+    $("#an-code").textContent = symbol;
+    $("#an-board").textContent = s.board || "—";
+    $("#an-asof").textContent = `截至 ${prettyDate(state.universe?.as_of)} 收盘（非盘中实时）`;
+    $("#an-close").textContent = Number(s.close).toFixed(2);
+
+    const verdict = $("#an-verdict");
+    verdict.className = `verdict ${qualified ? "pass" : "fail"}`;
+    verdict.textContent = qualified ? "符合清晰上升趋势" : `不符合（${passed}/8 项）`;
+
+    const list = $("#an-checks");
+    list.replaceChildren();
+    checks.forEach(([label, ok, value]) => {
+      const li = document.createElement("li");
+      const mark = document.createElement("span");
+      mark.className = `ck ${ok ? "ok" : "no"}`;
+      mark.textContent = ok ? "✓" : "✕";
+      const name = document.createElement("span");
+      name.textContent = label;
+      const val = document.createElement("span");
+      val.className = "cv";
+      val.textContent = value;
+      li.append(mark, name, val);
+      list.append(li);
+    });
+
+    const plan = $("#an-plan");
+    const note = $("#an-note");
+    if (qualified && s.entry !== null) {
+      plan.innerHTML = `<dl>
+        <dt>买入参考价</dt><dd class="up">${Number(s.entry).toFixed(2)}</dd>
+        <dt>止损价</dt><dd class="down">${Number(s.stop).toFixed(2)}</dd>
+        <dt>止盈价</dt><dd>${Number(s.target).toFixed(2)}（1:3）</dd>
+      </dl>`;
+      note.textContent =
+        `依据：买入取当日收盘（趋势确认）；止损 = MA20 ${Number(s.ma20).toFixed(2)} × 0.97，` +
+        `收盘跌破 MA20 即趋势结构破坏；止盈按 1:3 风险收益比推算。` +
+        `该股同时出现在今日候选榜中。`;
+    } else if (qualified) {
+      plan.innerHTML = `<p class="an-note">符合趋势，但今日买入价尚未生成。</p>`;
+      note.textContent = "";
+    } else {
+      plan.innerHTML = `<p class="an-note">当前不满足清晰上升趋势，暂不给出买卖点。</p>`;
+      note.textContent =
+        "八项条件必须全部成立才构成趋势确认；上表中标 ✕ 的项目即为当前不成立的原因。" +
+        "在条件补齐前给出买点等于逆势交易。";
+    }
+
+    panel.hidden = false;
+  }
+
+  async function updateAnalysis() {
+    const q = state.query.trim();
+    if (!q || state.archiveDay) {
+      hideAnalysis();
+      return;
+    }
+    if (!state.universe) {
+      state.universe = await fetchJson(UNIVERSE_URL).catch(() => ({ stocks: {}, params: {} }));
+    }
+    const hit = findStock(q);
+    if (hit) showAnalysis(hit.symbol, hit.s);
+    else hideAnalysis();
+  }
+
   /* ---------------- 事件 ---------------- */
 
   function bindEvents() {
@@ -534,8 +653,10 @@
       renderRows();
     });
 
-    $("#search").addEventListener("input", (e) => {
+    $("#search").addEventListener("input", async (e) => {
       state.query = e.target.value;
+      renderRows();
+      await updateAnalysis();
       renderRows();
     });
     $("#board").addEventListener("change", (e) => {
@@ -556,6 +677,7 @@
       }
       state.archiveDay = day;
       $("#back-latest").hidden = false;
+      hideAnalysis();
       await loadData(`./data/archive/${day}.json`);
     });
     $("#back-latest").addEventListener("click", async () => {

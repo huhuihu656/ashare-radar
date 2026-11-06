@@ -202,6 +202,11 @@ def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) 
         result = result.reindex(columns=columns).sort_values(["signal", "sort_score"], ascending=[True, False])
     result.to_csv(report_dir / "signals.csv", index=False, encoding="utf-8-sig")
     (report_dir / "signals.json").write_text(json.dumps(signals, ensure_ascii=False, indent=2), encoding="utf-8")
+    # 全市场名单：供网页搜索任意个股 + 导出全市场技术指标
+    (report_dir / "universe.json").write_text(
+        json.dumps([{"symbol": str(r.symbol), "name": str(r["name"]), "board": str(r["board"])}
+                    for r in records], ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8")
     metadata = {
         "scan_time": _now_cn().isoformat(timespec="seconds"),
         "scan_day": day,
