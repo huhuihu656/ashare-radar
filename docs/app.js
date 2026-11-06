@@ -423,9 +423,9 @@
           <div class="detail-meta">
             <h4>买卖点</h4>
             <dl class="plan">
-              <dt>买入参考价</dt><dd>${num(item.entry_price) === null ? "—" : item.entry_price}（${esc(item.entry_state || "—")}）</dd>
-              <dt>止损价</dt><dd>${num(item.stop_loss) === null ? "—" : item.stop_loss}</dd>
-              <dt>止盈价</dt><dd>${num(item.take_profit) === null ? "—" : item.take_profit}（1:${esc(item.risk_reward ?? "—")}）</dd>
+              <dt>买入参考价</dt><dd>${num(item.entry_price) === null ? "—" : esc(item.entry_price)}（${esc(item.entry_state || "—")}）</dd>
+              <dt>止损价</dt><dd>${num(item.stop_loss) === null ? "—" : esc(item.stop_loss)}</dd>
+              <dt>止盈价</dt><dd>${num(item.take_profit) === null ? "—" : esc(item.take_profit)}（1:${esc(item.risk_reward ?? "—")}）</dd>
               <dt>计划依据</dt><dd>${esc(item.plan_note || "—")}</dd>
             </dl>
             <h4>指标</h4>
@@ -435,12 +435,12 @@
               <dt>最大回撤</dt><dd class="down">${fmtPct(item.mdd_pct)}</dd>
               <dt>距 MA20</dt><dd>${fmtPct(item.ext_pct)}</dd>
               <dt>MA20 / MA60</dt><dd>${esc(item.ma20)} / ${esc(item.ma60)}</dd>
-              <dt>近20日涨停</dt><dd>${num(item.limit_ups) ?? "—"} 次</dd>
+              <dt>近20日涨停</dt><dd>${num(item.limit_ups) === null ? "—" : esc(item.limit_ups)} 次</dd>
               <dt>结构抬高</dt><dd>低点 ${item.higher_lows ? "是" : "否"} / 高点 ${item.higher_highs ? "是" : "否"}</dd>
             </dl>
             <h4>仓位与资金</h4>
             <dl>
-              <dt>参考仓位</dt><dd>${num(item.position_pct) ?? "—"}% · ${esc(item.position_tier || "—")}</dd>
+              <dt>参考仓位</dt><dd>${num(item.position_pct) === null ? "—" : esc(item.position_pct)}% · ${esc(item.position_tier || "—")}</dd>
               <dt>仓位依据</dt><dd>${esc(item.position_reason || "—")}</dd>
               <dt>主力资金</dt><dd>${mf === null ? "—" : `${mf > 0 ? "+" : ""}${(mf / 10000).toFixed(2)} 亿`}</dd>
             </dl>
@@ -577,7 +577,7 @@
       const days = Array.isArray(idx.days) ? idx.days : [];
       sel.innerHTML =
         '<option value="">最新</option>' +
-        days.map((d) => `<option value="${esc(d)}">${prettyDate(d)}</option>`).join("");
+        days.map((d) => `<option value="${esc(d)}">${esc(prettyDate(d))}</option>`).join("");
     } catch {
       /* 索引缺失时保持只有「最新」 */
     }
