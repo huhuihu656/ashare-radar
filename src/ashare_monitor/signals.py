@@ -915,7 +915,7 @@ def uptrend_metrics(frame: pd.DataFrame, cfg: ClearUptrendConfig,
     ret = np.diff(seg) / seg[:-1]
     run_max = np.maximum.accumulate(seg)
     block = max(1, w // 3)
-    blocks = [seg[i * block:(i + 1) * block] for i in range(3)]
+    blocks = [seg[1 + i * block:1 + (i + 1) * block] for i in range(3)]
     lows = [float(b.min()) for b in blocks]
     highs = [float(b.max()) for b in blocks]
     return {
@@ -931,6 +931,57 @@ def uptrend_metrics(frame: pd.DataFrame, cfg: ClearUptrendConfig,
         "limit_ups": int((ret[-cfg.limitup_lookback:] >= limit_pct - cfg.limit_tolerance).sum()),
         "higher_lows": all(lows[i + 1] > lows[i] for i in range(len(lows) - 1)),
         "higher_highs": all(highs[i + 1] > highs[i] for i in range(len(highs) - 1)),
+    }
+
+
+def clear_uptrend(frame: pd.DataFrame, cfg: ClearUptrendConfig, risk: RiskConfig,
+                  limit_pct: float = 0.10) -> dict | None:
+    """清晰上升趋势：趋势结构 + K 线规整度 + 非打板情绪，三者同时成立。"""
+    if not cfg.enabled:
+        return None
+    m = uptrend_metrics(frame, cfg, limit_pct)
+    if m is None:
+        return None
+    # 趋势
+    if not (m["px"] > m["ma20"] > m["ma60"]):
+        return None
+    if m["ma20"] <= m["ma20_prev"]:
+        return None
+    if m["gain_60"] < cfg.min_gain_60:
+        return None
+    if m["ext"] > cfg.max_ext_pct:
+        return None
+    # K 线老实
+    if m["er"] < cfg.min_efficiency:
+        return None
+    if m["p95"] >= cfg.max_daily_p95:
+        return None
+    if m["mdd"] <= -cfg.max_drawdown:
+        return None
+    # 非情绪驱动
+    if m["limit_ups"] > cfg.max_limit_ups:
+        return None
+    if cfg.require_higher_swings and not (m["higher_lows"] and m["higher_highs"]):
+        return None
+    if not position_ok(frame, risk):
+        return None
+    score = round(100 * min(1.0,
+                            0.35 * min(m["er"] / 0.40, 1.0) +
+                            0.25 * min(m["gain_60"] / 0.40, 1.0) +
+                            0.20 * min(-m["mdd"] / 0.20, 1.0) +
+                            0.20 * (1 - m["limit_ups"] / max(1, cfg.max_limit_ups + 1))), 1)
+    last = frame.iloc[-1]
+    return {
+        **_base_row(frame), "signal": "清晰上升趋势", "score": score,
+        "er": round(m["er"], 3),
+        "gain_60_pct": round(m["gain_60"] * 100, 2),
+        "mdd_pct": round(m["mdd"] * 100, 2),
+        "ext_pct": round(m["ext"] * 100, 2),
+        "ma20": round(m["ma20"], 3), "ma60": round(m["ma60"], 3),
+        "limit_ups": m["limit_ups"],
+        "higher_lows": bool(m["higher_lows"]), "higher_highs": bool(m["higher_highs"]),
+        "today_high": round(float(last.high), 3), "today_low": round(float(last.low), 3),
+        "note": "价格沿上行的MA20/MA60规整抬升，近20日无连续打板；收盘跌破MA20即趋势结构破坏",
     }
 
 
