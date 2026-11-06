@@ -1,4 +1,4 @@
-/* 势能雷达 Service Worker —— 离线/弱网兜底（v2）。
+/* 势能雷达 Service Worker —— 离线/弱网兜底（v4）。
 
 策略（v2 修复 v1 的"老用户长期吃旧前端"问题）：
   - index.html：network-first，网络失败才回退缓存 —— 保证每次打开都是
@@ -8,13 +8,13 @@
   - 数据文件：network-first，失败回退缓存（旧数据优于白屏）。
   - 缓存名带版本，activate 时清掉所有旧版本缓存。
 */
-const CACHE = "ashare-radar-v3";
+const CACHE = "ashare-radar-v4";
 const STATIC_ASSETS = ["./styles.css", "./app.js", "./sw.js"];
 const HTML_PATHS = ["./", "./index.html"];
 const DATA = [
   "./data/latest.json",
   "./data/klines.json",
-  "./data/tracked.json",
+  "./data/archive/index.json",
 ];
 
 self.addEventListener("install", (event) => {
