@@ -254,7 +254,10 @@ def test_accepts_clean_uptrend_and_exposes_fields() -> None:
 def test_rejects_below_ma60() -> None:
     close = uptrend()
     close[-1] = close[-1] * 0.60      # 收盘砸到 MA20/MA60 之下
-    assert_rejected_by(close, "px", lambda v: v < 8.0)
+    m = uptrend_metrics(build(close), CFG, 0.10)
+    assert m is not None
+    assert m["px"] < m["ma60"], "反例没有真的跌破 MA60"
+    assert clear_uptrend(build(close), CFG, RISK) is None
 
 
 def test_rejects_ma20_not_rising() -> None:
@@ -512,6 +515,10 @@ def scan_frame(frame: pd.DataFrame, uptrend_cfg: ClearUptrendConfig, risk: RiskC
 
 并在 `ScanConfig` 中删除 `deep_lookback_days`。
 
+**同时**删除 `config.yaml` 与 `config.example.yaml` 中 `deep_lookback_days` 那两行
+（该键 + 其续行注释）。不做这一步，`ScanConfig(**raw.get("scan", {}))` 会在
+Task 3 与 Task 4 之间抛 `TypeError: unexpected keyword argument 'deep_lookback_days'`。
+
 - [ ] **Step 6: 跑测试**
 
 Run: `.venv/Scripts/python.exe -m pytest tests/test_clear_uptrend.py -q -p no:cacheprovider`
@@ -661,52 +668,7 @@ clear_uptrend:
 
 > `notify` 块：以当前 `config.yaml` 里已有的 `notify:` 原文为准，原样保留；上面为简洁未展开。
 
-- [ ] **Step 8: 跑测试与导入检查**
-
-Run: `.venv/Scripts/python.exe -m pytest tests/ -q -p no:cacheprovider`
-Expected: PASS（只剩 `test_clear_uptrend.py` 与 `test_data_adjust.py`）
-
-Run: `.venv/Scripts/python.exe -c "import sys;sys.path.insert(0,'src');from ashare_monitor.config import load;c=load('config.yaml');print(c.clear_uptrend)"`
-Expected: 打印配置对象
-
-- [ ] **Step 9: 提交**
-
-```bash
-git add -A src/ashare_monitor tests config.yaml config.example.yaml
-git commit -m "refactor: 删除 13 个形态检测器与配置，只保留清晰上升趋势"
-```
-
----
-
-### Task 5: 管线与导出收敛
-
-**Files:**
-- Modify: `scripts/refresh_signals.py`
-- Modify: `scripts/export_dashboard.py`
-- Modify: `src/ashare_monitor/cli.py`
-
-**Interfaces:**
-- `SIGNAL_COUNT_KEYS` 变为单键
-- `refresh_signals.py` 直接调用 `clear_uptrend`
-
-- [ ] **Step 1: `export_dashboard.py` 收敛计数键**
-
-把 `SIGNAL_COUNT_KEYS` 整块替换为：
-
-```python
-SIGNAL_COUNT_KEYS = {
-    "清晰上升趋势": "clear_uptrend",
-}
-```
-
-删除 `build_payload` 中的：
-
-```python
-    support = counts["support_retest"]
-    breakout = counts["sideways_breakout"]
-```
-
-- [ ] **Step 2: `refresh_signals.py` 收敛检测器注册**
+- [ ] **Step 8: `refresh_signals.py` 收敛检测器注册**
 
 删除 `NAME2KEY`、`DETECTORS` 两个字典，import 改为：
 
@@ -757,7 +719,52 @@ LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北
                                    if s.get("signal") == "清晰上升趋势")}
 ```
 
-- [ ] **Step 3: `cli.py` 收敛 CSV 列**
+- [ ] **Step 9: 跑测试与导入检查**
+
+Run: `.venv/Scripts/python.exe -m pytest tests/ -q -p no:cacheprovider`
+Expected: PASS（只剩 `test_clear_uptrend.py` 与 `test_data_adjust.py`）
+
+Run: `.venv/Scripts/python.exe -c "import sys;sys.path.insert(0,'src');from ashare_monitor.config import load;c=load('config.yaml');print(c.clear_uptrend)"`
+Expected: 打印配置对象
+
+- [ ] **Step 10: 提交**
+
+```bash
+git add -A src/ashare_monitor tests config.yaml config.example.yaml scripts/refresh_signals.py
+git commit -m "refactor: 删除 13 个形态检测器与配置，只保留清晰上升趋势"
+```
+
+---
+
+### Task 5: 管线与导出收敛
+
+**Files:**
+- Modify: `scripts/refresh_signals.py`
+- Modify: `scripts/export_dashboard.py`
+- Modify: `src/ashare_monitor/cli.py`
+
+**Interfaces:**
+- `SIGNAL_COUNT_KEYS` 变为单键
+- `refresh_signals.py` 直接调用 `clear_uptrend`
+
+- [ ] **Step 1: `export_dashboard.py` 收敛计数键**
+
+把 `SIGNAL_COUNT_KEYS` 整块替换为：
+
+```python
+SIGNAL_COUNT_KEYS = {
+    "清晰上升趋势": "clear_uptrend",
+}
+```
+
+删除 `build_payload` 中的：
+
+```python
+    support = counts["support_retest"]
+    breakout = counts["sideways_breakout"]
+```
+
+- [ ] **Step 2: `cli.py` 收敛 CSV 列**
 
 把 `columns = [...]` 整块替换为：
 
@@ -770,7 +777,7 @@ LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北
                "limit_ups", "higher_lows", "higher_highs", "today_high", "today_low"]
 ```
 
-- [ ] **Step 4: 语法与导入检查**
+- [ ] **Step 3: 语法与导入检查**
 
 ```bash
 .venv/Scripts/python.exe -c "import ast;[ast.parse(open(f,encoding='utf-8').read()) for f in ('scripts/refresh_signals.py','scripts/export_dashboard.py','src/ashare_monitor/cli.py')];print('syntax ok')"
@@ -779,10 +786,10 @@ LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北
 
 Expected: `syntax ok` / `imports ok {'清晰上升趋势': 'clear_uptrend'}`
 
-- [ ] **Step 5: 提交**
+- [ ] **Step 4: 提交**
 
 ```bash
-git add scripts/refresh_signals.py scripts/export_dashboard.py src/ashare_monitor/cli.py
+git add scripts/export_dashboard.py src/ashare_monitor/cli.py
 git commit -m "refactor: 管线与导出只保留单一信号"
 ```
 
@@ -1100,7 +1107,7 @@ for f in sorted(glob.glob('data/cache/*.csv')):
     df=df[~df.index.duplicated(keep='last')].dropna(subset=['open','high','low','close','volume'])
     if len(df)<150 or df.index[-1].strftime('%Y%m%d')<'20261001': continue
     rows=scan_frame(df.tail(cfg.scan.lookback_days), cfg.clear_uptrend, cfg.risk, LP[board(sym)])
-    hits += [r['close'] and sym for r in rows]
+    hits += [sym for _ in rows]
 print('hits', len(hits)); print(sorted(hits))
 "
 ```
