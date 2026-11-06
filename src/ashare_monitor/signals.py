@@ -8,6 +8,7 @@ from .config import (
     BoxBreakoutConfig,
     BreakMa20Config,
     BreakoutConfig,
+    ClearUptrendConfig,
     DeepBaseConfig,
     DragonConfig,
     EneConfig,
@@ -882,6 +883,55 @@ def deep_base_retest(frame: pd.DataFrame, cfg: DeepBaseConfig, risk: RiskConfig)
             "note": "前期深跌后底部与高点持续抬高，现突破前高且回踩未破前高；跌破回踩低点即形态失效",
         }
     return None
+
+
+def uptrend_metrics(frame: pd.DataFrame, cfg: ClearUptrendConfig,
+                    limit_pct: float) -> dict | None:
+    """计算「清晰上升趋势」判定所需的全部原始指标，不做任何阈值判断。
+
+    拆成独立函数是为了让测试能逐项断言「这条反例到底违反了哪个指标」，
+    避免反例因为别的原因被拒而让测试变成空转。
+    """
+    if len(frame) < cfg.min_history_days:
+        return None
+    close = frame.close.astype(float)
+    c = close.to_numpy()
+    w = cfg.window
+    if len(c) < w + 1:
+        return None
+    ma20 = close.rolling(20).mean()
+    ma60 = close.rolling(60).mean()
+    if not (np.isfinite(ma20.iloc[-1]) and np.isfinite(ma60.iloc[-1])):
+        return None
+    px = float(c[-1])
+    m20 = float(ma20.iloc[-1])
+    m60 = float(ma60.iloc[-1])
+    if not (px > 0 and m20 > 0 and m60 > 0):
+        return None
+    seg = c[-(w + 1):]
+    if seg[0] <= 0:
+        return None
+    path = float(np.abs(np.diff(seg)).sum())
+    ret = np.diff(seg) / seg[:-1]
+    run_max = np.maximum.accumulate(seg)
+    block = max(1, w // 3)
+    blocks = [seg[i * block:(i + 1) * block] for i in range(3)]
+    lows = [float(b.min()) for b in blocks]
+    highs = [float(b.max()) for b in blocks]
+    return {
+        "px": px,
+        "ma20": m20,
+        "ma60": m60,
+        "ma20_prev": float(ma20.iloc[-1 - cfg.ma20_slope_days]),
+        "gain_60": float(seg[-1] / seg[0] - 1),
+        "ext": float(px / m20 - 1),
+        "er": float(abs(seg[-1] - seg[0]) / path) if path > 0 else 0.0,
+        "p95": float(np.percentile(np.abs(ret), 95)) if ret.size else 1.0,
+        "mdd": float(np.min(seg / run_max - 1)),
+        "limit_ups": int((ret[-cfg.limitup_lookback:] >= limit_pct - cfg.limit_tolerance).sum()),
+        "higher_lows": all(lows[i + 1] > lows[i] for i in range(len(lows) - 1)),
+        "higher_highs": all(highs[i + 1] > highs[i] for i in range(len(highs) - 1)),
+    }
 
 
 def position_strategy(row: dict, market_env: str = "未知") -> dict:
