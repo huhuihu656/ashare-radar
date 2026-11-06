@@ -1,4 +1,7 @@
-"""把最新搜到的达标股（超跌反转 / 恰好突破20日线 / 布林下轨探底针）合并进 docs/data/latest.json 并发布。"""
+"""把最新搜到的「清晰上升趋势」候选合并进 docs/data/latest.json 并重建 K 线。
+
+只做 append-only：已存在的 (symbol, signal) 不会重复写入，也不会改写其他信号的行。
+"""
 import sys
 import json
 from datetime import datetime, timezone
@@ -10,33 +13,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from ashare_monitor.config import load  # noqa: E402
-from ashare_monitor.signals import (  # noqa: E402
-    boll_lower_pin, break_ma20, deep_base_retest, ene_lower_touch, entry_exit_plan,
-    oversold_reversal, position_strategy,
-)
+from ashare_monitor.signals import clear_uptrend, entry_exit_plan, position_strategy  # noqa: E402
 from export_dashboard import build_klines  # noqa: E402
 
 cfg = load(ROOT / "config.yaml")
-NAME2KEY = {
-    "回踩前期起涨位": "support_retest", "横盘后放量突破": "sideways_breakout",
-    "箱体突破红肥绿瘦": "box_breakout", "阳包阴反包启动": "bullish_engulfing",
-    "涨停跳空缺口共振": "limitup_gap", "龙回头二次启动": "dragon_pullback",
-    "均线多头发散": "ma_divergence", "低位仙人指路": "low_shadow",
-    "超跌反转": "oversold_reversal", "恰好突破20日线": "break_ma20",
-    "布林下轨探底针": "boll_pin",
-    "ENE下轨回踩": "ene_pullback",
-    "深跌筑底回踩前高": "deep_base",
-}
-# (检测器, 配置名, 是否使用长窗口)。长窗口标记必须与 cli.py 的 deep_frame 口径一致：
-# 本脚本读的是整份缓存（约 448 根），若不切窗口，旧检测器会比云端（tail(320)）
-# 多认出信号，回填就会注入云端不会产出的候选。
-DETECTORS = {
-    "超跌反转": (oversold_reversal, "oversold_reversal", False),
-    "恰好突破20日线": (break_ma20, "break_ma20", False),
-    "布林下轨探底针": (boll_lower_pin, "boll_pin", False),
-    "ENE下轨回踩": (ene_lower_touch, "ene_pullback", False),
-    "深跌筑底回踩前高": (deep_base_retest, "deep_base", True),
-}
+SIGNAL_NAME = "清晰上升趋势"
+COUNT_KEY = "clear_uptrend"
+LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
 
 
 def board_of(sym: str) -> str:
@@ -90,32 +73,27 @@ def main() -> int:
             continue
         if len(frame) < 60 or frame.index[-1].strftime("%Y%m%d") < "20260901":
             continue
-        short = frame.tail(cfg.scan.lookback_days)
-        for sig_name, (det, cfg_key, deep_window) in DETECTORS.items():
-            row = det(frame if deep_window else short, getattr(cfg, cfg_key), cfg.risk)
-            if not row:
-                continue
-            key = (sym, row["signal"])
-            if key in existing_keys:
-                continue
-            row.update({"symbol": sym, "name": names.get(sym, sym), "board": board_of(sym),
-                        "market_env": env, "scan_time": scan_time,
-                        "news_count": 0, "news_total": 0, "top_headline": ""})
-            row.update(position_strategy(row, env))
-            plan = entry_exit_plan(row)
-            if not plan:
-                continue
-            row.update(plan)
-            row["sort_score"] = row.get("score")
-            new_rows.append(row)
-            existing_keys.add(key)
+        board = board_of(sym)
+        row = clear_uptrend(frame.tail(cfg.scan.lookback_days), cfg.clear_uptrend, cfg.risk,
+                            LIMIT_PCT_BY_BOARD.get(board, 0.10))
+        if not row:
+            continue
+        key = (sym, row["signal"])
+        if key in existing_keys:
+            continue
+        row.update({"symbol": sym, "name": names.get(sym, sym), "board": board,
+                    "market_env": env, "scan_time": scan_time})
+        row.update(position_strategy(row, env))
+        plan = entry_exit_plan(row)
+        if not plan:
+            continue
+        row.update(plan)
+        row["sort_score"] = row.get("score")
+        new_rows.append(row)
+        existing_keys.add(key)
 
     latest["signals"] = list(latest.get("signals", [])) + new_rows
-    counts = {v: 0 for v in NAME2KEY.values()}
-    for s in latest["signals"]:
-        k = NAME2KEY.get(s.get("signal"))
-        if k:
-            counts[k] += 1
+    counts = {COUNT_KEY: sum(1 for s in latest["signals"] if s.get("signal") == SIGNAL_NAME)}
     latest["signal_counts"] = counts
     latest["generated_at"] = scan_time
     latest["published_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")

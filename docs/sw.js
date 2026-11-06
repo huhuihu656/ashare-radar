@@ -8,12 +8,11 @@
   - 数据文件：network-first，失败回退缓存（旧数据优于白屏）。
   - 缓存名带版本，activate 时清掉所有旧版本缓存。
 */
-const CACHE = "ashare-radar-v2";
+const CACHE = "ashare-radar-v3";
 const STATIC_ASSETS = ["./styles.css", "./app.js", "./sw.js"];
 const HTML_PATHS = ["./", "./index.html"];
 const DATA = [
   "./data/latest.json",
-  "./data/mainline.json",
   "./data/klines.json",
   "./data/tracked.json",
 ];

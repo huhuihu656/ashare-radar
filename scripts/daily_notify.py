@@ -27,18 +27,6 @@ def main() -> int:
     counts = payload.get("signal_counts") or {}
     as_of = payload.get("as_of", "?")
 
-    # 主线板块（若有）
-    mainline_path = ROOT / "docs" / "data" / "mainline.json"
-    mainline = ""
-    if mainline_path.exists():
-        try:
-            ml = json.loads(mainline_path.read_text(encoding="utf-8"))
-            sectors = [s.get("industry", "") for s in ml.get("top_sectors", [])[:3]]
-            if sectors:
-                mainline = f"\n\n**本月主线**：{' / '.join(sectors)}"
-        except Exception:
-            pass
-
     # Top 信号（按 sort_score）
     top = sorted(signals, key=lambda s: -(s.get("sort_score") or 0))[:5]
     lines = []
@@ -53,7 +41,7 @@ def main() -> int:
     title = f"势能雷达 {as_of} 收盘扫描：{len(signals)} 条信号"
     desp = (
         f"覆盖 {payload.get('universe_count', '?')} 只 · 成功率 {round(float(payload.get('coverage') or 0) * 100, 1)}%\n\n"
-        f"**今日候选 Top**：\n{top_text}{mainline}\n\n"
+        f"**今日候选 Top**：\n{top_text}\n\n"
         f"[查看完整信号]({SITE})"
     )
     ok = send(title, desp)

@@ -112,12 +112,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ---- 第一批：核心数据立即提交推送（保证按时上线）----
-$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/archive
+$status = git status --porcelain -- docs/data/latest.json docs/data/klines.json docs/data/archive
 if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git status 失败"; exit 2 }
 if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "[publish] 核心数据无变化，跳过提交。"
 } else {
-    git add -- docs/data/latest.json docs/data/klines.json docs/data/mainline.json docs/data/archive docs/data/archive
+    git add -- docs/data/latest.json docs/data/klines.json docs/data/archive docs/data/archive
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git add 失败"; exit 2 }
     git commit -m "docs: 更新 $(Get-Date -Format 'yyyy-MM-dd') 收盘扫描结果" --quiet
     if ($LASTEXITCODE -ne 0) { Write-Error -ErrorAction Continue "git commit 失败"; exit 2 }

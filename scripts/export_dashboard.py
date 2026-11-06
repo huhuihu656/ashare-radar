@@ -50,19 +50,7 @@ def coverage_of(run: dict[str, Any]) -> float:
 
 
 SIGNAL_COUNT_KEYS = {
-    "回踩前期起涨位": "support_retest",
-    "横盘后放量突破": "sideways_breakout",
-    "箱体突破红肥绿瘦": "box_breakout",
-    "阳包阴反包启动": "bullish_engulfing",
-    "涨停跳空缺口共振": "limitup_gap",
-    "龙回头二次启动": "dragon_pullback",
-    "均线多头发散": "ma_divergence",
-    "低位仙人指路": "low_shadow",
-    "超跌反转": "oversold_reversal",
-    "恰好突破20日线": "break_ma20",
-    "布林下轨探底针": "boll_pin",
-    "ENE下轨回踩": "ene_pullback",
-    "深跌筑底回踩前高": "deep_base",
+    "清晰上升趋势": "clear_uptrend",
 }
 
 
@@ -72,8 +60,6 @@ def build_payload(report_dir: Path, signals: list[dict[str, Any]], run: dict[str
         key = SIGNAL_COUNT_KEYS.get(item.get("signal"))
         if key:
             counts[key] += 1
-    support = counts["support_retest"]
-    breakout = counts["sideways_breakout"]
     return {
         "schema_version": SCHEMA_VERSION,
         "as_of": report_dir.name,

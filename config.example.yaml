@@ -1,141 +1,35 @@
-# 研究预警扫描器配置。所有阈值都可调；免费行情源仅提供量价数据，
-# "资金进入"均为量价代理。封单金额、逐笔资金流等需要授权数据源。
-
+# 研究预警扫描器配置。免费行情源仅提供量价数据，"资金进入"均为量价代理。
 scan:
   workers: 8
   lookback_days: 320
-  deep_lookback_days: 448    # 长窗口信号（深跌筑底回踩前高）的回看长度；
-                             # 必须 >= lookback_days 且不超过缓存实际深度
   min_history_days: 150
   exclude_st: true
   include_boards: ["主板", "创业板", "科创板", "北交所"]
   cache_dir: "data/cache"
   output_dir: "data/reports"
 
-# 原有信号
-support_retest:
-  enabled: true
-  min_prior_rally_pct: 0.15
-  rally_min_days: 15
-  rally_max_days: 90
-  approach_band_above_pct: 0.06
-  invalidation_below_pct: 0.03
-  ma_fast: 20
-  ma_slow: 60
-
-breakout:
-  enabled: true
-  consolidation_days: 20
-  max_range_pct: 0.12
-  max_atr_pct: 0.035
-  volume_baseline_days: 20
-  min_volume_ratio: 1.8
-  breakout_lookback_days: 20
-  min_close_position: 0.65
-
-# 共性风控（位置/量能/大盘环境）——所有新形态统一生效
+# 共性风控：6 个月涨幅上限（本信号仍在使用）。低位分位与量能门槛已随旧形态删除。
 risk:
   enabled: true
   position_lookback_days: 120     # 6个月≈120交易日
   max_position_gain_pct: 1.0      # 位置错误：6个月涨幅>100% 形态失效
-  low_zone_pct: 0.45              # 低位判定：120日位置分位上限
-  min_volume_ratio: 1.5           # 量能缺失：量比<1.5 视为无效
-  early_trend_max_gain_pct: 0.60  # "趋势初期"的60日涨幅上限
-  weak_market_skip_signals: false # 大盘单边下跌时是否丢弃全部信号
+  weak_market_skip_signals: false
   weak_market_ma: 60
 
-# 一、启动信号
-box_breakout:            # 箱体突破 + 红肥绿瘦
-  enabled: true
-  box_days: 40
-  box_max_range_pct: 0.25
-  converge_days: 5
-  converge_ratio: 0.6
-  red_green_vol_ratio: 1.3
-  min_breakout_vol_ratio: 2.0     # 突破量 >= 5日均量2倍
-  vol_ma_days: 5
 
-bullish_engulfing:       # 阳包阴反包启动
+# 清晰上升趋势（唯一信号）
+# 趋势结构 + K 线规整度 + 非打板情绪，三组条件同时成立才入选。
+clear_uptrend:
   enabled: true
-  max_pullback_ratio: 0.30        # 阴线回调 <= 前两日涨幅的30%
-  pullback_vol_ratio: 0.8         # 阴线量 < 近5日均量80%（缩量）
-  engulf_min_vol_ratio: 1.2       # 反包量 >= 阴线量1.2倍
-  vol_ma_days: 5
-
-limitup_gap:             # 涨停 + 跳空缺口共振
-  enabled: true
-  lookback_days: 20
-  gap_hold_days: 3                 # 缺口3日内未回补
-  limit_tolerance_pct: 0.003
-  pressure_lookback_days: 60       # 涨停需突破前60日高点
-  pullback_vol_ratio: 0.5          # 回调量 < 涨停日50%
-
-# 二、趋势延续
-dragon_pullback:         # 龙回头二次启动
-  enabled: true
-  wave_lookback_days: 60
-  min_first_wave_pct: 0.20        # 首波涨幅 >= 20%
-  max_pullback_pct: 0.30          # 回调 <= 首波30%
-  pullback_vol_ratio: 0.30        # 回调量 < 首波均量30%
-  pullback_ma_tolerance: 0.05     # 回踩20/30日线容差
-  min_second_vol_ratio: 2.3       # 二次启动量比 >= 2.3
-  prior_high_tolerance: 0.98      # 站稳前高（收盘 >= 前高98%）
-  vol_ma_days: 20
-
-ma_divergence:           # 均线多头发散 + 量能突破
-  enabled: true
-  ma_fast: 20
-  ma_slow: 60
-  cross_lookback_days: 60
-  divergence_hold_days: 7         # 金叉后至少7日维持发散
-  pullback_ma_tolerance: 0.03     # 回调不破20日线
-  min_breakout_vol_ratio: 2.0     # 突破压力位量比 >= 2
-  vol_ma_days: 50                 # 量能站上50日均量线
-  breakout_lookback_days: 20
-
-low_shadow:              # 低位仙人指路
-  enabled: true
-  min_shadow_ratio: 2.0           # 上影线 >= 实体2倍
-  max_prior_gain_pct: 0.30        # 前期涨幅 <= 30%
-  shadow_vol_ratio: 1.2           # 上影日量 >= 5日均量1.2倍
-  support_days: 5                 # 上影日低点守住近5日支撑
-  vol_ma_days: 5
-
-# 布林下轨探底针（低位横盘中，当日下探破轨被多头拉回）
-boll_pin:
-  enabled: true
-  bb_period: 20
-  bb_std: 2.0
-  min_shadow_ratio: 2.0      # 下影 >= 实体*2
-  min_close_position: 0.5    # 收盘位于日内上半区
-  consolidation_days: 20     # 前N日低位横盘
-  max_range_pct: 0.15        # 横盘振幅上限
-  min_pierce_pct: 0.0        # 破轨最小幅度
-
-
-# 轨道线下轨回踩（上升趋势中，当日跌到 ENE 下轨）
-ene_pullback:
-  enabled: true
-  ene_period: 20             # 轨道线中轨均线周期 N
-  upper_pct: 0.09            # 上轨 = 中轨 x (1+0.09)，M1=9
-  lower_pct: 0.10            # 下轨 = 中轨 x (1-0.10)，M2=10
-  ma_short_period: 20        # 快线（要求上行）
-  ma_long_period: 60         # 慢线（要求收盘在其上方）
-  trend_slope_days: 5        # 快线上行回看天数
-  min_slope_pct: 0.0         # 快线上行的最小幅度
-  strong_slope_pct: 0.03     # 打分饱和的快线涨幅
-  deep_touch_pct: 4.0        # 打分饱和的触轨深度上限
-# 深跌筑底回踩前高（前期深跌 -> 底部与高点持续抬高 -> 突破前高 -> 回踩不破前高）
-# 判定链用 ZigZag 摆动点：跌幅 >= min_drop_pct 的低点之后，最近 higher_swings+1 个
-# 摆动低点与摆动高点各自严格递增，最后一个摆动高点作颈线，突破后回踩未破且今日收在颈线上方。
-# 注意：本形态**不叠 low_zone_ok**（突破创新高时位置分位必然在上部），只叠 position_ok。
-deep_base:
-  enabled: true
-  swing_pct: 0.10            # ZigZag 摆动阈值：反向走够 10% 才确认一个摆动点
-  min_drop_pct: 0.50         # 前期跌幅下限（原始需求是 70%，放宽到 50% 后才在 448 根窗口稳定触发）
-  max_rebound_pct: 1.00      # 底部反弹上限：不超过 1 倍
-  higher_swings: 2           # 需要 2 次「底部抬高 + 高点抬高」-> 比较最近 3 个摆动点
-  min_break_pct: 0.01        # 突破颈线的最小幅度
-  neck_tolerance_pct: 0.03   # 回踩允许跌破颈线的幅度
-  min_breakout_vol_ratio: 0.0  # 突破日量能下限，0 = 不检查（原描述未含量能条件）
-  min_history_days: 150      # 判定所需最少 K 线数
+  window: 60                 # 判定窗口（交易日）
+  ma20_slope_days: 10        # MA20 上行的回看天数
+  min_gain_60: 0.10          # 窗口净涨幅下限
+  max_ext_pct: 0.08          # 收盘相对 MA20 的最大偏离（不追高）
+  min_efficiency: 0.18       # 效率比下限（净涨幅 / 路径总长）
+  max_daily_p95: 0.07        # 日涨跌幅绝对值 95 分位上限
+  max_drawdown: 0.15         # 窗口内最大回撤上限
+  limitup_lookback: 20       # 涨停统计窗口
+  max_limit_ups: 1           # 允许的涨停次数
+  limit_tolerance: 0.005     # 涨停判定容差（吸收复权/四舍五入误差）
+  require_higher_swings: false  # 是否强制三段低点/高点同步抬高
+  min_history_days: 150

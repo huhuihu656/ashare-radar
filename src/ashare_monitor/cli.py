@@ -17,7 +17,6 @@ from .data import (_ts_pro, cache_latest_date, filter_universe, get_universe,
                    market_regime, polite_pause)
 from .data import refresh_history_cache_bulk, session_fetched
 from .signals import entry_exit_plan, position_strategy, scan_frame
-from .news_factor import news_counts, sort_score
 from .tushare_src import latest_moneyflow
 
 LIMIT_PCT_BY_BOARD = {"主板": 0.10, "创业板": 0.20, "科创板": 0.20, "北交所": 0.30}
@@ -28,24 +27,16 @@ console = Console()
 def _scan_one(quote: pd.Series, cfg: Config, cache_dir: Path, market_state: str,
              moneyflow: pd.DataFrame | None, day: str) -> list[dict]:
     symbol = str(quote.symbol)
-    # 取满 deep_lookback_days 再切两种窗口：深跌筑底回踩前高需要更长历史才能看到
-    # 「前期深跌 + 底部抬高」，其余检测器仍用 lookback_days，口径不变。
-    history = history_for(symbol, cache_dir, cfg.scan.deep_lookback_days, as_of=day)
+    history = history_for(symbol, cache_dir, cfg.scan.lookback_days, as_of=day)
     if len(history) < cfg.scan.min_history_days:
         return []
     # 收盘后扫描：缓存已含当日真实收盘 bar，直接用；
     # 历史回填（--day）时缓存可能含更晚数据，必须切到基准日为止（防未来函数）。
-    deep_frame = history[history.index <= pd.Timestamp(day)]
-    frame = deep_frame.tail(cfg.scan.lookback_days)
+    frame = history[history.index <= pd.Timestamp(day)]
     if len(frame) < cfg.scan.min_history_days:
         return []
     limit_pct = LIMIT_PCT_BY_BOARD.get(str(quote["board"]), 0.10)
-    rows = scan_frame(frame, cfg.support_retest, cfg.breakout, cfg.risk,
-                      cfg.box_breakout, cfg.bullish_engulfing, cfg.limitup_gap,
-                      cfg.dragon_pullback, cfg.ma_divergence, cfg.low_shadow,
-                      cfg.oversold_reversal, cfg.break_ma20, cfg.boll_pin,
-                      cfg.ene_pullback, cfg.deep_base,
-                      limit_pct=limit_pct, deep_frame=deep_frame)
+    rows = scan_frame(frame, cfg.clear_uptrend, cfg.risk, limit_pct=limit_pct)
     money = moneyflow.loc[symbol] if moneyflow is not None and symbol in moneyflow.index else None
     for row in rows:
         row.update({"symbol": symbol, "name": str(quote["name"]), "board": str(quote["board"]),
@@ -196,30 +187,14 @@ def scan(config_path: str, day: str | None = None, rebuild_cache: bool = False) 
                 signals.extend(future.result())
             except Exception as error:
                 failures.append({"symbol": str(quote.symbol), "error": str(error)[:300]})
-    # 利好消息因子：每条信号附加近3日利好新闻数（东财公开资讯，文本非行情源）
-    news = news_counts([str(s["symbol"]) for s in signals],
-                       Path(cfg.scan.cache_dir).parent / "news_cache")
     for row in signals:
-        info = news.get(str(row["symbol"]), {})
-        row["news_count"] = info.get("news_count", 0)
-        row["news_total"] = info.get("news_total", 0)
-        row["top_headline"] = info.get("top_headline", "")
-        row["sort_score"] = sort_score(float(row.get("score") or 0), int(row.get("news_count") or 0))
-    columns = ["symbol", "name", "board", "signal", "score", "sort_score", "close", "volume", "market_env", "scan_time", "note",
-               "mf_date", "net_mf_amount",
+        row["sort_score"] = float(row.get("score") or 0)
+    columns = ["symbol", "name", "board", "signal", "score", "sort_score", "close", "volume",
+               "market_env", "scan_time", "note", "mf_date", "net_mf_amount",
                "position_pct", "position_tier", "position_reason",
                "entry_price", "stop_loss", "take_profit", "risk_reward", "entry_state", "plan_note",
-               "start_date", "start_price", "distance_to_start_pct", "prior_rally_pct", "ma20", "ma60",
-               "range_pct", "atr_pct", "volume_ratio", "breakout_high", "close_position",
-               "box_high", "converge_ratio", "red_green_vol_ratio",
-               "pullback_ratio", "prior2_gain_pct", "engulf_vol_ratio",
-               "limit_date", "gap_size_pct", "days_since_limit", "pullback_vol_ratio",
-               "wave_gain_pct", "pullback_pct", "second_vol_ratio", "prior_high",
-               "ma_gap_pct", "shadow_ratio", "shadow_vol_ratio", "cover_vol_ratio", "prior_gain_60d_pct",
-               "bb_lower", "bb_mid", "pierce_pct", "today_high", "today_low",
-               "ene_upper", "ene_lower", "slope_pct", "trend_gap_pct", "touch_depth_pct",
-               "neck_price", "base_low", "prior_high", "drop_pct", "rebound_pct",
-               "break_pct", "retest_pct", "higher_lows", "higher_highs", "retest_low"]
+               "er", "gain_60_pct", "mdd_pct", "ext_pct", "ma20", "ma60",
+               "limit_ups", "higher_lows", "higher_highs", "today_high", "today_low"]
     result = pd.DataFrame(signals)
     if result.empty:
         result = pd.DataFrame(columns=columns)

@@ -22,19 +22,7 @@
   const num = (value) => (Number.isFinite(Number(value)) ? Number(value) : null);
 
   const SIGNAL_KINDS = {
-    "回踩前期起涨位": "support",
-    "横盘后放量突破": "breakout",
-    "箱体突破红肥绿瘦": "box",
-    "阳包阴反包启动": "engulfing",
-    "涨停跳空缺口共振": "limitup",
-    "龙回头二次启动": "dragon",
-    "均线多头发散": "ma",
-    "低位仙人指路": "shadow",
-    "超跌反转": "reversal",
-    "恰好突破20日线": "ma20",
-    "布林下轨探底针": "boll",
-    "ENE下轨回踩": "ene",
-    "深跌筑底回踩前高": "deepbase",
+    "清晰上升趋势": "uptrend",
   };
   const signalKind = (signal) => SIGNAL_KINDS[signal] || "other";
 
@@ -161,10 +149,9 @@
     $("#scan-note").textContent = cleanText(payload.warning, "自动任务完成后，最新结果会显示在这里。");
 
     $("#universe-count").textContent = hasData ? number.format(Number(payload.universe_count || 0)) : "—";
-    $("#support-count").textContent = hasData ? number.format(Number(counts.support_retest || 0)) : "—";
-    $("#breakout-count").textContent = hasData ? number.format(Number(counts.sideways_breakout || 0)) : "—";
+    $("#uptrend-count").textContent = hasData ? number.format(Number(counts.clear_uptrend || 0)) : "—";
     $("#failure-count").textContent = hasData ? number.format(Number(payload.failure_count || 0)) : "—";
-    ["#universe-count", "#support-count", "#breakout-count", "#failure-count"].forEach((sel) => {
+    ["#universe-count", "#uptrend-count", "#failure-count"].forEach((sel) => {
       if (!hasData) $(sel).dataset.empty = "true";
       else delete $(sel).dataset.empty;
     });
@@ -173,10 +160,6 @@
       ? `更新于 ${relLabel(ageOf(payload.generated_at))}`
       : "—";
 
-    $("#all-count").textContent = number.format((payload.signals || []).length);
-    $("#filter-support-count").textContent = number.format(Number(counts.support_retest || 0));
-    $("#filter-breakout-count").textContent = number.format(Number(counts.sideways_breakout || 0));
-    renderExtraChips(counts);
 
     const warning = $("#data-warning");
     const setBanner = (kind, message) => {
@@ -193,44 +176,6 @@
       warning.className = "data-warning";
       warning.textContent = "";
     }
-  }
-
-  /* ---------- 高胜率形态筛选 chips ---------- */
-
-  const EXTRA_KINDS = [
-    ["box", "箱体突破红肥绿瘦", "box_breakout"],
-    ["engulfing", "阳包阴反包启动", "bullish_engulfing"],
-    ["limitup", "涨停跳空缺口共振", "limitup_gap"],
-    ["dragon", "龙回头二次启动", "dragon_pullback"],
-    ["ma", "均线多头发散", "ma_divergence"],
-    ["shadow", "低位仙人指路", "low_shadow"],
-    ["reversal", "超跌反转", "oversold_reversal"],
-    ["ma20", "突破20日线", "break_ma20"],
-    ["boll", "布林探底针", "boll_pin"],
-    ["ene", "ENE下轨回踩", "ene_pullback"],
-    ["deepbase", "深跌筑底回踩前高", "deep_base"],
-  ];
-
-  function renderExtraChips(counts) {
-    const container = $("#extra-filter-chips");
-    if (!container) return;
-    container.replaceChildren();
-    EXTRA_KINDS.forEach(([kind, label, key]) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "filter-button";
-      chip.dataset.filter = kind;
-      const count = Number(counts[key] || 0);
-      if (count > 0) chip.classList.add("has-hits");
-      add(chip, "span", label);
-      add(chip, "span", number.format(count));
-      chip.addEventListener("click", () => {
-        state.signal = kind;
-        setFilterButtons();
-        renderResults();
-      });
-      container.append(chip);
-    });
   }
 
   /* ---------- 板块筛选 ---------- */
@@ -253,7 +198,7 @@
     const query = state.query.trim().toLowerCase();
     return signals
       .filter((item) => {
-        const kindMatch = state.signal === "all" || signalKind(item.signal) === state.signal;
+        const kindMatch = true;
         const boardMatch = state.board === "all" || item.board === state.board;
         const haystack = `${item.symbol || ""} ${item.name || ""}`.toLowerCase();
         return kindMatch && boardMatch && (!query || haystack.includes(query));
@@ -273,90 +218,13 @@
   };
 
   function metricLines(item) {
-    if (signalKind(item.signal) === "support") {
-      return [
-        { text: `距起涨位 ${signedPct(item.distance_to_start_pct)}`, cls: signClass(item.distance_to_start_pct) },
-        { text: `前段涨幅 ${signedPct(item.prior_rally_pct)}`, cls: signClass(item.prior_rally_pct) },
-        { text: `MA20 / MA60 ${cleanText(item.ma20)} / ${cleanText(item.ma60)}`, cls: "" },
-      ];
-    }
-    const vr = num(item.volume_ratio);
-    const sh = num(item.shadow_ratio);
-    const cp = num(item.close_position);
-    const metricMap = {
-      box: [
-        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
-        { text: `箱体上沿 ${cleanText(item.box_high)}`, cls: "" },
-        { text: `红绿量比 ${cleanText(item.red_green_vol_ratio)}`, cls: "" },
-      ],
-      engulfing: [
-        { text: `反包量比 ${cleanText(item.engulf_vol_ratio)}`, cls: "" },
-        { text: `回调占比 ${cleanText(item.pullback_ratio)}`, cls: "" },
-        { text: `前两日涨幅 ${signedPct(item.prior2_gain_pct)}`, cls: signClass(item.prior2_gain_pct) },
-      ],
-      limitup: [
-        { text: `涨停日 ${prettyDate(item.limit_date)}`, cls: "" },
-        { text: `缺口幅度 ${signedPct(item.gap_size_pct)}`, cls: signClass(item.gap_size_pct) },
-        { text: `回调缩量比 ${cleanText(item.pullback_vol_ratio)}`, cls: "" },
-      ],
-      dragon: [
-        { text: `量比 ${cleanText(item.second_vol_ratio)}`, cls: num(item.second_vol_ratio) !== null && num(item.second_vol_ratio) >= 2.3 ? "is-up" : "" },
-        { text: `首波涨幅 ${signedPct(item.wave_gain_pct)}`, cls: signClass(item.wave_gain_pct) },
-        { text: `前高 ${cleanText(item.prior_high)}`, cls: "" },
-      ],
-      ma: [
-        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
-        { text: `MA20/60 ${cleanText(item.ma20)}/${cleanText(item.ma60)}`, cls: "" },
-        { text: `突破位 ${cleanText(item.breakout_high)}`, cls: "" },
-      ],
-      shadow: [
-        { text: `上影倍数 ${cleanText(item.shadow_ratio)}`, cls: "" },
-        { text: `覆盖量比 ${cleanText(item.cover_vol_ratio)}`, cls: "" },
-        { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
-      ],
-      reversal: [
-        { text: cleanText(item.sub_signal), cls: "" },
-        { text: `RSI ${cleanText(item.rsi)}`, cls: num(item.rsi) !== null && num(item.rsi) < 30 ? "is-down" : "" },
-        { text: item.macd_div ? "MACD背离" : "—", cls: item.macd_div ? "is-up" : "" },
-        { text: item.long_shadow ? "长下影" : (item.volume_ground ? "地量" : "—"), cls: "" },
-      ],
-      ma20: [
-        { text: `突破MA20 ${signedPct(item.broke_above_pct)}`, cls: signClass(item.broke_above_pct) },
-        { text: `60日涨幅 ${signedPct(item.prior_gain_60d_pct)}`, cls: signClass(item.prior_gain_60d_pct) },
-        { text: `MA20 ${cleanText(item.ma20)}`, cls: "" },
-      ],
-      boll: [
-        { text: `穿透下轨 ${pct(item.pierce_pct)}`, cls: "" },
-        { text: `下影倍数 ${cleanText(item.shadow_ratio)}`, cls: sh !== null && sh >= 4 ? "is-up" : "" },
-        { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
-        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 2 ? "is-up" : "" },
-      ],
-      ene: [
-        { text: `触轨深度 ${pct(item.touch_depth_pct)}`, cls: "" },
-        { text: `趋势强度 ${signedPct(item.slope_pct)}`, cls: signClass(item.slope_pct) },
-        { text: `收盘位置 ${cp === null ? "—" : pct(cp * 100)}`, cls: cp !== null && cp >= 0.8 ? "is-up" : "" },
-        { text: `MA20 / MA60 ${cleanText(item.ma20)} / ${cleanText(item.ma60)}`, cls: "" },
-      ],
-      deepbase: [
-        { text: `前期跌幅 ${signedPct(item.drop_pct)}`, cls: signClass(item.drop_pct) },
-        { text: `突破前高 ${signedPct(item.break_pct)}`, cls: signClass(item.break_pct) },
-        { text: `回踩前高 ${signedPct(item.retest_pct)}`, cls: signClass(item.retest_pct) },
-        { text: `底部 / 高点抬高 ${cleanText(item.higher_lows)} / ${cleanText(item.higher_highs)} 次`, cls: "" },
-      ],
-      breakout: [
-        { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
-        { text: `区间振幅 ${pct(item.range_pct)}`, cls: "" },
-        { text: `ATR ${pct(item.atr_pct)}`, cls: "" },
-        { text: `突破位 ${cleanText(item.breakout_high)}`, cls: "" },
-      ],
-    };
-    const kind = signalKind(item.signal);
-    let lines;
-    if (metricMap[kind]) lines = metricMap[kind];
-    else lines = [
-      { text: `量比 ${cleanText(item.volume_ratio)}`, cls: vr !== null && vr >= 1.8 ? "is-up" : "" },
-      { text: `区间振幅 ${pct(item.range_pct)}`, cls: "" },
-      { text: `突破位 ${cleanText(item.breakout_high)}`, cls: "" },
+    const er = num(item.er);
+    const lines = [
+      { text: `趋势效率 ${er === null ? "—" : er.toFixed(3)}`, cls: er !== null && er >= 0.25 ? "is-up" : "" },
+      { text: `60日涨幅 ${signedPct(item.gain_60_pct)}`, cls: signClass(item.gain_60_pct) },
+      { text: `最大回撤 ${signedPct(item.mdd_pct)}`, cls: signClass(item.mdd_pct) },
+      { text: `距MA20 ${signedPct(item.ext_pct)}`, cls: signClass(item.ext_pct) },
+      { text: `近20日涨停 ${cleanText(item.limit_ups)} 次`, cls: num(item.limit_ups) === 0 ? "is-up" : "" },
     ];
     const mf = moneyTag(item);
     if (mf) lines.push(mf);
@@ -370,10 +238,6 @@
     add(stockCell, "span", cleanText(item.name), "stock-name");
     add(stockCell, "span", cleanText(item.symbol), "stock-code");
     add(stockCell, "span", cleanText(item.board), "board-tag");
-    const nc = Number(item.news_count || 0);
-    if (nc > 0) {
-      add(stockCell, "span", `利好 ×${nc}`, "news-badge");
-    }
 
     const signalCell = add(tr, "td");
     add(signalCell, "span", cleanText(item.signal), `signal-tag signal-${signalKind(item.signal)}`);
@@ -498,7 +362,6 @@
   /* ---------- 详情对话框 ---------- */
 
   function dialogRows(item) {
-    const kind = signalKind(item.signal);
     const rows = [
       { dt: "标的价格", dd: num(item.close) !== null ? decimal.format(num(item.close)) : "—" },
       { dt: "成交量", dd: compactVolume(item.volume) },
@@ -509,10 +372,6 @@
       },
       { dt: "扫描时间", dd: prettyDate(item.scan_time) },
     ];
-    if (Number(item.news_count || 0) > 0) {
-      rows.push({ dt: "近3日利好资讯", dd: `${item.news_count} 条（共 ${item.news_total} 条资讯）`, cls: "is-up" });
-      if (item.top_headline) rows.push({ dt: "代表性利好", dd: cleanText(item.top_headline), cls: "news-headline-cell" });
-    }
     const net = num(item.net_mf_amount);
     if (net !== null) {
       rows.push({
@@ -535,117 +394,16 @@
         rows.push({ dt: "计划依据", dd: cleanText(item.plan_note) });
       }
     }
-    if (kind === "support") {
-      rows.push(
-        { dt: "起涨日", dd: prettyDate(item.start_date) },
-        { dt: "起涨价", dd: num(item.start_price) !== null ? decimal.format(num(item.start_price)) : "—" },
-        { dt: "距起涨位", dd: signedPct(item.distance_to_start_pct), cls: signClass(item.distance_to_start_pct) },
-        { dt: "前段涨幅", dd: signedPct(item.prior_rally_pct), cls: signClass(item.prior_rally_pct) },
-        { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
-        { dt: "区间振幅", dd: pct(item.range_pct) },
-      );
-    } else if (kind === "breakout") {
-      const pos = num(item.close_position);
-      rows.push(
-        { dt: "量比", dd: cleanText(item.volume_ratio) },
-        { dt: "区间振幅", dd: pct(item.range_pct) },
-        { dt: "ATR 振幅", dd: pct(item.atr_pct) },
-        { dt: "突破位", dd: cleanText(item.breakout_high) },
-        {
-          dt: "收盘位置",
-          dd: pos !== null ? `${(Math.max(0, Math.min(1, pos)) * 100).toFixed(1)}%` : "—",
-          meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
-          cls: pos !== null && pos >= 0.8 ? "is-up" : "",
-        },
-      );
-    } else if (kind === "box") {
-      rows.push(
-        { dt: "箱体上沿", dd: cleanText(item.box_high) },
-        { dt: "箱体振幅", dd: pct(item.range_pct) },
-        { dt: "末端收敛比", dd: cleanText(item.converge_ratio) },
-        { dt: "红绿量比", dd: cleanText(item.red_green_vol_ratio) },
-        { dt: "突破量比", dd: cleanText(item.volume_ratio) },
-      );
-    } else if (kind === "engulfing") {
-      rows.push(
-        { dt: "回调占比", dd: cleanText(item.pullback_ratio) },
-        { dt: "前两日涨幅", dd: signedPct(item.prior2_gain_pct), cls: signClass(item.prior2_gain_pct) },
-        { dt: "反包量比", dd: cleanText(item.engulf_vol_ratio) },
-        { dt: "量比", dd: cleanText(item.volume_ratio) },
-      );
-    } else if (kind === "limitup") {
-      rows.push(
-        { dt: "涨停日", dd: prettyDate(item.limit_date) },
-        { dt: "缺口幅度", dd: signedPct(item.gap_size_pct), cls: signClass(item.gap_size_pct) },
-        { dt: "距涨停天数", dd: cleanText(item.days_since_limit) },
-        { dt: "回调缩量比", dd: cleanText(item.pullback_vol_ratio) },
-      );
-    } else if (kind === "dragon") {
-      rows.push(
-        { dt: "首波涨幅", dd: signedPct(item.wave_gain_pct), cls: signClass(item.wave_gain_pct) },
-        { dt: "回调幅度", dd: signedPct(item.pullback_pct), cls: signClass(item.pullback_pct) },
-        { dt: "回调缩量比", dd: cleanText(item.pullback_vol_ratio) },
-        { dt: "二次启动量比", dd: cleanText(item.second_vol_ratio) },
-        { dt: "前高", dd: cleanText(item.prior_high) },
-      );
-    } else if (kind === "ma") {
-      rows.push(
-        { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
-        { dt: "均线乖离", dd: pct(item.ma_gap_pct) },
-        { dt: "量比", dd: cleanText(item.volume_ratio) },
-        { dt: "突破位", dd: cleanText(item.breakout_high) },
-      );
-    } else if (kind === "shadow") {
-      rows.push(
-        { dt: "上影倍数", dd: cleanText(item.shadow_ratio) },
-        { dt: "上影日量比", dd: cleanText(item.shadow_vol_ratio) },
-        { dt: "覆盖量比", dd: cleanText(item.cover_vol_ratio) },
-        { dt: "60日涨幅", dd: signedPct(item.prior_gain_60d_pct), cls: signClass(item.prior_gain_60d_pct) },
-      );
-    } else if (kind === "boll") {
-      const pos = num(item.close_position);
-      rows.push(
-        { dt: "布林下轨 / 中轨", dd: `${cleanText(item.bb_lower)} / ${cleanText(item.bb_mid)}` },
-        { dt: "穿透下轨幅度", dd: pct(item.pierce_pct) },
-        { dt: "下影倍数", dd: cleanText(item.shadow_ratio) },
-        {
-          dt: "收盘位置",
-          dd: pos !== null ? `${(Math.max(0, Math.min(1, pos)) * 100).toFixed(1)}%` : "—",
-          meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
-          cls: pos !== null && pos >= 0.8 ? "is-up" : "",
-        },
-        { dt: "横盘振幅", dd: pct(item.range_pct) },
-        { dt: "量比", dd: cleanText(item.volume_ratio) },
-        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
-      );
-    } else if (kind === "ene") {
-      const pos = num(item.close_position);
-      rows.push(
-        { dt: "ENE 上轨 / 下轨", dd: `${cleanText(item.ene_upper)} / ${cleanText(item.ene_lower)}` },
-        { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
-        { dt: "趋势强度（MA20 近 5 日涨幅）", dd: signedPct(item.slope_pct), cls: signClass(item.slope_pct) },
-        { dt: "MA20 / MA60 乖离", dd: signedPct(item.trend_gap_pct), cls: signClass(item.trend_gap_pct) },
-        { dt: "触轨深度（最低价低于下轨）", dd: pct(item.touch_depth_pct) },
-        {
-          dt: "收盘位置",
-          dd: pos !== null ? `${(Math.max(0, Math.min(1, pos)) * 100).toFixed(1)}%` : "—",
-          meter: pos === null ? 0 : Math.max(0, Math.min(1, pos)),
-          cls: pos !== null && pos >= 0.8 ? "is-up" : "",
-        },
-        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
-      );
-    } else if (kind === "deepbase") {
-      rows.push(
-        { dt: "前期高点 → 底部低点", dd: `${cleanText(item.prior_high)} → ${cleanText(item.base_low)}` },
-        { dt: "前期跌幅", dd: signedPct(item.drop_pct), cls: signClass(item.drop_pct) },
-        { dt: "底部反弹幅度", dd: signedPct(item.rebound_pct), cls: signClass(item.rebound_pct) },
-        { dt: "前高（颈线）", dd: cleanText(item.neck_price) },
-        { dt: "突破高点", dd: `${cleanText(item.breakout_high)}（${signedPct(item.break_pct)}）`, cls: "is-up" },
-        { dt: "回踩低点", dd: `${cleanText(item.retest_low)}（${signedPct(item.retest_pct)}）`, cls: signClass(item.retest_pct) },
-        { dt: "结构抬升次数", dd: `底部 ${cleanText(item.higher_lows)} 次 / 高点 ${cleanText(item.higher_highs)} 次` },
-        { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
-      );
-    }
+    rows.push(
+      { dt: "趋势效率（ER）", dd: cleanText(item.er) },
+      { dt: "60日涨幅", dd: signedPct(item.gain_60_pct), cls: signClass(item.gain_60_pct) },
+      { dt: "60日最大回撤", dd: signedPct(item.mdd_pct), cls: signClass(item.mdd_pct) },
+      { dt: "距 MA20", dd: signedPct(item.ext_pct), cls: signClass(item.ext_pct) },
+      { dt: "MA20 / MA60", dd: `${cleanText(item.ma20)} / ${cleanText(item.ma60)}` },
+      { dt: "近20日涨停", dd: `${cleanText(item.limit_ups)} 次` },
+      { dt: "结构（低点/高点抬高）", dd: `${item.higher_lows ? "是" : "否"} / ${item.higher_highs ? "是" : "否"}` },
+      { dt: "当日高 / 低", dd: `${cleanText(item.today_high)} / ${cleanText(item.today_low)}` },
+    );
     return rows;
   }
 
@@ -1100,83 +858,6 @@
     renderArchivePanel();
   }
 
-  /* ---------- 月度主线板块 ---------- */
-
-  const MAINLINE_URL = "./data/mainline.json";
-  let mainlineCache = null;
-
-  async function renderMainline() {
-    const grid = $("#mainline-grid");
-    const meta = $("#mainline-meta");
-    if (!grid) return;
-    if (!mainlineCache) {
-      try {
-        const response = await fetch(`${MAINLINE_URL}?v=${Date.now()}`, { cache: "no-store" });
-        if (response.ok) mainlineCache = await response.json();
-      } catch (error) {
-        mainlineCache = null;
-      }
-    }
-    if (!mainlineCache || !Array.isArray(mainlineCache.top_sectors) || !mainlineCache.top_sectors.length) {
-      const empty = document.createElement("p");
-      empty.className = "mainline-empty";
-      empty.textContent = "主线数据尚未发布（每月首个交易日自动更新）。";
-      grid.replaceChildren(empty);
-      if (meta) meta.textContent = "";
-      return;
-    }
-    if (meta) {
-      meta.textContent = `判定日 ${cleanText(mainlineCache.as_of)} · 蓄势轮动口径（经两年回测：验证期命中54.5%，非100%）· 不构成投资建议`;
-    }
-    grid.replaceChildren();
-    mainlineCache.top_sectors.forEach((sector, rank) => {
-      const card = document.createElement("article");
-      card.className = "mainline-card";
-      card.setAttribute("role", "listitem");
-
-      const top = add(card, "div", undefined, "mainline-card-top");
-      add(top, "span", `#${cleanText(sector.rank)}`, "mainline-rank");
-      const nameWrap = add(top, "div", undefined, "mainline-name-wrap");
-      add(nameWrap, "h3", cleanText(sector.industry), "mainline-name");
-      const badge = add(top, "div", undefined, "mainline-score");
-      add(badge, "span", `TOP ${rank + 1}`, "mainline-badge");
-      add(badge, "span", `优先级排名 ${cleanText(sector.rank_pctile)}%`, "mainline-rank-caption");
-
-      const bar = add(card, "div", undefined, "mainline-bar");
-      const fill = add(bar, "i");
-      fill.style.width = `${Math.max(0, Math.min(100, Number(sector.rank_pctile) || 0))}%`;
-
-      const metrics = add(card, "dl", undefined, "mainline-metrics");
-      const momentum = Number(sector.momentum_20d_pct) || 0;
-      const momLabel = momentum <= 0 ? "近20日涨幅（蓄势中，未大涨）" : "近20日涨幅";
-      const items = [
-        [momLabel, `${signedPct(momentum)}`, signClass(momentum)],
-        ["主力资金5日", `${signedNum(sector.flow_5d_avg_10k)}万`, signClass(sector.flow_5d_avg_10k)],
-        ["站上MA20占比", `${pct(sector.breadth_pct)}`, ""],
-        ["板块成员", `${cleanText(sector.members)} 只`, ""],
-      ];
-      items.forEach(([label, value, cls]) => {
-        const wrap = add(metrics, "div", undefined, "mainline-metric");
-        add(wrap, "dt", label);
-        add(wrap, "dd", value, cls || undefined);
-      });
-
-      const stocks = add(card, "div", undefined, "mainline-stocks");
-      (sector.top_stocks || []).forEach((stock) => {
-        const chip = add(stocks, "span", undefined, "mainline-stock");
-        add(chip, "span", `${cleanText(stock.name)} ${cleanText(stock.symbol)}`, "ms-name");
-        add(chip, "span", `资金 ${stock.flow_5d_10k > 0 ? "+" : ""}${decimal.format((stock.flow_5d_10k || 0) / 10000)}亿`, `ms-flow ${signClass(stock.flow_5d_10k)}`);
-      });
-      const foot = add(card, "div", undefined, "mainline-foot");
-      if (sector.etf) {
-        add(foot, "span", `行业ETF: ${cleanText(sector.etf.label)} (${cleanText(sector.etf.code)})`, "mainline-etf");
-      } else {
-        add(foot, "span", "暂无对应行业ETF（可用板块内推荐个股组合替代）", "mainline-noetf");
-      }
-      grid.append(card);
-    });
-  }
-
   /* ---------- 数据加载 ---------- */
 
   async function loadData() {
@@ -1198,7 +879,6 @@
       setStatus(dataState(payload));
       renderBoards();
       renderResults();
-      renderMainline();
       loadArchiveIndex();
     } catch (error) {
       const hadData = Boolean(state.payload?.as_of);
