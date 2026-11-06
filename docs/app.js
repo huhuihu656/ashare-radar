@@ -85,9 +85,9 @@
       return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : NaN;
     };
     countUp($("#avg-gain"), avg("gain_60_pct"), 1, "+", "%");
-    countUp($("#avg-er"), avg("er"), 3);
-    const top = signals.reduce((m, s) => Math.max(m, num(s.score) ?? 0), 0);
-    countUp($("#top-score"), signals.length ? top : NaN, 1);
+    const gains = signals.map((s) => num(s.gain_60_pct)).filter((v) => v !== null);
+    countUp($("#max-gain"), gains.length ? Math.max(...gains) : NaN, 1, "+", "%");
+    countUp($("#avg-mdd"), avg("mdd_pct"), 1, "", "%");
   }
 
   /* ---------------- 迷你走势线 ---------------- */
@@ -148,7 +148,6 @@
   }
 
   function rowHtml(item, idx) {
-    const score = num(item.score) ?? 0;
     return `
       <td class="col-rank">${idx + 1}</td>
       <td class="col-name">
@@ -162,8 +161,7 @@
       <td class="col-num c-gain up">${fmtPct(item.gain_60_pct)}</td>
       <td class="col-num down">${fmtPct(item.mdd_pct)}</td>
       <td class="col-num c-ext">${fmtPct(item.ext_pct)}</td>
-      <td class="col-num c-limit">${num(item.limit_ups) ?? "—"}</td>
-      <td class="col-num score${score >= 80 ? " high" : ""}">${fmtNum(item.score, 1)}</td>`;
+      <td class="col-num c-limit">${num(item.limit_ups) === null ? "—" : esc(item.limit_ups)}</td>`;
   }
 
   function renderRows() {
@@ -469,7 +467,7 @@
     const tr = document.createElement("tr");
     tr.className = "row-detail";
     const td = document.createElement("td");
-    td.colSpan = 9;
+    td.colSpan = 8;
     tr.append(td);
     td.innerHTML = detailHtml(item);
     main.after(tr);
