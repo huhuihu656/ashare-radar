@@ -194,6 +194,7 @@ tr.row-main.is-open { background: rgba(230, 180, 80, 0.07); }
 }
 
 .col-num { font-family: var(--mono); font-size: 13px; text-align: right; }
+.col-num.price { color: var(--ink); font-weight: 600; }
 .score { color: var(--ink); font-weight: 600; }
 .score.high { color: var(--score); text-shadow: 0 0 14px rgba(255, 212, 121, 0.25); }
 

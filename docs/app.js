@@ -158,7 +158,7 @@
         <span class="board-tag">${esc(item.board)}</span>
       </td>
       <td class="col-spark c-spark">${sparklineSvg(item.symbol, item.er)}</td>
-      <td class="col-num">${fmtNum(item.er, 3)}</td>
+      <td class="col-num price">${fmtNum(item.close, 2)}</td>
       <td class="col-num c-gain up">${fmtPct(item.gain_60_pct)}</td>
       <td class="col-num down">${fmtPct(item.mdd_pct)}</td>
       <td class="col-num c-ext">${fmtPct(item.ext_pct)}</td>
